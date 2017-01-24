@@ -34,45 +34,46 @@ RESET	  SEI           ;disable interrupts,set interrupt mask
         LDAB #$09	    ;put 9 in B
         JMP $FB0A	    ;jumps below
                       ;
-        LDAA <$1B	    ;F83F, SUBRTN, vol (always $FF)
-        STAA >$0400	  ;DAC output
-        LDAA <$13	    ;F844, load accum A
-        STAA <$1C	    ;store accum A
-        LDAA <$14	    ;load accum A
-        STAA <$1D	    ;store accum A
-        LDX <$18	    ;F84C, load index 
-        LDAA <$1C	    ;F84E, load accum A, loop, alt 0-255, variable delay
-        COM >$0400	  ;complement DAC, invert
-        DEX			      ;F853, decrement index
-        BEQ $F866	    ;branch below if = 0
+                      ;SUBRTN, Variable Duty Cycle Square Wave Routine
+VARI    LDAA <$1B	    ;VAMP -amplitude, F83F
+        STAA >$0400	  ;SOUND, DAC output
+VAR0    LDAA <$13	    ;LOPER -low period, F844 
+        STAA <$1C	    ;LOCNT -lo period counter
+        LDAA <$14	    ;HIPER -hi period
+        STAA <$1D	    ;HICNT -hi period counter
+V0      LDX <$18	    ;SWPDT -sweep period, F84C, load index 
+V0LP    LDAA <$1C	    ;LOCNT -lo cycle, F84E, load accum A
+        COM >$0400	  ;SOUND, complement DAC, invert
+V1      DEX			      ;F853, decrement index
+        BEQ $F866	    ;branch VSWEEP below if = 0
         DECA		      ;decr A
-        BNE $F853	    ;branch above if != 0
-        COM >$0400	  ;complement DAC, invert
-        LDAA <$1D	    ;F85E, load accum A
-        DEX			      ;decrement index
-        BEQ $F866	    ;branch below if = 0
+        BNE $F853	    ;branch V1 above if != 0
+        COM >$0400	  ;SOUND, complement DAC, invert
+        LDAA <$1D	    ;HICNT - hi cycle, load accum A
+V2      DEX			      ;decrement index
+        BEQ $F866	    ;branch VSWEEP below if = 0
         DECA		      ;decr A
-        BNE $F85E	    ;branch above != 0
-        BRA $F84E	    ;branch above always, end loop
-        LDAA >$0400	  ;F866, load accum DAC
-        BMI $F86C	    ;branch below if minus
+        BNE $F85E	    ;branch V2 above != 0
+        BRA $F84E	    ;branch V0LP above always, loop back
+VSWEEP  LDAA >$0400	  ;SOUND, F866, load accum DAC
+        BMI $F86C	    ;branch VS1 below if minus
         COMA		      ;complement A
-        ADDA #$00	    ;F86C, add A
-        STAA >$0400	  ;DAC invert
-        LDAA <$1C	    ;load accum A
-        ADDA <$15	    ;add A
-        STAA <$1C	    ;store accum A
-        LDAA <$1D	    ;load accum A
-        ADDA <$16	    ;add A
-        STAA <$1D	    ;store accum A
-        CMPA <$17	    ;compare A
-        BNE $F84C	    ;branch above if != 0
-        LDAA <$1A	    ;load accum A
-        BEQ $F88B	    ;branch below if = 0
-        ADDA <$13	    ;add A
-        STAA <$13	    ;store A
-        BNE $F844	    ;branch above if != 0
-        RTS			      ;F88B, return
+VS1     ADDA #$00	    ;F86C, add A
+        STAA >$0400	  ;SOUND, OUTPUT
+        LDAA <$1C	    ;LOCNT, load accum A
+        ADDA <$15	    ;LODT -lo period deltas, add A
+        STAA <$1C	    ;LOCNT, store accum A
+        LDAA <$1D	    ;HICNT, load accum A
+        ADDA <$16	    ;HIDT -hi period deltas, add A
+        STAA <$1D	    ;HICNT, store accum A
+        CMPA <$17	    ;HIEN -end period, compare A
+        BNE $F84C	    ;branch V0 above if != 0
+        LDAA <$1A	    ;LOMOD -lo base freq mod, load accum A
+        BEQ $F88B	    ;branch VARX below if = 0
+        ADDA <$13	    ;LOPER -lo period, add A
+        STAA <$13	    ;LOPER -lo period, store A
+        BNE $F844	    ;branch VAR0 above if != 0
+VARX    RTS			      ;F88B, return
                       ;
         LDAA #$01	    ;F88C, SYNTH2(PWM?),W vector
         STAA <$1A	    ;
@@ -399,12 +400,14 @@ RESET	  SEI           ;disable interrupts,set interrupt mask
         STAB $00,X	  ;
         LDAB #$DD	    ;
         STAB $02,X	  ;
-        LDX <$13	    ;FADB, SUBRTN
-        CLRA		      ;
-        LDAB >$0012	  ;
+                      ;ORGAN ROUTINE
+ORGAN   LDX <$13	    ;DUR -duration, FADB, SUBRTN
+ORGAN1  CLRA		      ;
+        FCB $F6   	  ;LOAD B EXTND TEMPB
+        FDB TEMPB     ;
         INCB		      ;
-        STAB <$12	    ;
-        ANDB <$15	    ;
+        STAB <$12	    ;TEMPB
+        ANDB <$15	    ;OSCIL -mask oscillators
         LSRB		      ;logical shift right
         ADCA #$00	    ;add with Carry
         LSRB		      ;
@@ -424,11 +427,12 @@ RESET	  SEI           ;disable interrupts,set interrupt mask
         ASLA		      ;
         ASLA		      ;
         ASLA		      ;
-        STAA >$0400	  ;DAC output
+        ASLA          ;
+        STAA >$0400	  ;SOUND, DAC output
         DEX			      ;decr index
-        BEQ $FB09	    ;branch below if = 0
-        JMP $0016   	;jump above ?
-        RTS			      ;FB09,return
+        BEQ $FB09	    ;branch ORGAN2 below if = 0, NOTE OVER?
+        JMP $0016   	;RDELAY, jump above ?
+ORGAN2  RTS			      ;FB09,return
                       ;
         PSHA		      ;FB0A, SUBRTN, push data
         LDAA $00,X	  ;FB0B,load from X
@@ -778,6 +782,19 @@ VWTAB	  FDB $FB48	    ;FD58,form double byte -- FB49?
         FDB $F9F3   	;FD70, W vector SYNTH7
         FDB $FA44   	;FD72, W vector SYNTH7
         FDB $FA84	    ;FD74, W vector SYNTH7
+        
+                      ; VARI VECTORS, square wave pulse width modulator
+VVECT   EQU *
+SAW     FCB $40,$01,$00,$10,$E1,$00,$80,$FF,$FF
+FOSHIT  FCB $28,$01,$00,$08,$81,$02,$00,$FF,$FF
+QUASAR  FCB $28,$81,$00,$FC,$01,$02,$00,$FC,$FF
+CABSHK  FCB $FF,$01,$00,$18,$41,$04,$80,$00,$FF
+                      ;
+CSCALE  FCB $00,$FF,$08,$FF,$68,$04,$80,$00,$FF
+MOSQTO  FCB $28,$81,$00,$FC,$01,$02,$00,$FC,$FF ; dupe QUASAR
+VARBG1  FCB $60,$01,$57,$08,$E1,$02,$00,$FE,$80
+
+
 FD76:                    40 01  00 10 e1 00 80 ff ff 28  |...D..@........(|
 FD80:  01 00 08 81 02 00 ff ff  28 81 00 fc 01 02 00 fc  |........(.......|
 FD90:  ff ff 01 00 18 41 04 80  00 ff 8c 5b b6 40 bf 49  |.....A.....[.@.I|
