@@ -1,5 +1,5 @@
         ORG $F800     ;origin
-        FCB $FF		    ;form constant byte
+        FCB $FF		    ;form constant byte <- incorrect?
 RESET	  SEI           ;disable interrupts,set interrupt mask
         LDS #$007F    ;load stack pointer to top of RAM
         LDX #$0400    ;load index reg with PIA (DAC)
@@ -27,9 +27,9 @@ PARAM1  TAB			      ;F82A, PARAM 1, transfer accums
         ASLA		      ;shift left A
         ASLA		      ;A x 8
         ABA			      ;add accums, A x 8 + A = 9A
-        LDX #$0013	  ;load 19 in X
+        LDX #$0013	  ;load 19 in X (hex to dec)
         STX <$0f	    ;store in zero page
-        LDX #$FD76	  ;load table addr
+        LDX #$FD76	  ;load table addr SAW into index
         JSR CALCOS	  ;FD21,calcs X + A -> X
         LDAB #$09	    ;put 9 in B
         JMP UTIL1	    ;jumps below, FB0A
@@ -57,9 +57,9 @@ DAC3    COM >$0400	  ;complement DAC, invert
 DAC4    LDAA >$0400	  ;F866, load accum DAC, SUB LOOP 5
         BMI $F86C	    ;branch below if minus
         COMA		      ;complement A
-        ADDA #$00	    ;F86C, add A
+        ADDA #$00	    ;F86C, add 0 to A
         STAA >$0400	  ;DAC invert
-        LDAA <$1C	    ;load accum A
+        LDAA <$1C	    ;load accum A with value at location 1C
         ADDA <$15	    ;add A
         STAA <$1C	    ;store accum A
         LDAA <$1D	    ;load accum A
@@ -645,7 +645,7 @@ DAC18   STAA >$0400	  ;DAC output
         BEQ $FCB5	    ;branch below if = 0
         LDX <$18	    ;
         STX <$0D	    ;
-        LDX #$0024	  ;
+        LDX #$0024	  ;load index with value (dec)36
         STAA <$12	    ;
         STX <$0F	    ;FC93
         LDX <$0D	    ;
@@ -704,7 +704,7 @@ IRQ		  LDS #$007F	  ;FCB6, IRQ handler,select sound,load stack pointer, vector a
         BHI $FD06	    ;branch below if higher
         SUBA #$0D	    ;
         ASLA		      ;x 2 for offset in table
-        LDX #$FD58	  ;addr VWTAB, W Vector table
+        LDX #$FD58	  ;load addr VWTAB, W Vector table, into index
         BSR CALCOS	  ;branch sub CALCOS, calc offset into table
         LDX $00,X	    ;load vector addr
         JSR $00,X	    ;jump sub ? W vector addr at index?
@@ -724,7 +724,7 @@ IRQ2    LDAA <$04	    ;FD0E, IRQ2, IRQ sub
         JMP SYNTH4	  ;jump to F913, SYNTH4
         JMP UTIL2	    ;FD1E, jump above to FB34, UTIL2
                       ;
-CALCOS	STX <$0D	    ;FD21, SUBRTN, unsigned offset of A + X, val in X
+CALCOS	STX <$0D	    ;FD21, SUBRTN, calculate unsigned offset of A + X, val in X
         ADDA <$0E	    ;add A to LSB of index base value
         STAA <$0E	    ;store it
         BCC $FD2C	    ;branch below if Carry clear
@@ -738,7 +738,7 @@ NMI		  SEI			      ;FD2F, set interrupt mask, vector at $FFFC, Non Maskable Inte
         CLRB		      ;
         ADCB $00,X	  ;FD37,add with Carry
         DEX			      ;
-        CPX #$F800	  ;
+        CPX #$F800	  ;compare index reg to origin
         BNE $FD37	    ;branch above if != 0
         CMPB $00,X	  ;
         BEQ $FD44	    ;branch below if = 0
@@ -749,9 +749,10 @@ NMI		  SEI			      ;FD2F, set interrupt mask, vector at $FFFC, Non Maskable Inte
         LDAB >$EFFA	  ;
         CMPB #$7E	    ;
         BNE NMI		    ;branch above if != 0
-        JSR $EFFA	    ;jump sub ?
+        JSR $EFFA	    ;jump sub ?, was Label 79D0
         BRA NMI		    ;branch above
                       ;
+                      ;Vector Table start FD58, form double byte
 VWTAB	  FDB $FB49	    ;FD58, W vector FB49, PARAM12
         FDB $F913	    ;FD5A, W vector F913, PARAM3
         FDB $FB24	    ;FD5C, W vector FB24, PARAM11
@@ -767,3 +768,86 @@ VWTAB	  FDB $FB49	    ;FD58, W vector FB49, PARAM12
         FDB $F9F3   	;FD70, W vector F9F3, SYNTH7
         FDB $FA44   	;FD72, W vector FA44, PARAM6
         FDB $FA84	    ;FD74, W vector FA84, PARAM8
+        
+                      ; VARI VECTORS, square wave pulse width modulator
+                      ; form constant byte, pseudo-op, single byte or word into object
+VVECT   EQU *
+SAW     FCB $40,$01,$00,$10,$E1,$00,$80,$FF,$FF ; FD76
+FOSHIT  FCB $28,$01,$00,$08,$81,$02,$00,$FF,$FF ; FD7F, FD80
+QUASAR  FCB $28,$81,$00,$FC,$01,$02,$00,$FC,$FF ; FD88
+CABSHK  FCB $FF,$01,$00,$18,$41,$04,$80,$00,$FF ; FD91
+                      ;8c 5b b6 40 bf 49 a4 73 73
+                      ;a4 49 bf 40 b6 5b 8c 0c 7f
+                      ;1d 0f fb 7f 23 0f 15 fe 08
+                      ; below are from diff rom
+CSCALE  FCB $00,$FF,$08,$FF,$68,$04,$80,$00,$FF ; FD9A
+MOSQTO  FCB $28,$81,$00,$FC,$01,$02,$00,$FC,$FF ; FDA3, dupe QUASAR
+VARBG1  FCB $60,$01,$57,$08,$E1,$02,$00,$FE,$80 ; FDAC
+
+;FD76:                    40 01  00 10 e1 00 80 ff ff 28  |...D..@........(|
+;FD80:  01 00 08 81 02 00 ff ff  28 81 00 fc 01 02 00 fc  |........(.......|
+;FD90:  ff ff 01 00 18 41 04 80  00 ff 8c 5b b6 40 bf 49  |.....A.....[.@.I|
+;FDA0:  a4 73 73 a4 49 bf 40 b6  5b 8c 0c 7f 1d 0f fb 7f  |.ss.I.@.[.......|
+;FDB0:  23 0f 15 fe 08 50 8b 88  3e 3f 02 3e 7c 04 03 ff  |#....P..>?.>|...|
+;FDC0:  3e 3f 2c e2 7c 12 0d 74  7c 0d 0e 41 7c 23 0b 50  |>?,.|..t|..A|#.P|
+;FDD0:  7c 1d 29 f2 7c 3f 02 3e  f8 04 03 ff 7c 3f 2c e2  ||.).|?.>....|?,.|
+;FDE0:  f8 12 0d 74 f8 0d 0e 41  f8 23 0b 50 f8 1d 2f f2  |...t...A.#.P../.|
+;FDF0:  f8 23 05 a8 f8 12 06 ba  f8 04 07 ff 7c 37 04 c1  |.#..........|7..|
+;FE00:  7c 23 05 a8 7c 12 06 ba  3e 04 07 ff 3e 37 04 c1  ||#..|...>...>7..|
+;FE10:  3e 23 05 a8 1f 12 06 ba  1f 04 07 ff 1f 37 04 c1  |>#...........7..|
+;FE20:  1f 23 16 a0 fe 1d 17 f9  7f 37 13 06 7f 3f 08 fa  |.#.......7...?..|
+;FE30:  fe 04 0f ff fe 0d 0e 41  fe 23 0b 50 fe 1d 5f e4  |.......A.#.P.._.|
+;FE40:  00 47 3f 37 30 29 23 1d  17 12 0d 08 04 08 7f d9  |.G?70)#.........|
+;FE50:  ff d9 7f 24 00 24 08 00  40 80 00 ff 00 80 40 10  |...$.$..@.....@.|
+;FE60:  7f b0 d9 f5 ff f5 d9 b0  7f 4e 24 09 00 09 24 4e  |.........N$...$N|
+;FE70:  10 7f c5 ec e7 bf 8d 6d  6a 7f 94 92 71 40 17 12  |.......mj...q@..|
+;FE80:  39 10 ff ff ff ff 00 00  00 00 ff ff ff ff 00 00  |9...............|
+;FE90:  00 00 48 8a 95 a0 ab b5  bf c8 d1 da e1 e8 ee f3  |..H.............|
+;FEA0:  f7 fb fd fe ff fe fd fb  f7 f3 ee e8 e1 da d1 c8  |................|
+;FEB0:  bf b5 ab a0 95 8a 7f 75  6a 5f 54 4a 40 37 2e 25  |.......uj_TJ@7.%|
+;FEC0:  1e 17 11 0c 08 04 02 01  00 01 02 04 08 0c 11 17  |................|
+;FED0:  1e 25 2e 37 40 4a 54 5f  6a 75 7f 10 59 7b 98 ac  |.%.7@JT_ju..Y{..|
+;FEE0:  b3 ac 98 7b 59 37 19 06  00 06 19 37 81 24 00 00  |...{Y7.....7.$..|
+;FEF0:  00 16 31 12 05 1a ff 00  27 6d 11 05 11 01 0f 01  |..1.....'m......|
+;FF00:  47 11 31 00 01 00 0d 1b  f4 12 00 00 00 14 47 41  |G.1...........GA|
+;FF10:  45 00 00 00 0f 5b 21 35  11 ff 00 0d 1b 15 00 00  |E....[!5........|
+;FF20:  fd 00 01 69 31 11 00 01  00 03 6a 01 15 01 01 01  |...i1.....j.....|
+;FF30:  01 47 f6 53 03 00 02 06  94 6a 10 02 00 02 06 9a  |.G.S.....j......|
+;FF40:  1f 12 00 ff 10 04 69 31  11 00 ff 00 0d 00 12 06  |......i1........|
+;FF50:  00 ff 01 09 28 a0 98 90  88 80 78 70 68 60 58 50  |....(.....xph`XP|
+;FF60:  44 40 01 01 02 02 04 04  08 08 10 10 30 60 c0 e0  |D@..........0`..|
+;FF70:  01 01 02 02 03 04 05 06  07 08 09 0a 0c 80 7c 78  |..............|x|
+;FF80:  74 70 74 78 7c 80 01 01  02 02 04 04 08 08 10 20  |tptx|.......... |
+;FF90:  28 30 38 40 48 50 60 70  80 a0 b0 c0 08 40 08 40  |(08@HP`p.....@.@|
+;FFA0:  08 40 08 40 08 40 08 40  08 40 08 40 08 40 08 40  |.@.@.@.@.@.@.@.@|
+;FFB0:  01 02 04 08 09 0a 0b 0c  0e 0f 10 12 14 16 40 10  |..............@.|
+;FFC0:  08 01 01 01 01 01 02 02  03 03 04 04 05 06 08 0a  |................|
+;FFD0:  0c 10 14 18 20 30 40 50  40 30 20 10 0c 0a 08 07  |.... 0@P@0 .....|
+;FFE0:  06 05 04 03 02 02 01 01  01 07 08 09 0a 0c 08 17  |................|
+;FFF0:  18 19 1a 1b 1c 00 00 00  
+
+
+;	Motorola vector table settings
+        FDB   IRQ     ;FFF8: FC B6
+        FDB   RESET   ;FFFA: F8 01, Software Interrupt
+        FDB   NMI     ;FFFC: FD 2F
+        FDB   RESET   ;FFFE: F8 01, Hardware Interrupt
+
+ ;	****** Hardware data ******
+ ;	Sound 6802/6808 board
+ ;	$0000 - $007F RAM 
+ ;	$0400 - $0403 PIA 
+ ;	$F800 - $FFFF ROM 
+ ;	Writing to $400 puts values in the DAC
+ 
+ ; Accumulator        A       8 bits
+ ; Accumulator        B       8 bits
+ ; Index Register     X       16 bits
+ ; Program Counter    PC      16 bits
+ ; Stack Pointer      SP      16 bits
+ ; Status Register    COSZAc  8 bits (Carry, Overflow, Sign, Zero, Aux Carry)(|1|1|Ac|1|S|Z|O|C|)
+ 
+ ; Memory Addressing
+ ; Immediate  #   ADDA #$30   adds value 30(hex) to Accum A
+ ; Direct     $   ADDA $30    adds value at location 0030 to accum A
+ ; Indexed    ,X  ADDA $30,X  adds value at location 0030 with value of index to Accum A
