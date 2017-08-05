@@ -1,6 +1,6 @@
         ORG $F800     ;origin
-        FCB $FF		    ;form constant byte <- incorrect?
-RESET	  SEI           ;disable interrupts,set interrupt mask
+        FCB $FF		    ;form constant byte <- should not be here ?
+RESET	  SEI           ;disable interrupts, set interrupt mask
         LDS #$007F    ;load stack pointer to top of RAM
         LDX #$0400    ;load index reg with PIA (DAC)
         CLR $01,X     ;clear, index x, switch to DDR
@@ -19,7 +19,7 @@ RESET	  SEI           ;disable interrupts,set interrupt mask
         STAA <$05
         STAA <$06
         STAA <$08
-        CLI			      ;enable interrupts
+        CLI			      ;clear interrupt mask, enable interrupts
 STDBY   BRA STDBY	    ;F828, wait here (F828) for interrupt 
                       ;
 PARAM1  TAB			      ;F82A, PARAM 1, transfer accums
@@ -27,11 +27,11 @@ PARAM1  TAB			      ;F82A, PARAM 1, transfer accums
         ASLA		      ;shift left A
         ASLA		      ;A x 8
         ABA			      ;add accums, A x 8 + A = 9A
-        LDX #$0013	  ;load 19 in X (hex to dec)
+        LDX #$0013	  ;load in X
         STX <$0f	    ;store in zero page
-        LDX #$FD76	  ;load table addr SAW into index
+        LDX #$FD76	  ;load waveform from table? SAW
         JSR CALCOS	  ;FD21,calcs X + A -> X
-        LDAB #$09	    ;put 9 in B
+        LDAB #$09	    ;
         JMP UTIL1	    ;jumps below, FB0A
                       ;
 SYNTH1  LDAA <$1B	    ;F83F, SYNTH1 (boot), vol (always $FF)
@@ -107,7 +107,7 @@ DAC6    COM >$0400	  ;DAC invert
         LDAA <$19	    ;
         ADDA <$1A	    ;
         STAA <$19	    ;
-        BNE LOOP2	  ;branch to F8A7 above if != 0, MAIN LOOP END
+        BNE LOOP2	    ;branch to F8A7 above if != 0, MAIN LOOP END
 EXIT2   RTS			      ;F8CC, return, EXIT2
                       ;
 SYNTH3  LDAA #$20	    ;F8CD, W vector, SYNTH3
@@ -118,7 +118,7 @@ SYNTH3  LDAA #$20	    ;F8CD, W vector, SYNTH3
         LDAB #$FF	    ;
         BRA $F8DC	    ;branch below
         STAA <$13	    ;F8DC
-        STX <$16	    ;F8DE,store index, MAIN LOOP START
+LOOP3   STX <$16	    ;F8DE,store index, MAIN LOOP START
         STAB <$14	    ;F8E0, SUB LOOP 1
         LDAB <$15	    ;
         LDAA <$0A	    ;F8E4
@@ -145,7 +145,7 @@ DAC7    STAA >$0400	  ;F8F8,DAC output
         INX			      ;increment index
         LDAA <$18	    ;
         BEQ $F8E0	    ;branch above if = 0, goto SUB LOOP 1
-        BRA $F8DE	    ;branch above always, goto MAIN LOOP
+        BRA LOOP3	    ;branch above always F8DE, goto MAIN LOOP
 EXIT3   RTS			      ;F912, return, EXIT3
                       ;
 PARAM3  LDAB #$01	    ;F913, parameters
@@ -162,15 +162,15 @@ PARAM4  CLRA		      ;F91C, parameters
 PARAM5  LDAA #$01	    ;F923, parameters
         STAA <$19	    ;
         LDX #$03E8	  ;load index
-        LDAA #$01	    ;
-        LDAB #$FF	    ;
+        LDAA #$01	    ;load accum A
+        LDAB #$FF	    ;load accum B 
         BRA SYNTH4	  ;branch below always, F930 SYNTH 4
                       ;
 SYNTH4  STAA <$18	    ;F930, W vector, SYNTH 4
         STAB <$13	    ;
         STX <$16	    ;store index
         CLR >$0015	  ;clear
-        LDX <$16	    ;F939,load index, MAIN LOOP START
+LOOP4   LDX <$16	    ;F939,load index, MAIN LOOP START
 DAC8    LDAA >$0400	  ;F93B, DAC
         TAB			      ;F93E,transfer accums, SUB LOOP 1
         LSRB		      ;logical shift right
@@ -181,7 +181,7 @@ DAC8    LDAA >$0400	  ;F93B, DAC
         ROR >$0009	  ;rotate right
         ROR >$000A	  ;
         LDAB <$13	    ;
-        TST >$0019	  ;test for 0 or negative
+        TST >$0019	  ;test for 0 or negative at location
         BEQ $F954	    ;branch below if = 0
         ANDB <$09	    ;logical and
         STAB <$14	    ;F954
@@ -225,16 +225,16 @@ DAC11   STAA >$0400	  ;F980, DAC output
         ADCA <$13	    ;add with Carry
         STAB <$15	    ;
         STAA <$13	    ;
-        BNE $F939	    ;branch above if != 0, goto MAIN LOOP
+        BNE LOOP4	    ;branch above if != 0, F939, goto MAIN LOOP
         CMPB #$07	    ;
-        BNE $F939   	;branch above if != 0, goto MAIN LOOP
+        BNE LOOP4   	;branch above if != 0,F939, goto MAIN LOOP
 EXIT4   RTS			      ;F9A5, return , EXIT
                       ;
 SYNTH5  LDAA #$FD	    ;F9A6, W vector, SYNTH5
         STAA <$0F	    ;
-        LDX #$0064	  ;
+        LDX #$0064	  ;load index
         STX <$0B	    ;
-        ADDB <$0C	    ;F9AF, MAIN LOOP start
+LOOP5   ADDB <$0C	    ;F9AF, MAIN LOOP start
         LDAA <$11	    ;
         ADCA <$0B	    ;
         STAA <$11	    ;
@@ -245,46 +245,46 @@ SYNTH5  LDAA #$FD	    ;F9A6, W vector, SYNTH5
         INX			      ;F9BF
         BEQ EXIT5	    ;branch below if = 0, F9D3
         STX <$0B	    ;F9C2, SUB LOOP 1
-        ANDA #$0F	    ;
-        ADDA #$9A	    ;
+        ANDA #$0F	    ;and A 
+        ADDA #$9A	    ;add A 
         STAA <$10   	;
         LDX <$0F	    ;
-        LDAA $00,X	  ;
+        LDAA $00,X	  ;load accum A with value at $00 added with index
 DAC12   STAA >$0400	  ;DAC output
-        BRA $F9AF	    ;branch above, goto MAIN LOOP
+        BRA LOOP5	    ;branch above, F9AF, goto MAIN LOOP
 EXIT5   RTS			      ;F9D3, return, EXIT5
                       ;
 SYNTH6  CLRA		      ;F9D4, W vector, SYNTH6(PWM?)
 DAC13   STAA >$0400	  ;DAC output
         STAA <$11	    ;
-        CLRA		      ;F9DA, MAIN LOOP start
+LOOP6   CLRA		      ;F9DA, MAIN LOOP start
         CMPA <$11	    ;F9DB, SUB LOOP 1
         BNE $F9E2	    ;branch below if != 0
 DAC14   COM >$0400	  ;DAC invert
-        LDAB #$12	    ;F9E2
+        LDAB #$12	    ;F9E2, load B 
         DECB		      ;F9E4
         BNE $F9E4	    ;branch above if != 0
         INCA		      ;
         BPL $F9DB   	;branch above if plus, goto SUB LOOP 1
 DAC15   COM >$0400	  ;DAC invert
         INC >$0011	  ;
-        BPL $F9DA	    ;branch above if plus, goto MAIN LOOP
+        BPL LOOP6	    ;branch above if plus, F9DA, goto MAIN LOOP
 EXIT6   RTS			      ;F9F2, return, EXIT
                       ;
 SYNTH7  LDX #$0013	  ;F9F3,W vector, SYNTH 7
         CLR $00,X	    ;F9F6,clear
         INX			      ;
-        CPX #$001B	  ;compare index
+        CPX #$001B	  ;compare index 
         BNE $F9F6	    ;branch above if != 0
-        LDAA #$40	    ;
+        LDAA #$40	    ;load A 
         STAA <$13	    ;
-        LDX #$0013	  ;FA02, MAIN LOOP start
-        LDAA #$80	    ;
+LOOP7   LDX #$0013	  ;FA02, MAIN LOOP start
+        LDAA #$80	    ;load A
         STAA <$11	    ;
         CLRB		      ;
-        LDAA $01,X	  ;FA0A, SUB LOOP 1
-        ADDA $00,X	  ;
-        STAA $01,X	  ;
+        LDAA $01,X	  ;FA0A, SUB LOOP 1, $01 value plus index
+        ADDA $00,X	  ;$00 value plus index
+        STAA $01,X	  ;$01 value plus index
         BPL $FA14	    ;branch below if plus
         ADDB <$11	    ;
         LSR >$0011	  ;FA14,logical shift right
@@ -294,14 +294,14 @@ SYNTH7  LDX #$0013	  ;F9F3,W vector, SYNTH 7
         BNE $FA0A	    ;branch above if != 0, goto SUB LOOP 1
 DAC16   STAB >$0400	  ;DAC output
         INC >$0012	  ;
-        BNE $FA02	    ;branch above if != 0, goto MAIN LOOP
+        BNE LOOP7	    ;branch above if != 0, FA02, goto MAIN LOOP
         LDX #$0013	  ;
         CLRB		      ;
         LDAA $00,X	  ;FA2A, SUB LOOP 2
         BEQ $FA39	    ;branch below if = 0
-        CMPA #$37	    ;
+        CMPA #$37	    ;compare 
         BNE $FA36	    ;branch below if != 0
-        LDAB #$41	    ;
+        LDAB #$41	    ;load B
         STAB $02,X	  ;
         DEC $00,X	    ;FA36
         INCB		      ;
@@ -310,7 +310,7 @@ DAC16   STAB >$0400	  ;DAC output
         CPX #$001B	  ;
         BNE $FA2A	    ;branch above if != 0, goto SUB LOOP 2
         TSTB		      ;test if 0 or minus
-        BNE $FA02	    ;branch above if != 0, goto MAIN LOOP
+        BNE LOOP7	    ;branch above if != 0, FA02, goto MAIN LOOP
 EXIT7   RTS			      ;FA43, return, EXIT
                       ;
 PARAM6  DEC >$0008	  ;FA44  
@@ -318,7 +318,7 @@ PARAM6  DEC >$0008	  ;FA44
                       ;
 PARAM7  CLR >$0008	  ;FA48, param 7
         STAA <$11	    ;store countdown value
-        LDX #$FDAA	  ;load index, start point
+        LDX #$FDAA	  ;load waveform from table?
         LDAA $00,X	  ;FA50
         BEQ $FA81	    ;branch below if = 0
         DEC >$0011	  ;
@@ -367,7 +367,7 @@ SYNTH8  DECA		      ;FA9A, SYNTH8
         CMPA #$0B     ;
         BLS $FAA0	    ;branch if lower or same
         CLRA		      ;
-        LDX #$FE41	  ;FAA0
+        LDX #$FE41	  ;FAA0, load waveform from table?
         JSR CALCOS	  ;jump sub to CALCOS
         LDAA $00,X	  ;
         LDX #$FFFF	  ;
@@ -424,10 +424,10 @@ SYNTH8  DECA		      ;FA9A, SYNTH8
 DAC17   STAA >$0400	  ;DAC output
         DEX			      ;decr index
         BEQ $FB09	    ;branch below if = 0
-        JMP $0016   	;jump above ??
+        JMP $0016   	;jump where?, FB06: 7E 00 16; (jmp 22 places in instructions...?)
 EXIT8   RTS			      ;FB09,return, exit 8
                       ;
-UTIL1   PSHA		      ;FB0A, SUBRTN, push data, UTIL1
+UTIL1   PSHA		      ;FB0A, SUBRTN, push accum A data onto stack, UTIL1, maybe servicing an interrupt
         LDAA $00,X	  ;FB0B,load from X
         STX <$0D	    ;store index
         LDX <$0F	    ;
@@ -438,7 +438,7 @@ UTIL1   PSHA		      ;FB0A, SUBRTN, push data, UTIL1
         INX			      ;   
         DECB		      ;
         BNE $FB0B	    ;branch above if != 0
-        PULA		      ;pull data
+        PULA		      ;pull top byte from stack into accum A
         RTS			      ;FB1D, return
                       ;
 PARAM10 CLRA		      ;FB1E, param 10
@@ -503,7 +503,7 @@ PARAM13 LDAA <$07	    ;FB71, W vector, param 13
         ABA			      ;add accums
         ABA			      ;
         ABA			      ;
-        LDX #$FEEC	  ;
+        LDX #$FEEC	  ;load waveform from table?
         JSR CALCOS	  ;jump sub
         LDAA $00,X	  ;
         TAB			      ;
@@ -524,13 +524,14 @@ PARAM13 LDAA <$07	    ;FB71, W vector, param 13
         ANDA #$0F	    ;
         STAA <$11	    ;
         STX <$0B	    ;
-        LDX #$FE4D	  ;
+        LDX #$FE4D	  ;load waveform from table?
         DEC >$0011	  ;FBAB
         BMI $FBB8	    ;branch below if minus
         LDAA $00,X	  ;
         INCA		      ;
         JSR CALCOS	  ;jump sub
         BRA $FBAB	    ;
+                      ;
         STX <$18	    ;FBB8
         JSR $FC75	    ;jump sub below
         LDX <$0B	    ;
@@ -545,7 +546,7 @@ PARAM13 LDAA <$07	    ;FB71, W vector, param 13
         LDAA $05,X	  ;
         TAB			      ;
         LDAA $06,X	  ;
-        LDX #$FF55	  ;
+        LDX #$FF55	  ;load waveform from table?
         JSR CALCOS	  ;jump sub
         TBA			      ;transfer accums
         STX <$1B	    ;
@@ -563,11 +564,11 @@ SYNTH9  LDAA <$13	    ;FBE7, SYNTH 9
         ADDA <$23	    ;
         STAA <$21	    ;
         CPX <$1D	    ;
-        BEQ $FC21	    ;branch below if = 0
+        BEQ PARAM14	  ;branch below if = 0, FC21
         LDAB <$14	    ;
         INX		        ;
         STX <$0D	    ;
-        LDX #$0024	  ;FC00
+LOOP9   LDX #$0024	  ;FC00, LOOP9
         LDAA <$21	    ;FC03
         DECA		      ;FC05
         BNE $FC05	    ;branch above if != 0
@@ -587,34 +588,37 @@ DAC18   STAA >$0400	  ;DAC output
         DEX		      	;
         NOP		      	;no operation
         NOP		      	;
-        BRA $FC00	    ;branch above
-        LDAA <$15	    ;FC21
-        BSR $FC87	    ;branch below to subrtn
+        BRA LOOP9	    ;branch above, FC00, goto LOOP9
+                      ;
+PARAM14 LDAA <$15	    ;FC21, param 14
+        BSR PARAM19	  ;branch below to subrtn, FC87
         DEC >$0022	  ;
         BNE $FBEB	    ;branch aobve if != 0
         LDAA <$07	    ;
-        BNE $FC74	    ;
+        BNE P17EXIT	  ;branch not equal, FC74
         LDAA <$16	    ;FC2E
-        BEQ $FC74	    ;branch below if = 0
+        BEQ P17EXIT	  ;branch below if = 0, FC74
         DEC >$0017	  ;
-        BEQ $FC74	    ;branch below if = 0
+        BEQ P17EXIT	  ;branch below if = 0, FC74
         ADDA <$23	    ;
         STAA <$23	    ;FC39
         LDX <$1B	    ;FC3B
         CLRB		      ;
         LDAA <$23	    ;FC3E
         TST >$0016	  ;test for zero or negative
-        BMI $FC4B	    ;branch below if minus
+        BMI PARAM15	  ;branch below if minus, FC4B
         ADDA $00,X	  ;
         BCS $FC51	    ;branch below if Carry set
-        BRA $FC56	    ;branch below
-        ADDA $00,X	  ;FC4B
+        BRA PARAM16	  ;branch below, FC56
+                      ;
+PARAM15 ADDA $00,X	  ;FC4B, param 15
         BEQ $FC51	    ;branch below if = 0
-        BCS $FC56	    ;branch below if carry
+        BCS PARAM16	  ;branch below if carry, FC56
         TSTB		      ;FC51
         BEQ $FC5C	    ;branch below if = 0
-        BRA $FC65	    ;branch below
-        TSTB		      ;FC56, UTIL
+        BRA PARAM17	  ;branch below, FC65
+                      ;
+PARAM16 TSTB		      ;FC56, param 16
         BNE $FC5C	    ;branch below if != 0
         STX <$1B	    ;
         INCB		      ;
@@ -622,17 +626,19 @@ DAC18   STAA >$0400	  ;DAC output
         CPX <$1D	    ;
         BNE $FC3E	    ;branch above if != 0
         TSTB		      ;
-        BNE $FC65	    ;branch below if != 0
+        BNE PARAM17	  ;branch below if != 0, FC65
         RTS			      ;return
-        STX <$1D	    ;FC65, UTIL
+                      ;
+PARAM17 STX <$1D	    ;FC65, param 17
         LDAA <$15	    ;
         BEQ $FC71	    ;branch below if = 0
-        BSR $FC75	    ;branch sub below
+        BSR PARAM18	  ;branch sub below, FC75
         LDAA <$1A	    ;
-        BSR $FC87	    ;branch sub below
+        BSR PARAM19	  ;branch sub below, FC87
         JMP SYNTH9	  ;FC71, jump above FBE7
-        RTS			      ;FC74, return
-        LDX #$0024	  ;FC75
+P17EXIT RTS			      ;FC74, return
+                      ;
+PARAM18 LDX #$0024	  ;FC75, param 18
         STX <$0F	    ;
         LDX <$18	    ;
         LDAB $00,X	  ;
@@ -641,13 +647,14 @@ DAC18   STAA >$0400	  ;DAC output
         LDX <$0F	    ;
         STX <$1F	    ;
         RTS			      ;return
-        TSTA		      ;FC87, test A
-        BEQ $FCB5	    ;branch below if = 0
+                      ;
+PARAM19 TSTA		      ;FC87, test A, param 19
+        BEQ EXIT9	    ;branch below if = 0, FCB5
         LDX <$18	    ;
         STX <$0D	    ;
-        LDX #$0024	  ;load index with value (dec)36
+        LDX #$0024	  ;load index
         STAA <$12	    ;
-        STX <$0F	    ;FC93
+LOOP10  STX <$0F	    ;FC93 , LOOP10
         LDX <$0D	    ;
         LDAB <$12	    ;
         STAB <$11   	;
@@ -666,7 +673,7 @@ DAC18   STAA >$0400	  ;DAC output
         STAA $00,x	  ;
         INX			      ;
         CPX <$1F	    ;
-        BNE $FC93	    ;branch above if != 0
+        BNE LOOP10	  ;branch above if != 0, FC93, goto LOOP10
 EXIT9   RTS			      ;FCB5, return, exit 9
                       ;
 IRQ		  LDS #$007F	  ;FCB6, IRQ handler,select sound,load stack pointer, vector at $FFF8
@@ -696,7 +703,7 @@ IRQ		  LDS #$007F	  ;FCB6, IRQ handler,select sound,load stack pointer, vector a
         DECA		      ;
         CMPA #$0C	    ;
         BHI $FCF4	    ;branch below if higher
-        JSR $FB81	    ;jump sub above
+        JSR $FB81	    ;jump sub above to PARAM13 TAB
         JSR SYNTH9	  ;jump sub above FBE7
         BRA IRQ2	    ;branch below FD0E
                       ;
@@ -828,10 +835,10 @@ VARBG1  FCB $60,$01,$57,$08,$E1,$02,$00,$FE,$80 ; FDAC
 
 
 ;	Motorola vector table settings
-        FDB   IRQ     ;FFF8: FC B6
-        FDB   RESET   ;FFFA: F8 01, Software Interrupt
-        FDB   NMI     ;FFFC: FD 2F
-        FDB   RESET   ;FFFE: F8 01, Hardware Interrupt
+;       FDB   IRQ     ;FFF8: FC B6
+;       FDB   RESET   ;FFFA: F8 01, Software Interrupt
+;       FDB   NMI     ;FFFC: FD 2F
+;       FDB   RESET   ;FFFE: F8 01, Hardware Interrupt
 
  ;	****** Hardware data ******
  ;	Sound 6802/6808 board
@@ -851,3 +858,5 @@ VARBG1  FCB $60,$01,$57,$08,$E1,$02,$00,$FE,$80 ; FDAC
  ; Immediate  #   ADDA #$30   adds value 30(hex) to Accum A
  ; Direct     $   ADDA $30    adds value at location 0030 to accum A
  ; Indexed    ,X  ADDA $30,X  adds value at location 0030 with value of index to Accum A
+ 
+ ; LDX #$FD58 is load the value held at location FD58(vector table) or the value of FD58 (64856 in dec)... ?
