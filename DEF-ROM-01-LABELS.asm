@@ -34,43 +34,43 @@ PARAM1  TAB			      ;F82A, PARAM 1, transfer accums
         LDAB #$09	    ;
         JMP UTIL1	    ;jumps below, FB0A
                       ;
-SYNTH1  LDAA <$1B	    ;F83F, SYNTH1 (boot), vol (always $FF)
-DAC1    STAA >$0400	  ;DAC output
-LOOP1   LDAA <$13	    ;F844, load accum A, MAIN LOOP START
-        STAA <$1C	    ;store accum A
-        LDAA <$14	    ;load accum A
-        STAA <$1D	    ;store accum A
-        LDX <$18	    ;F84C, load index, SUB LOOP 1
-        LDAA <$1C	    ;F84E, load accum A, alt 0-255, variable delay, SUB LOOP 2
-DAC2    COM >$0400	  ;complement DAC, invert
+SYNTH1  LDAA <$1B	    ;F83F, SYNTH1 (boot), vol (always $FF), VARI, VAMP, Variable Duty Cycle Square Wave Routine
+DAC1    STAA >$0400	  ;DAC output, SOUND
+LOOP1   LDAA <$13	    ;F844, load accum A, MAIN LOOP START, LOPER
+        STAA <$1C	    ;store accum A, LOCNT
+        LDAA <$14	    ;load accum A, HIPER
+        STAA <$1D	    ;store accum A, HICNT
+        LDX <$18	    ;F84C, load index, SUB LOOP 1, SWPDT
+        LDAA <$1C	    ;F84E, load accum A, alt 0-255, variable delay, SUB LOOP 2, LOCNT, LO CYCLE
+DAC2    COM >$0400	  ;complement DAC, invert, SOUND
         DEX			      ;F853, decrement index, SUB LOOP 3
-        BEQ $F866	    ;branch below if = 0, goto SUB LOOP 5
+        BEQ $F866	    ;branch below if = 0, goto SUB LOOP 5, VSWEEP
         DECA		      ;decr A
         BNE $F853	    ;branch above if != 0, goto SUB LOOP 3
-DAC3    COM >$0400	  ;complement DAC, invert
-        LDAA <$1D	    ;F85E, load accum A, SUB LOOP 4
+DAC3    COM >$0400	  ;complement DAC, invert, SOUND
+        LDAA <$1D	    ;F85E, load accum A, SUB LOOP 4, HICNT, HI CYCLE
         DEX			      ;decrement index
-        BEQ $F866	    ;branch below if = 0, goto SUB LOOP
+        BEQ $F866	    ;branch below if = 0, goto SUB LOOP, VSWEEP
         DECA		      ;decr A
         BNE $F85E	    ;branch above != 0, goto SUB LOOP 4
         BRA $F84E	    ;branch above always, goto SUB LOOP 2
-DAC4    LDAA >$0400	  ;F866, load accum DAC, SUB LOOP 5
+DAC4    LDAA >$0400	  ;F866, load accum DAC, SUB LOOP 5, SOUND
         BMI $F86C	    ;branch below if minus
         COMA		      ;complement A
         ADDA #$00	    ;F86C, add 0 to A
-        STAA >$0400	  ;DAC invert
-        LDAA <$1C	    ;load accum A with value at location 1C
-        ADDA <$15	    ;add A
-        STAA <$1C	    ;store accum A
-        LDAA <$1D	    ;load accum A
-        ADDA <$16	    ;add A
-        STAA <$1D	    ;store accum A
-        CMPA <$17	    ;compare A
+        STAA >$0400	  ;DAC invert, SOUND, OUTPUT
+        LDAA <$1C	    ;load accum A with value at location 1C, LOCNT
+        ADDA <$15	    ;add A, LODT
+        STAA <$1C	    ;store accum A, LOCNT
+        LDAA <$1D	    ;load accum A, HICNT
+        ADDA <$16	    ;add A, HIDT
+        STAA <$1D	    ;store accum A, HICNT
+        CMPA <$17	    ;compare A, HIEN
         BNE $F84C	    ;branch above if != 0, goto SUB LOOP 1
-        LDAA <$1A	    ;load accum A
-        BEQ EXIT1	    ;branch below if = 0, goto EXIT1, F88B
-        ADDA <$13	    ;add A
-        STAA <$13	    ;store A
+        LDAA <$1A	    ;load accum A, LOMOD
+        BEQ EXIT1	    ;branch below if = 0, goto EXIT1, F88B, VARX
+        ADDA <$13	    ;add A, LOPER
+        STAA <$13	    ;store A, LOPER
         BNE LOOP1	    ;branch above, F844, if != 0, goto MAIN LOOP
 EXIT1   RTS			      ;F88B, return, EXIT1
                       ;
@@ -400,8 +400,8 @@ SYNTH8  DECA		      ;FA9A, SYNTH8
         CLRA		      ;
         LDAB >$0012	  ;
         INCB		      ;
-        STAB <$12	    ;
-        ANDB <$15	    ;
+        STAB <$12	    ; TEMPB
+        ANDB <$15	    ; OSCIL, MASK OSCILLATORS
         LSRB		      ;logical shift right
         ADCA #$00	    ;add with Carry
         LSRB		      ;
@@ -421,11 +421,11 @@ SYNTH8  DECA		      ;FA9A, SYNTH8
         ASLA		      ;
         ASLA		      ;
         ASLA		      ;
-DAC17   STAA >$0400	  ;DAC output
+DAC17   STAA >$0400	  ;DAC output, SOUND
         DEX			      ;decr index
-        BEQ $FB09	    ;branch below if = 0
-        JMP $0016   	;jump where?, FB06: 7E 00 16; (jmp 22 places in instructions...?)
-EXIT8   RTS			      ;FB09,return, exit 8
+        BEQ $FB09	    ;branch below if = 0, ORGAN2
+        JMP $0016   	;jump where?, FB06: 7E 00 16; (jmp 22 places in instructions...?), RDELAY
+EXIT8   RTS			      ;FB09,return, exit 8, ORGAN2
                       ;
 UTIL1   PSHA		      ;FB0A, SUBRTN, push accum A data onto stack, UTIL1, maybe servicing an interrupt
         LDAA $00,X	  ;FB0B,load from X
