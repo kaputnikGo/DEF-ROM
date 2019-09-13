@@ -1,15 +1,28 @@
   ADDR B1 B2 B3 B4 C:\Users\admin\Documents\ASM-tests\DEF-ROM-02.   PAGE       1
+  notes on bit size of registers:
+  ACCA 7-0
+  ACCB 7-0
+  IX (X) 15-0
+  PC 15-0
+  SP 15-0
+  
+ ;	****** Hardware data ******
+ ;	Sound 6802/6808 board
+ ;	$0000 - $007F RAM 
+ ;	$0400 - $0403 PIA 
+ ;	$F800 - $FFFF ROM 
+ ;	Writing to $400 puts values in the DAC
 
                            ORG $F800       ;origin
   F800 FF                  FCB $FF         ;
   F801 0F          RESET   SEI             ;disable interrupts,set interrupt mask
-  F802 8E 00 7F            LDS #$007F      ;init stack pointer
-  F805 CE 04 00            LDX #$0400      ;load PIA (DAC) addr
-  F808 6F 01               CLR $01,X       ;switch to DDR
-  F80A 6F 03               CLR $03,X       ;and for 2nd port
-  F80C 86 FF               LDAA #$FF
-  F80E A7 00               STAA $00,X      ; all outputs on chn A
-  F810 6F 02               CLR $02,X       ;all inputs on chn B
+  F802 8E 00 7F            LDS #$007F      ;load stack pointer, RAM end address
+  F805 CE 04 00            LDX #$0400      ;load index reg PIA (DAC) addr
+  F808 6F 01               CLR $01,X       ;PIA Data Direction Register for port A
+  F80A 6F 03               CLR $03,X       ;PIA DDR for port B
+  F80C 86 FF               LDAA #$FF       ;load accum A with FFh
+  F80E A7 00               STAA $00,X      ;store in accum A the sum X + offset 00h, all outputs on port A, to DAC
+  F810 6F 02               CLR $02,X       ;all inputs on port B, from sound select
   F812 86 37               LDAA #$37       ;CB2 is output, output reg selected
   F814 A7 03               STAA $03,X      ;IRQB on low to hi, enabled
   F816 86 3C               LDAA #$3C       ;CA2 is output, output reg selected
@@ -21,16 +34,16 @@
   F821 97 05               STAA <$05
   F823 97 06               STAA <$06
   F825 97 08               STAA <$08
-  F827 0E                  CLI             ;enable interrupts
-  F828 20 FE               BRA $F828       ;$F828,wait for interrupt
-  F82A 16                  TAB             ;$F82A,synth1(boot)
+  F827 0E                  CLI             ;clear interrupts
+  F828 20 FE               BRA $F828       ;$F828,branch always, wait for interrupt
+  F82A 16                  TAB             ;$F82A,transfer from accum A to B, synth1(boot)
   F82B 48                  ASLA            ;shift left A
   F82C 48                  ASLA            ;shift left A
-  F82D 48                  ASLA            ;A x 8
-  F82E 1B                  ABA             ;A x 8 + A = 9A
-  F82F CE 00 13            LDX #$0013      ;load 19 in X reg
-  F832 DF 0F               STX <$0f        ;store in zero page
-  F834 CE FD 76            LDX #$FD76      ;load table addr
+  F82D 48                  ASLA            ;shift left A, A x 8
+  F82E 1B                  ABA             ;(ADA) add B to A, A x 8 + A = 9A
+  F82F CE 00 13            LDX #$0013      ;load index reg with ram addr 0013
+  F832 DF 0F               STX <$0f        ;store 0f in X reg 
+  F834 CE FD 76            LDX #$FD76      ;load in index reg (waveform?) table addr
   F837 BD FD 1F            JSR CALCOS      ;($FD21)calcs X + A -> X
   F83A C6 09               LDAB #$09       ;put 9 in B reg
   F83C 7E FB 0A            JMP $FB0A       ;jumps to...
@@ -737,6 +750,89 @@
   FD6E F9 F3               FDB $F9F3       ;
   FD70 FA 44               FDB $FA44       ;
   FD72 FA 84               FDB $FA84       ;
+  FD74 FA 84
+  
+; VARI VECTORS, square wave pulse width modulator
+; form constant byte, pseudo-op, single byte or word into object  
+  FD76 40 01      SAW
+  FD78 00 10
+  FD7A E1 00
+  FD7C 80 FF
+  FD7E FF
+  FD7F 28 01      FOSHIT
+       00 08
+       81 02
+       00 FF
+       FF
+  FD88 28 81      QUASAR
+       00 FC
+       01 02
+       00 FC
+       FF
+  FD91 FF 01      CABSHK
+       00 18
+       41 04
+       80 00
+       FF   
+  FD9A 8C 5B      UNKNOWN
+       B6 40 
+       BF 49
+       A4 73 
+       73
+  FDA3 a4 49      UNKNOWN
+       bf 40 
+       b6 5b 
+       8c 0c
+       7f
+  FDAC 1d 0f      UNKNOWN
+       fb 7f 
+       23 0f 
+       15 fe 
+       08
+ 
+etc etc TBC
+
+;FD76:                    40 01  00 10 e1 00 80 ff ff 28  |...D..@........(|
+;FD80:  01 00 08 81 02 00 ff ff  28 81 00 fc 01 02 00 fc  |........(.......|
+;FD90:  ff ff 01 00 18 41 04 80  00 ff 8c 5b b6 40 bf 49  |.....A.....[.@.I|
+;FDA0:  a4 73 73 a4 49 bf 40 b6  5b 8c 0c 7f 1d 0f fb 7f  |.ss.I.@.[.......|
+;FDB0:  23 0f 15 fe 08 50 8b 88  3e 3f 02 3e 7c 04 03 ff  |#....P..>?.>|...|
+;FDC0:  3e 3f 2c e2 7c 12 0d 74  7c 0d 0e 41 7c 23 0b 50  |>?,.|..t|..A|#.P|
+;FDD0:  7c 1d 29 f2 7c 3f 02 3e  f8 04 03 ff 7c 3f 2c e2  ||.).|?.>....|?,.|
+;FDE0:  f8 12 0d 74 f8 0d 0e 41  f8 23 0b 50 f8 1d 2f f2  |...t...A.#.P../.|
+;FDF0:  f8 23 05 a8 f8 12 06 ba  f8 04 07 ff 7c 37 04 c1  |.#..........|7..|
+;FE00:  7c 23 05 a8 7c 12 06 ba  3e 04 07 ff 3e 37 04 c1  ||#..|...>...>7..|
+;FE10:  3e 23 05 a8 1f 12 06 ba  1f 04 07 ff 1f 37 04 c1  |>#...........7..|
+;FE20:  1f 23 16 a0 fe 1d 17 f9  7f 37 13 06 7f 3f 08 fa  |.#.......7...?..|
+;FE30:  fe 04 0f ff fe 0d 0e 41  fe 23 0b 50 fe 1d 5f e4  |.......A.#.P.._.|
+;FE40:  00 47 3f 37 30 29 23 1d  17 12 0d 08 04 08 7f d9  |.G?70)#.........|
+;FE50:  ff d9 7f 24 00 24 08 00  40 80 00 ff 00 80 40 10  |...$.$..@.....@.|
+;FE60:  7f b0 d9 f5 ff f5 d9 b0  7f 4e 24 09 00 09 24 4e  |.........N$...$N|
+;FE70:  10 7f c5 ec e7 bf 8d 6d  6a 7f 94 92 71 40 17 12  |.......mj...q@..|
+;FE80:  39 10 ff ff ff ff 00 00  00 00 ff ff ff ff 00 00  |9...............|
+;FE90:  00 00 48 8a 95 a0 ab b5  bf c8 d1 da e1 e8 ee f3  |..H.............|
+;FEA0:  f7 fb fd fe ff fe fd fb  f7 f3 ee e8 e1 da d1 c8  |................|
+;FEB0:  bf b5 ab a0 95 8a 7f 75  6a 5f 54 4a 40 37 2e 25  |.......uj_TJ@7.%|
+;FEC0:  1e 17 11 0c 08 04 02 01  00 01 02 04 08 0c 11 17  |................|
+;FED0:  1e 25 2e 37 40 4a 54 5f  6a 75 7f 10 59 7b 98 ac  |.%.7@JT_ju..Y{..|
+;FEE0:  b3 ac 98 7b 59 37 19 06  00 06 19 37 81 24 00 00  |...{Y7.....7.$..|
+;FEF0:  00 16 31 12 05 1a ff 00  27 6d 11 05 11 01 0f 01  |..1.....'m......|
+;FF00:  47 11 31 00 01 00 0d 1b  f4 12 00 00 00 14 47 41  |G.1...........GA|
+;FF10:  45 00 00 00 0f 5b 21 35  11 ff 00 0d 1b 15 00 00  |E....[!5........|
+;FF20:  fd 00 01 69 31 11 00 01  00 03 6a 01 15 01 01 01  |...i1.....j.....|
+;FF30:  01 47 f6 53 03 00 02 06  94 6a 10 02 00 02 06 9a  |.G.S.....j......|
+;FF40:  1f 12 00 ff 10 04 69 31  11 00 ff 00 0d 00 12 06  |......i1........|
+;FF50:  00 ff 01 09 28 a0 98 90  88 80 78 70 68 60 58 50  |....(.....xph`XP|
+;FF60:  44 40 01 01 02 02 04 04  08 08 10 10 30 60 c0 e0  |D@..........0`..|
+;FF70:  01 01 02 02 03 04 05 06  07 08 09 0a 0c 80 7c 78  |..............|x|
+;FF80:  74 70 74 78 7c 80 01 01  02 02 04 04 08 08 10 20  |tptx|.......... |
+;FF90:  28 30 38 40 48 50 60 70  80 a0 b0 c0 08 40 08 40  |(08@HP`p.....@.@|
+;FFA0:  08 40 08 40 08 40 08 40  08 40 08 40 08 40 08 40  |.@.@.@.@.@.@.@.@|
+;FFB0:  01 02 04 08 09 0a 0b 0c  0e 0f 10 12 14 16 40 10  |..............@.|
+;FFC0:  08 01 01 01 01 01 02 02  03 03 04 04 05 06 08 0a  |................|
+;FFD0:  0c 10 14 18 20 30 40 50  40 30 20 10 0c 0a 08 07  |.... 0@P@0 .....|
+;FFE0:  06 05 04 03 02 02 01 01  01 07 08 09 0a 0c 08 17  |................|
+;FFF0:  18 19 1a 1b 1c 00 00 00  
 
 
   Symbol Table 
