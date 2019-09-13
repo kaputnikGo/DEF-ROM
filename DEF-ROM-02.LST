@@ -6,9 +6,24 @@
   PC 15-0
   SP 15-0
   
+Addressing Modes: 
+Immediate
+    Data is part of the instruction itself. This mode is specified with the use of the prefix "#" before the data byte or word. Example:
+    LDAA #$80 loads the A register with the hex number $80. 
+Direct
+    Data is located in RAM (within addresses $0000 to $00FF). One byte is used to specify which RAM location is to be used. Example: STAA $80 stores the A register to the memory location $0080. 
+Extended
+    Location of data is specified by a 16-bit address given in the instruction. Example: STAA #$1000 stores the contents of the A register at memory location $1000. 
+Indexed
+    Location of data is specified by the sum of a 16-bit index register (register X or Y) and an offset value that is part of the instruction. Example: LDAA 5,X takes the sum of the value currently in the X register and 5, then loads the A register with the memory byte at that address. Offsets range in value from 0 to 255. 
+Inherent
+    Data is "inherent" to the microprocessor and does not require an external memory address. Example: TAB transfers the contents of the A register to to the B register. No external memory  address is required. 
+Relative
+    Location is specified by an offset value from the address of the instruction currently being executed. Example: BRA 5 causes a branch to be formed that skips five bytes ahead in the instruction stream. Relative addressing is only used in branching instructions. Offsets range in value from -128 to +127, allowing jumps both forward and backward in the instruction stream. 
+  
  ;	****** Hardware data ******
  ;	Sound 6802/6808 board
- ;	$0000 - $007F RAM 
+ ;	$0000 - $007F RAM (internal to 6802) 
  ;	$0400 - $0403 PIA 
  ;	$F800 - $FFFF ROM 
  ;	Writing to $400 puts values in the DAC
@@ -16,25 +31,25 @@
                            ORG $F800       ;origin
   F800 FF                  FCB $FF         ;
   F801 0F          RESET   SEI             ;disable interrupts,set interrupt mask
-  F802 8E 00 7F            LDS #$007F      ;load stack pointer, RAM end address
-  F805 CE 04 00            LDX #$0400      ;load index reg PIA (DAC) addr
-  F808 6F 01               CLR $01,X       ;PIA Data Direction Register for port A
-  F80A 6F 03               CLR $03,X       ;PIA DDR for port B
-  F80C 86 FF               LDAA #$FF       ;load accum A with FFh
-  F80E A7 00               STAA $00,X      ;store in accum A the sum X + offset 00h, all outputs on port A, to DAC
-  F810 6F 02               CLR $02,X       ;all inputs on port B, from sound select
-  F812 86 37               LDAA #$37       ;CB2 is output, output reg selected
-  F814 A7 03               STAA $03,X      ;IRQB on low to hi, enabled
-  F816 86 3C               LDAA #$3C       ;CA2 is output, output reg selected
-  F818 A7 01               STAA $01,X      ;IRQA on hi to low, disabled
-  F81A 97 09               STAA <$09       ;store that setting
-  F81C 4F                  CLRA            ;clear A
-  F81D 97 07               STAA <$07       ;next clears some mem locations
+  F802 8E 00 7F            LDS #$007F      ;load stack pointer with 007Fh (0000 0000 0111 1111)
+  F805 CE 04 00            LDX #$0400      ;load index reg with 0400h, PIA (DAC) addr
+  F808 6F 01               CLR $01,X       ;clear 0401, PIA Data Direction Register for port A
+  F80A 6F 03               CLR $03,X       ;clear 0403, PIA DDR for port B
+  F80C 86 FF               LDAA #$FF       ;load accum A with FFh (1111 1111)
+  F80E A7 00               STAA $00,X      ;store accum A to the sum X + offset 00h (0400h), all outputs on port A, to DAC
+  F810 6F 02               CLR $02,X       ;clear 0402, all inputs on port B, from sound select
+  F812 86 37               LDAA #$37       ;load accum A with 37h (0011 0111), CB2 is output, output reg selected
+  F814 A7 03               STAA $03,X      ;store accum A to the sum X + offset 03h (0403h), IRQB on low to hi, enabled
+  F816 86 3C               LDAA #$3C       ;load accum A with 3Ch (0011 1100), CA2 is output, output reg selected
+  F818 A7 01               STAA $01,X      ;store accum A to 0401h, IRQA on hi to low, disabled
+  F81A 97 09               STAA <$09       ;store accum A to mem location 0009
+  F81C 4F                  CLRA            ;clear A (writes 00h to A
+  F81D 97 07               STAA <$07       ;next store accum A to some mem locations
   F81F 97 04               STAA <$04
   F821 97 05               STAA <$05
   F823 97 06               STAA <$06
   F825 97 08               STAA <$08
-  F827 0E                  CLI             ;clear interrupts
+  F827 0E                  CLI             ;clear interrupt mask
   F828 20 FE               BRA $F828       ;$F828,branch always, wait for interrupt
   F82A 16                  TAB             ;$F82A,transfer from accum A to B, synth1(boot)
   F82B 48                  ASLA            ;shift left A
@@ -754,28 +769,28 @@
   
 ; VARI VECTORS, square wave pulse width modulator
 ; form constant byte, pseudo-op, single byte or word into object  
-  FD76 40 01      SAW
-  FD78 00 10
-  FD7A E1 00
-  FD7C 80 FF
-  FD7E FF
-  FD7F 28 01      FOSHIT
-       00 08
-       81 02
-       00 FF
-       FF
-  FD88 28 81      QUASAR
-       00 FC
-       01 02
-       00 FC
-       FF
-  FD91 FF 01      CABSHK
-       00 18
-       41 04
-       80 00
-       FF   
-  FD9A 8C 5B      UNKNOWN
-       B6 40 
+  FD76 40 01      SAW                      ; 0100 0000 0000 0001
+  FD78 00 10                               ; 0000 0000 0001 0000
+  FD7A E1 00                               ; 1110 0001 0000 0000
+  FD7C 80 FF                               ; 1000 0000 1111 1111
+  FD7E FF                                  ; 1111 1111
+  FD7F 28 01      FOSHIT                   ; 0010 1000 0000 0001
+       00 08                               ; 0000 0000 0000 1000
+       81 02                               ; 1000 0001 0000 0010
+       00 FF                               ; 0000 0000 1111 1111
+       FF                                  ; 1111 1111
+  FD88 28 81      QUASAR                   ; 0010 1000 1000 0001
+       00 FC                               ; 0000 0000 1111 1100
+       01 02                               ; 0000 0001 0000 0010
+       00 FC                               ; 0000 0000 1111 1100
+       FF                                  ; 1111 1111
+  FD91 FF 01      CABSHK                   ; 1111 1111 0000 0001
+       00 18                               ; 0000 0000 0001 1000
+       41 04                               ; 0100 0001 0000 0100
+       80 00                               ; 1000 0000 0000 0000
+       FF                                  ; 1111 1111
+  FD9A 8C 5B      UNKNOWN                  ; 1000 1100 0101 1011
+       B6 40                               ; 1011 0110 0100 0000
        BF 49
        A4 73 
        73
@@ -832,7 +847,13 @@ etc etc TBC
 ;FFC0:  08 01 01 01 01 01 02 02  03 03 04 04 05 06 08 0a  |................|
 ;FFD0:  0c 10 14 18 20 30 40 50  40 30 20 10 0c 0a 08 07  |.... 0@P@0 .....|
 ;FFE0:  06 05 04 03 02 02 01 01  01 07 08 09 0a 0c 08 17  |................|
-;FFF0:  18 19 1a 1b 1c 00 00 00  
+;FFF0:  18 19 1a 1b 1c 00 00 00 
+ 
+;	Motorola vector table settings
+  FFFE  F8 01     RES                       ;Restart (hardware), FE RES high byte FF RES low byte, 
+  FFFC  FD 2F     NMI                       ;Non-Maskable Interrupt
+  FFFA  F8 01     SWI                       ;Software Interrupt
+  FFF8  FC B6     IRQ                       ;Interrupt Request, vector for mem location on address bus (ie in ROM range F800-FFFF)
 
 
   Symbol Table 
