@@ -1,0 +1,1761 @@
+				;
+				;	Disassembled by:
+				;		DASMx object code disassembler
+				;		(c) Copyright 1996-2003   Conquest Consultants
+				;		Version 1.40 (Oct 18 2003)
+				;
+				;	File:		SOUND12.716
+				;
+				;	Size:		2048 bytes
+				;	Checksum:	AF3F
+				;	CRC-32:		CABAEC58
+				;
+				;	Date:		Mon Dec 26 11:05:20 2016
+				;
+				;	CPU:		Motorola 6802 (6800/6802/6808 family)
+				;
+				;
+				; org should be $F800 for ROM address ?
+        ; assuming index is set to 0400 (PIA) at start?
+ ; Accumulator        A       8 bits
+ ; Accumulator        B       8 bits
+ ; Index Register     X       16 bits
+ ; Program Counter    PC      16 bits
+ ; Stack Pointer      SP      16 bits
+ ; Status Register    COSZAc  8 bits (Carry, Overflow, Sign, Zero, Aux Carry)(|1|1|Ac|1|S|Z|O|C|)
+ ; (assuming org F800) $0000 - $007F RAM (internal to 6802)  
+               
+        
+					org	$0000
+				;
+0000 : 78 0F 8E		"x  "		asl	X0F8E   ; arithmetic shift left at addr 0F8E
+
+0003 : 00		" "		db	$00
+				;
+0004 : 7F CE 04		"   "		clr	XCE04   ; clear (00) at addr CE04
+				;
+0007 : 00		" "		db	$00
+				;
+0008 : 6F 01		"o "		clr	$01,x     ; clear at index + 01h
+
+000A : 6F 03		"o "		clr	$03,x     ; clear at index + 03h
+
+000C : 86 FF		"  "		ldaa	#$FF    ; load A with FFh (1111 1111)
+
+000E : A7 00		"  "		staa	$00,x   ; store A in addr index + 00h
+
+0010 : 6F 02		"o "		clr	$02,x     ; clear at index + 02h
+0012				L0012:
+0012 : 86 37		" 7"		ldaa	#$37    ; load A with 37h (0011 0111)
+
+0014 : A7 03		"  "		staa	$03,x   ; store A in addr index + 03h
+
+0016 : 86 3C		" <"		ldaa	#$3C    ; load A with 3Ch(0011 1100)
+
+0018 : A7 01		"  "		staa	$01,x   ; store A in addr index + 01h
+001A : 97 05		"  "		staa	X0005   ; store A in addr 0005
+001C : 4F		"O"		clra                ; clear A (00)
+
+001D : 97 03		"  "		staa	X0003   ; store A at addr 0003
+
+001F : 97 00		"  "		staa	X0000   ; store A at addr 0000
+0021 : 97 01		"  "		staa	X0001   ; store A at addr 0001
+0023 : 97 02		"  "		staa	X0002   ; store A at addr 0002
+0025 : 97 04		"  "		staa	X0004   ; store A at addr 0004
+
+0027 : 0E		" "		cli                 ; clear interrupt mask (0)
+0028				L0028:
+0028 : 20 FE		"  "		bra	L0028     ; branch always to addr FEh
+**************************************;
+002A : 16		" "		tab                 ; transfer A to B
+002B : 48		"H"		asla                ; shift left at A
+002C : 48		"H"		asla                ; shift left at A
+002D : 48		"H"		asla                ; shift left at A
+002E : 1B		" "		aba                 ; add A + B into A
+002F : CE 00 0F		"   "	ldx	#$000F    ; load index with value at addr 000F
+0032 : DF 0B		"  "		stx	X000B     ; store index at addr 000B
+0034 : CE FD 60		"  `"	ldx	#$FD60    ; load index with value at addr FD60
+0037 : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine at addr FCF0 (label)
+003A : C6 09		"  "		ldab	#$09    ; load B with 09h (0000 1001)
+003C : 7E FA E0		"~  "	jmp	LFAE0     ; jump to addr FAE0 (label)
+**************************************;
+003F : 96 17		"  "		ldaa	X0017   ; load A with value at addr 0017
+0041 : B7 04 00		"   "	staa	X0400   ; store A at addr 0400 (SOUND)
+0044				L0044:
+0044 : 96 0F		"  "		ldaa	X000F   ; load A with value at addr 000F
+0046 : 97 18		"  "		staa	X0018   ; store A at addr 0018
+0048 : 96 10		"  "		ldaa	X0010   ; load A with value at addr 0010
+004A : 97 19		"  "		staa	X0019   ; store A at addr 0019
+004C				L004C:
+004C : DE 14		"  "		ldx	X0014     ; load index with value at 0014
+004E				L004E:
+004E : 96 18		"  "		ldaa	X0018   ; load A with value at addr 0018
+0050 : 73 04 00		"s  "	com	X0400     ; complement 1s at addr 0400 (change all 1 to 0 and 0 to 1)
+0053				L0053:
+0053 : 09		" "		dex                 ; decrement index (X = X - 1)
+0054 : 27 10		"' "		beq	L0066     ; branch if zero (Z = 1) to Program Counter + 2 + 10h (label 0066)
+0056 : 4A		"J"		deca                ; decrement A (A = A - 1)
+0057 : 26 FA		"& "		bne	L0053     ; branch if not equal zero (Z = 0) to PC + 2 + FAh (label 0053) ?
+0059 : 73 04 00		"s  "	com	X0400     ; complements 1s at addr 0400 (SOUND)
+005C : 96 19		"  "		ldaa	X0019   ; load A with value at 0019
+005E				L005E:
+005E : 09		" "		dex                 ; decrement index
+005F : 27 05		"' "		beq	L0066     ; branch if zero to PC + 2 + 05h (label 0066)
+0061 : 4A		"J"		deca                ; decrement A
+0062 : 26 FA		"& "		bne	L005E     ; branch if not equal zero to PC + 2 + FAh (label 005E) ?
+0064 : 20 E8		"  "		bra	L004E     ; branch always to addr E8h 
+**************************************;
+0066				L0066:
+0066 : B6 04 00		"   "	ldaa	X0400   ; load A with value at addr 0400
+0069 : 2B 01		"+ "		bmi	L006C     ; branch if minus (N = 1) to addr PC + 2 + 01h (label 006C)
+006B : 43		"C"		coma                ; complements 1s in A
+006C				L006C:
+006C : 8B 00		"  "		adda	#$00    ; add A with 00h (A = A + 00h)
+006E : B7 04 00		"   "	staa	X0400   ; store A at addr 0400 (SOUND)
+0071 : 96 18		"  "		ldaa	X0018   ; load A with value at 0018
+0073 : 9B 11		"  "		adda	X0011   ; add A with value at addr 0011
+0075 : 97 18		"  "		staa	X0018   ; store A at addr 0018
+0077 : 96 19		"  "		ldaa	X0019   ; load A with value at 0019
+0079 : 9B 12		"  "		adda	X0012   ; add A with value at addr 0012
+007B : 97 19		"  "		staa	X0019   ; store A at addr 0019
+007D : 91 13		"  "		cmpa	X0013   ; compare A with value at addr 0013
+
+007F : 26 CB		"& "		bne	L004C     ; branch if not equal zero to PC + 2 + CBh (label 004C) ?
+0081 : 96 16		"  "		ldaa	X0016   ; load A with value at 0016
+0083 : 27 06		"' "		beq	L008B     ; branch if zero to PC + 2 + 06h (label 008B)
+0085 : 9B 0F		"  "		adda	X000F   ; add A with value at addr 000F
+0087 : 97 0F		"  "		staa	X000F   ; store A at addr 000F
+0089 : 26 B9		"& "		bne	L0044     ; branch if not equal zero to PC + 2 + B9h (label 0044) ?
+008B				L008B:
+008B : 39		"9"		rts                 ; return from subroutine
+**************************************;
+008C : 86 01		"  "		ldaa	#$01    ; load A with 01h (0000 0001)
+008E : 97 16		"  "		staa	X0016   ; store A at addr 0016
+
+0090 : C6 03		"  "		ldab	#$03    ; load B with 03h (0000 0011)
+
+0092 : 20 0A		"  "		bra	L009E     ; branch always to addr 0Ah
+**************************************;
+0094 : 86 FE		"  "		ldaa	#$FE    ; load A with FEh (1111 1110)
+0096 : 97 16		"  "		staa	X0016   ; store A at addr 0016
+0098 : 86 C0		"  "		ldaa	#$C0    ; load A with C0h (1100 0000)
+009A : C6 10		"  "		ldab	#$10    ; load B with 10h (0001 0000)
+009C : 20 00		"  "		bra	L009E     ; branch always to addr 00h (next instruction?)
+**************************************;
+009E				L009E:
+009E : 97 15		"  "		staa	X0015   ; store A at addr 0015
+00A0 : 86 FF		"  "		ldaa	#$FF    ; load A with FFh (1111 1111)
+00A2 : B7 04 00		"   "	staa	X0400   ; store A at addr 0400
+00A5 : D7 11		"  "		stab	X0011   ; store B at addr 0011
+00A7				L00A7:
+00A7 : D6 11		"  "		ldab	X0011   ; load B with value at addr 0011
+00A9				L00A9:
+00A9 : 96 06		"  "		ldaa	X0006   ; load A with value at 0006
+00AB : 44		"D"		lsra                ; logic shift right A (LSB is moved to carry bit, 0 inserted as MSB)
+
+00AC : 44		"D"		lsra                ; logic shift right A
+00AD : 44		"D"		lsra                ; logic shift right A
+00AE : 98 06		"  "		eora	X0006   ; exclusive OR in A with value at addr 0006 (a == b = 0, a != b = 1) 
+
+00B0 : 44		"D"		lsra                ; logic shift right A
+00B1 : 76 00 05		"v  "	ror	X0005     ; rotate right at addr 0005 (rotate(shift) one bit left add Carry bit, Carry set to 0)
+00B4 : 76 00 06		"v  "	ror	X0006     ; rotate right at addr 0006
+00B7 : 24 03		"$ "		bcc	L00BC     ; branch if Carry clear (C = 0) to addr PC + 2 + 03h (label 00BC)
+00B9 : 73 04 00		"s  "	com	X0400     ; complement 1s at addr 0400 (SOUND)
+00BC				L00BC:
+00BC : 96 15		"  "		ldaa	X0015   ; load A with value at 0015
+00BE				L00BE:
+00BE : 4A		"J"		deca                ; decrement A
+00BF : 26 FD		"& "		bne	L00BE     ; branch not equal zero to PC + 2 + FDh (label 00BE) ?
+00C1 : 5A		"Z"		decb                ; decrement B
+00C2 : 26 E5		"& "		bne	L00A9     ; branch not equal zero to PC + 2 + E5h (label 00A9) ?
+00C4 : 96 15		"  "		ldaa	X0015   ; load A with value at 0015
+00C6 : 9B 16		"  "		adda	X0016   ; add A with value at addr 0016
+
+00C8 : 97 15		"  "		staa	X0015   ; store A at addr 0015
+00CA : 26 DB		"& "		bne	L00A7     ; branch not equal zero to PC + 2 + DBh (label 00A7) ?
+00CC : 39		"9"		rts                 ; return from subroutine
+**************************************;
+00CD : 86 20		"  "		ldaa	#$20    ; load A with 20h (0010 0000)
+00CF : 97 11		"  "		staa	X0011   ; store A at addr 0011
+00D1 : 97 14		"  "		staa	X0014   ; store A at addr 0014
+00D3 : 86 01		"  "		ldaa	#$01    ; load A with 01h (0000 0001)
+00D5 : CE 00 01		"   "	ldx	#$0001    ; load index with 0001h (0000 0000 0000 0001)
+00D8 : C6 FF		"  "		ldab	#$FF    ; load B with FFh (1111 1111)
+
+00DA : 20 00		"  "		bra	L00DC     ; branch always to addr 00h (next instruction?)
+**************************************;
+00DC				L00DC:
+00DC : 97 0F		"  "		staa	X000F   ; store A at addr 000F
+00DE				L00DE:
+00DE : DF 12		"  "		stx	X0012     ; store index at addr 0012
+00E0				L00E0:
+00E0 : D7 10		"  "		stab	X0010   ; store B at addr 0010
+00E2 : D6 11		"  "		ldab	X0011   ; load B with value at addr 0011
+00E4				L00E4:
+00E4 : 96 06		"  "		ldaa	X0006   ; load A with value at addr 0006
+00E6 : 44		"D"		lsra                ; logic shift right A
+00E7 : 44		"D"		lsra                ; logic shift right A
+00E8 : 44		"D"		lsra                ; logic shift right A
+00E9 : 98 06		"  "		eora	X0006   ; exclusive OR in A with value at addr 0006
+00EB : 44		"D"		lsra                ; logic shift right A
+00EC : 76 00 05		"v  "		ror	X0005   ; rotate right at addr 0005
+00EF : 76 00 06		"v  "		ror	X0006   ; rotate right at addr 0006
+00F2 : 86 00		"  "		ldaa	#$00    ; load A with 00h (0000 0000)
+00F4 : 24 02		"$ "		bcc	L00F8     ; branch if Carry clear to addr PC + 2 + 02h (label 00F8)
+00F6 : 96 10		"  "		ldaa	X0010   ; load A with value at addr 0010
+00F8				L00F8:
+00F8 : B7 04 00		"   "	staa	X0400   ; store A at addr 0400 (SOUND)
+00FB : DE 12		"  "		ldx	X0012     ; load index with value at addr 0012
+00FD				L00FD:
+00FD : 09		" "		dex                 ; decrement index
+00FE : 26 FD		"& "		bne	L00FD     ; branch not equal zero to PC + 2 + FDh (label 00FD) ?
+0100 : 5A		"Z"		decb                ; decrement B
+0101 : 26 E1		"& "		bne	L00E4     ; branch not equal zero to PC + 2 + E1h (label 00E4) ?
+0103 : D6 10		"  "		ldab	X0010   ; load B with value at addr 0010
+0105 : D0 0F		"  "		subb	X000F   ; subtract B with value at addr 000F
+0107 : 27 09		"' "		beq	L0112     ; branch if zero to PC + 2 + 09h (label 0112)
+
+0109 : DE 12		"  "		ldx	X0012     ; load index with value at addr 0012
+010B : 08		" "		inx                 ; increment index
+010C : 96 14		"  "		ldaa	X0014   ; load A with value at addr 0014
+010E : 27 D0		"' "		beq	L00E0     ; branch if zero to PC + 2 + D0h (label 00E0) ?
+0110 : 20 CC		"  "		bra	L00DE     ; branch always to addr CCh
+**************************************;
+0112				L0112:
+0112 : 39		"9"		rts                 ; return from subroutine
+**************************************;
+0113 : C6 01		"  "		ldab	#$01    ; load B with 01h (0000 0001)
+0115 : D7 00		"  "		stab	X0000   ; store B at addr 0000
+0117 : 4F		"O"		clra                ; clear A (00)
+0118 : 97 15		"  "		staa	X0015   ; store A at addr 0015
+011A : 20 14		"  "		bra	L0130     ; branch always to addr 14h
+**************************************;
+011C : 4F		"O"		clra                ; clear A (00)
+011D : 97 15		"  "		staa	X0015   ; store A at addr 0015
+011F : C6 03		"  "		ldab	#$03    ; load B with 03h (0000 0011)
+0121 : 20 0D		"  "		bra	L0130     ; branch always to addr 0Dh
+**************************************;
+0123 : 86 01		"  "		ldaa	#$01    ; load A with 01h (0000 0001)
+0125 : 97 15		"  "		staa	X0015   ; store A at addr 0015
+0127 : CE 03 E8		"   "	ldx	#$03E8    ; load index with 03E8h (0000 0011 11110 1000)
+012A : 86 01		"  "		ldaa	#$01    ; load A with 01h (0000 0001)
+012C : C6 FF		"  "		ldab	#$FF    ; load B with FFh (1111 1111)
+012E : 20 00		"  "		bra	L0130     ; branch always to addr 00 (next instruction?)
+**************************************;
+0130				L0130:
+0130 : 97 14		"  "		staa	X0014   ; store A at addr 0014
+0132 : D7 0F		"  "		stab	X000F   ; store B at addr 000F
+0134 : DF 12		"  "		stx	X0012     ; store index at addr 0012
+0136 : 7F 00 11		"   "	clr	X0011     ; clear (00) addr 0011
+0139				L0139:
+0139 : DE 12		"  "		ldx	X0012     ; load index with value at addr 0012
+013B : B6 04 00		"   "	ldaa	X0400   ; load A with value at addr 0400
+013E				L013E:
+013E : 16		" "		tab                 ; transfer A to B
+013F : 54		"T"		lsrb                ; logic shift right B
+0140 : 54		"T"		lsrb                ; logic shift right B
+0141 : 54		"T"		lsrb                ; logic shift right B
+0142 : D8 06		"  "		eorb	X0006   ; exclusive OR in B with value at addr 0006
+0144 : 54		"T"		lsrb                ; logic shift right B
+0145 : 76 00 05		"v  "	ror	X0005     ; rotate right at addr 0005
+0148 : 76 00 06		"v  "	ror	X0006     ; rotate right at addr 0006
+014B : D6 0F		"  "		ldab	X000F   ; load B with value at addr 000F
+014D : 7D 00 15		"}  "	tst	X0015     ; test zero or minus at addr 0015, then do below
+0150 : 27 02		"' "		beq	L0154     ; branch if zero to PC + 2 + 02h (label 0154)
+0152 : D4 05		"  "		andb	X0005   ; and B with addr 0005 into B
+0154				L0154:
+0154 : D7 10		"  "		stab	X0010   ; store B at addr 0010
+0156 : D6 11		"  "		ldab	X0011   ; load B with value at addr 0011
+0158 : 91 06		"  "		cmpa	X0006   ; compare A with value at addr 0006, change Z,C flags, then do below
+015A : 22 12		"" "		bhi	L016E     ; branch if higher (C + Z = 0) to PC + 2 + 12h (label 016E) ?
+015C				L015C:
+015C : 09		" "		dex                 ; decrement index
+015D : 27 26		"'&"		beq	L0185     ; branch if zero to PC + 2 + 26h (label 0185) ?
+015F : B7 04 00		"   "	staa	X0400   ; store A at addr 0400 (SOUND)
+0162 : DB 11		"  "		addb	X0011   ; add B with value at addr 0011
+0164 : 99 10		"  "		adca	X0010   ; add A with Carry and value at addr 0010 (A + M + C into A)
+0166 : 25 16		"% "		bcs	L017E     ; branch if Carry set (C = 1) to PC + 2 + 16h (label 017E) ?
+0168 : 91 06		"  "		cmpa	X0006   ; compare A with value at addr 0006, change Z, C flags, then do below
+016A : 23 F0		"# "		bls	L015C     ; branch if lower or same to PC + 2 + F0h (label 015C) ?
+016C : 20 10		"  "		bra	L017E     ; branch always to addr 10h
+**************************************;
+016E				L016E:
+016E : 09		" "		dex                 ; decrement index
+016F : 27 14		"' "		beq	L0185     ; branch if zero to PC + 2 + 14h (label 0185) ?
+0171 : B7 04 00		"   "	staa	X0400   ; store A to addr 0400 (SOUND)
+0174 : D0 11		"  "		subb	X0011   ; subtract B with value at addr 0011
+0176 : 92 10		"  "		sbca	X0010   ; subtract A with Carry and value at addr 0010 (A - M - C into A)
+0178 : 25 04		"% "		bcs	L017E     ; branch if Carry set to PC + 2 + 04h (label 017E) ?
+017A : 91 06		"  "		cmpa	X0006   ; compare A with value at addr 0006, change Z, C flags, then do below
+017C : 22 F0		"" "		bhi	L016E     ; branch if higher to PC + 2 + F0h (label 016E) ?
+017E				L017E:
+017E : 96 06		"  "		ldaa	X0006   ; load A with value at addr 0006
+0180 : B7 04 00		"   "	staa	X0400   ; store A at addr 0400 (SOUND)
+0183 : 20 B9		"  "		bra	L013E     ; branch always at addr B9h
+**************************************;
+0185				L0185:
+0185 : D6 14		"  "		ldab	X0014   ; load B with value at 0014
+0187 : 27 B5		"' "		beq	L013E     ; branch if zero to PC + 2 + B5h (label 013E) ?
+0189 : 96 0F		"  "		ldaa	X000F   ; load A with value at 000F
+018B : D6 11		"  "		ldab	X0011   ; load B with value at 0011
+018D : 44		"D"		lsra                ; logic shift right A
+018E : 56		"V"		rorb                ; rotate right B
+018F : 44		"D"		lsra                ; logic shift right A
+0190 : 56		"V"		rorb                ; rotate right B
+0191 : 44		"D"		lsra                ; logic shift right A
+0192 : 56		"V"		rorb                ; rotate right B
+0193 : 43		"C"		coma                ; complement 1s A
+0194 : 50		"P"		negb                ; neagte B (complement 2s) (invert and add 1)
+0195 : 82 FF		"  "		sbca	#$FF    ; subtract A with Carry and FFh (1111 1111)
+0197 : DB 11		"  "		addb	X0011   ; add B with value at 0011
+0199 : 99 0F		"  "		adca	X000F   ; add A with Carry and value at 000F
+019B : D7 11		"  "		stab	X0011   ; store B at addr 0011
+019D : 97 0F		"  "		staa	X000F   ; store A at addr 000F
+019F : 26 98		"& "		bne	L0139     ; branch if not equal zero to PC + 2 + 98h (label 0139) ?
+01A1 : C1 07		"  "		cmpb	#$07    ; compare B with 07h (0000 0111)
+01A3 : 26 94		"& "		bne	L0139     ; branch if not equal zero to PC + 2 + 94h (label 0139) ?
+01A5 : 39		"9"		rts                 ; return from subroutine
+**************************************;
+01A6 : 86 FD		"  "		ldaa	#$FD    ; load A with FDh (1111 1101)
+01A8 : 97 0B		"  "		staa	X000B   ; store A to addr 000B
+01AA : CE 00 64		"  d"	ldx	#$0064    ; load index with 0064h (0000 0000 0110 0100)
+01AD : DF 07		"  "		stx	X0007     ; store index at addr 0007
+01AF				L01AF:
+01AF : DB 08		"  "		addb	X0008   ; add B with value at 0008
+01B1 : 96 0D		"  "		ldaa	X000D   ; load A with value at 000D
+01B3 : 99 07		"  "		adca	X0007   ; add A with Carry and value at 0007
+01B5 : 97 0D		"  "		staa	X000D   ; store A at addr 000D
+01B7 : DE 07		"  "		ldx	X0007     ; load index with value at 0007
+01B9 : 25 04		"% "		bcs	L01BF     ; branch if Carry set to PC + 2 + 04h (label 01BF)
+01BB : 20 00		"  "		bra	L01BD     ; branch always to addr 00h
+**************************************;
+01BD				L01BD:
+01BD : 20 03		"  "		bra	L01C2     ; branch always to addr 03h
+**************************************;
+01BF				L01BF:
+01BF : 08		" "		inx                 ; increment index
+01C0 : 27 11		"' "		beq	L01D3     ; branch if zero to PC + 2 + 11h (label 01D3) ?
+01C2				L01C2:
+01C2 : DF 07		"  "		stx	X0007     ; 
+01C4 : 84 0F		"  "		anda	#$0F
+01C6 : 8B 84		"  "		adda	#$84
+01C8 : 97 0C		"  "		staa	X000C
+01CA : DE 0B		"  "		ldx	X000B
+01CC : A6 00		"  "		ldaa	$00,x
+01CE : B7 04 00		"   "		staa	X0400
+01D1 : 20 DC		"  "		bra	L01AF
+01D3				L01D3:
+01D3 : 39		"9"		rts
+				;
+01D4 : 4F		"O"		clra
+01D5 : B7 04 00		"   "		staa	X0400
+01D8 : 97 0D		"  "		staa	X000D
+01DA				L01DA:
+01DA : 4F		"O"		clra
+01DB				L01DB:
+01DB : 91 0D		"  "		cmpa	X000D
+01DD : 26 03		"& "		bne	L01E2
+01DF : 73 04 00		"s  "		com	X0400
+01E2				L01E2:
+01E2 : C6 12		"  "		ldab	#$12
+01E4				L01E4:
+01E4 : 5A		"Z"		decb
+01E5 : 26 FD		"& "		bne	L01E4
+01E7 : 4C		"L"		inca
+01E8 : 2A F1		"* "		bpl	L01DB
+01EA : 73 04 00		"s  "		com	X0400
+01ED : 7C 00 0D		"|  "		inc	X000D
+01F0 : 2A E8		"* "		bpl	L01DA
+01F2 : 39		"9"		rts
+				;
+01F3 : CE 00 0F		"   "		ldx	#$000F
+01F6				L01F6:
+01F6 : 6F 00		"o "		clr	$00,x
+01F8 : 08		" "		inx
+01F9 : 8C 00 17		"   "		cpx	#$0017
+01FC : 26 F8		"& "		bne	L01F6
+01FE : 86 40		" @"		ldaa	#$40
+0200 : 97 0F		"  "		staa	X000F
+0202				L0202:
+0202 : CE 00 0F		"   "		ldx	#$000F
+0205 : 86 80		"  "		ldaa	#$80
+0207 : 97 0D		"  "		staa	X000D
+0209 : 5F		"_"		clrb
+020A				L020A:
+020A : A6 01		"  "		ldaa	$01,x
+020C : AB 00		"  "		adda	$00,x
+020E : A7 01		"  "		staa	$01,x
+0210 : 2A 02		"* "		bpl	L0214
+0212 : DB 0D		"  "		addb	X000D
+0214				L0214:
+0214 : 74 00 0D		"t  "		lsr	X000D
+0217 : 08		" "		inx
+0218 : 08		" "		inx
+0219 : 8C 00 17		"   "		cpx	#$0017
+021C : 26 EC		"& "		bne	L020A
+021E : F7 04 00		"   "		stab	X0400
+0221 : 7C 00 0E		"|  "		inc	X000E
+0224 : 26 DC		"& "		bne	L0202
+0226 : CE 00 0F		"   "		ldx	#$000F
+0229 : 5F		"_"		clrb
+022A				L022A:
+022A : A6 00		"  "		ldaa	$00,x
+022C : 27 0B		"' "		beq	L0239
+022E : 81 37		" 7"		cmpa	#$37
+0230 : 26 04		"& "		bne	L0236
+0232 : C6 41		" A"		ldab	#$41
+0234 : E7 02		"  "		stab	$02,x
+0236				L0236:
+0236 : 6A 00		"j "		dec	$00,x
+0238 : 5C		"\"		incb
+0239				L0239:
+0239 : 08		" "		inx
+023A : 08		" "		inx
+023B : 8C 00 17		"   "		cpx	#$0017
+023E : 26 EA		"& "		bne	L022A
+0240 : 5D		"]"		tstb
+0241 : 26 BF		"& "		bne	L0202
+0243 : 39		"9"		rts
+				;
+0244 : 7A 00 04		"z  "		dec	X0004
+0247 : 39		"9"		rts
+				;
+0248 : 8D 03		"  "		bsr	L024D
+024A : 7E FC DD		"~  "		jmp	LFCDD
+				;
+024D				L024D:
+024D : 7F 00 04		"   "		clr	X0004
+0250 : 97 0D		"  "		staa	X000D
+0252 : CE FD 94		"   "		ldx	#$FD94
+0255				L0255:
+0255 : A6 00		"  "		ldaa	$00,x
+0257 : 27 2D		"'-"		beq	L0286
+0259 : 7A 00 0D		"z  "		dec	X000D
+025C : 27 06		"' "		beq	L0264
+025E : 4C		"L"		inca
+025F : BD FC F0		"   "		jsr	LFCF0
+0262 : 20 F1		"  "		bra	L0255
+				;
+0264				L0264:
+0264 : 08		" "		inx
+0265 : DF 0B		"  "		stx	X000B
+0267 : BD FC F0		"   "		jsr	LFCF0
+026A : DF 09		"  "		stx	X0009
+026C : DE 0B		"  "		ldx	X000B
+026E				L026E:
+026E : A6 00		"  "		ldaa	$00,x
+0270 : 97 11		"  "		staa	X0011
+0272 : A6 01		"  "		ldaa	$01,x
+0274 : EE 02		"  "		ldx	$02,x
+0276 : DF 0F		"  "		stx	X000F
+0278 : 8D 0E		"  "		bsr	L0288
+027A : DE 0B		"  "		ldx	X000B
+027C : 08		" "		inx
+027D : 08		" "		inx
+027E : 08		" "		inx
+027F : 08		" "		inx
+0280 : DF 0B		"  "		stx	X000B
+0282 : 9C 09		"  "		cpx	X0009
+0284 : 26 E8		"& "		bne	L026E
+0286				L0286:
+0286 : 39		"9"		rts
+0287 : 39		"9"		rts
+				;
+0288				L0288:
+0288 : CE 00 12		"   "		ldx	#$0012
+028B : 80 02		"  "		suba	#$02
+028D				L028D:
+028D : 23 15		"# "		bls	L02A4
+028F : 81 03		"  "		cmpa	#$03
+0291 : 27 09		"' "		beq	L029C
+0293 : C6 01		"  "		ldab	#$01
+0295 : E7 00		"  "		stab	$00,x
+0297 : 08		" "		inx
+0298 : 80 02		"  "		suba	#$02
+029A : 20 F1		"  "		bra	L028D
+				;
+029C				L029C:
+029C : C6 91		"  "		ldab	#$91
+029E : E7 00		"  "		stab	$00,x
+02A0 : 6F 01		"o "		clr	$01,x
+02A2 : 08		" "		inx
+02A3 : 08		" "		inx
+02A4				L02A4:
+02A4 : C6 7E		" ~"		ldab	#$7E
+02A6 : E7 00		"  "		stab	$00,x
+02A8 : C6 FA		"  "		ldab	#$FA
+02AA : E7 01		"  "		stab	$01,x
+02AC : C6 B2		"  "		ldab	#$B2
+02AE : E7 02		"  "		stab	$02,x
+02B0 : DE 0F		"  "		ldx	X000F
+02B2 : 4F		"O"		clra
+02B3 : F6 00 0E		"   "		ldab	X000E
+02B6 : 5C		"\"		incb
+02B7 : D7 0E		"  "		stab	X000E
+02B9 : D4 11		"  "		andb	X0011
+02BB : 54		"T"		lsrb
+02BC : 89 00		"  "		adca	#$00
+02BE : 54		"T"		lsrb
+02BF : 89 00		"  "		adca	#$00
+02C1 : 54		"T"		lsrb
+02C2 : 89 00		"  "		adca	#$00
+02C4 : 54		"T"		lsrb
+02C5 : 89 00		"  "		adca	#$00
+02C7 : 54		"T"		lsrb
+02C8 : 89 00		"  "		adca	#$00
+02CA : 54		"T"		lsrb
+02CB : 89 00		"  "		adca	#$00
+02CD : 54		"T"		lsrb
+02CE : 89 00		"  "		adca	#$00
+02D0 : 1B		" "		aba
+02D1 : 48		"H"		asla
+02D2 : 48		"H"		asla
+02D3 : 48		"H"		asla
+02D4 : 48		"H"		asla
+02D5 : 48		"H"		asla
+02D6 : B7 04 00		"   "		staa	X0400
+02D9 : 09		" "		dex
+02DA : 27 03		"' "		beq	L02DF
+02DC : 7E 00 12		"~  "		jmp	L0012
+02DF				L02DF:
+02DF : 39		"9"		rts
+				;
+02E0 : 36		"6"		psha
+02E1				L02E1:
+02E1 : A6 00		"  "		ldaa	$00,x
+02E3 : DF 09		"  "		stx	X0009
+02E5 : DE 0B		"  "		ldx	X000B
+02E7 : A7 00		"  "		staa	$00,x
+02E9 : 08		" "		inx
+02EA : DF 0B		"  "		stx	X000B
+02EC : DE 09		"  "		ldx	X0009
+02EE : 08		" "		inx
+02EF : 5A		"Z"		decb
+02F0 : 26 EF		"& "		bne	L02E1
+02F2 : 32		"2"		pula
+02F3 : 39		"9"		rts
+				;
+02F4 : 4F		"O"		clra
+02F5 : 97 00		"  "		staa	X0000
+02F7 : 97 01		"  "		staa	X0001
+02F9 : 39		"9"		rts
+				;
+02FA : 7F 00 00		"   "		clr	X0000
+02FD : 96 01		"  "		ldaa	X0001
+02FF : 84 7F		"  "		anda	#$7F
+0301 : 81 1D		"  "		cmpa	#$1D
+0303 : 26 01		"& "		bne	L0306
+0305 : 4F		"O"		clra
+0306				L0306:
+0306 : 4C		"L"		inca
+0307 : 97 01		"  "		staa	X0001
+0309 : 39		"9"		rts
+				;
+030A : 86 0E		"  "		ldaa	#$0E
+030C : BD FB 57		"  W"		jsr	LFB57
+030F : 96 01		"  "		ldaa	X0001
+0311 : 48		"H"		asla
+0312 : 48		"H"		asla
+0313 : 43		"C"		coma
+0314 : BD FC 0F		"   "		jsr	LFC0F
+0317				L0317:
+0317 : 7C 00 13		"|  "		inc	X0013
+031A : BD FC 11		"   "		jsr	LFC11
+031D : 20 F8		"  "		bra	L0317
+				;
+031F : 86 03		"  "		ldaa	#$03
+0321 : BD F8 2A		"  *"		jsr	LF82A
+0324 : D6 02		"  "		ldab	X0002
+0326 : C1 1F		"  "		cmpb	#$1F
+0328 : 26 01		"& "		bne	L032B
+032A : 5F		"_"		clrb
+032B				L032B:
+032B : 5C		"\"		incb
+032C : D7 02		"  "		stab	X0002
+032E : 86 20		"  "		ldaa	#$20
+0330 : 10		" "		sba
+0331 : 5F		"_"		clrb
+0332				L0332:
+0332 : 81 14		"  "		cmpa	#$14
+0334 : 23 05		"# "		bls	L033B
+0336 : CB 0E		"  "		addb	#$0E
+0338 : 4A		"J"		deca
+0339 : 20 F7		"  "		bra	L0332
+				;
+033B				L033B:
+033B : CB 05		"  "		addb	#$05
+033D : 4A		"J"		deca
+033E : 26 FB		"& "		bne	L033B
+0340 : D7 0F		"  "		stab	X000F
+0342				L0342:
+0342 : BD F8 3F		"  ?"		jsr	LF83F
+0345 : 20 FB		"  "		bra	L0342
+				;
+0347 : 96 03		"  "		ldaa	X0003
+0349 : 26 09		"& "		bne	L0354
+034B : 7C 00 03		"|  "		inc	X0003
+034E : 86 0D		"  "		ldaa	#$0D
+0350 : 8D 05		"  "		bsr	L0357
+0352 : 20 69		" i"		bra	L03BD
+0354				L0354:
+0354 : 7E FC 04		"~  "		jmp	LFC04
+				;
+0357				L0357:
+0357 : 16		" "		tab
+0358 : 58		"X"		aslb
+0359 : 1B		" "		aba
+035A : 1B		" "		aba
+035B : 1B		" "		aba
+035C : CE FE D6		"   "		ldx	#$FED6
+035F : BD FC F0		"   "		jsr	LFCF0
+0362 : A6 00		"  "		ldaa	$00,x
+0364 : 16		" "		tab
+0365 : 84 0F		"  "		anda	#$0F
+0367 : 97 10		"  "		staa	X0010
+0369 : 54		"T"		lsrb
+036A : 54		"T"		lsrb
+036B : 54		"T"		lsrb
+036C : 54		"T"		lsrb
+036D : D7 0F		"  "		stab	X000F
+036F : A6 01		"  "		ldaa	$01,x
+0371 : 16		" "		tab
+0372 : 54		"T"		lsrb
+0373 : 54		"T"		lsrb
+0374 : 54		"T"		lsrb
+0375 : 54		"T"		lsrb
+0376 : D7 11		"  "		stab	X0011
+0378 : 84 0F		"  "		anda	#$0F
+037A : 97 0D		"  "		staa	X000D
+037C : DF 07		"  "		stx	X0007
+037E : CE FE 37		"  7"		ldx	#$FE37
+0381				L0381:
+0381 : 7A 00 0D		"z  "		dec	X000D
+0384 : 2B 08		"+ "		bmi	L038E
+0386 : A6 00		"  "		ldaa	$00,x
+0388 : 4C		"L"		inca
+0389 : BD FC F0		"   "		jsr	LFCF0
+038C : 20 F3		"  "		bra	L0381
+				;
+038E				L038E:
+038E : DF 14		"  "		stx	X0014
+0390 : BD FC 4B		"  K"		jsr	LFC4B
+0393 : DE 07		"  "		ldx	X0007
+0395 : A6 02		"  "		ldaa	$02,x
+0397 : 97 16		"  "		staa	X0016
+0399 : BD FC 5D		"  ]"		jsr	LFC5D
+039C : DE 07		"  "		ldx	X0007
+039E : A6 03		"  "		ldaa	$03,x
+03A0 : 97 12		"  "		staa	X0012
+03A2 : A6 04		"  "		ldaa	$04,x
+03A4 : 97 13		"  "		staa	X0013
+03A6 : A6 05		"  "		ldaa	$05,x
+03A8 : 16		" "		tab
+03A9 : A6 06		"  "		ldaa	$06,x
+03AB : CE FF 3F		"  ?"		ldx	#$FF3F
+03AE : BD FC F0		"   "		jsr	LFCF0
+03B1 : 17		" "		tba
+03B2 : DF 17		"  "		stx	X0017
+03B4 : 7F 00 1F		"   "		clr	X001F
+03B7 : BD FC F0		"   "		jsr	LFCF0
+03BA : DF 19		"  "		stx	X0019
+03BC : 39		"9"		rts
+				;
+03BD				L03BD:
+03BD : 96 0F		"  "		ldaa	X000F
+03BF : 97 1E		"  "		staa	X001E
+03C1				L03C1:
+03C1 : DE 17		"  "		ldx	X0017
+03C3 : DF 09		"  "		stx	X0009
+03C5				L03C5:
+03C5 : DE 09		"  "		ldx	X0009
+03C7 : A6 00		"  "		ldaa	$00,x
+03C9 : 9B 1F		"  "		adda	X001F
+03CB : 97 1D		"  "		staa	X001D
+03CD : 9C 19		"  "		cpx	X0019
+03CF : 27 26		"'&"		beq	L03F7
+03D1 : D6 10		"  "		ldab	X0010
+03D3 : 08		" "		inx
+03D4 : DF 09		"  "		stx	X0009
+03D6				L03D6:
+03D6 : CE 00 20		"   "		ldx	#$0020
+03D9				L03D9:
+03D9 : 96 1D		"  "		ldaa	X001D
+03DB				L03DB:
+03DB : 4A		"J"		deca
+03DC : 26 FD		"& "		bne	L03DB
+03DE : A6 00		"  "		ldaa	$00,x
+03E0 : B7 04 00		"   "		staa	X0400
+03E3 : 08		" "		inx
+03E4 : 9C 1B		"  "		cpx	X001B
+03E6 : 26 F1		"& "		bne	L03D9
+03E8 : 5A		"Z"		decb
+03E9 : 27 DA		"' "		beq	L03C5
+03EB : 08		" "		inx
+03EC : 09		" "		dex
+03ED : 08		" "		inx
+03EE : 09		" "		dex
+03EF : 08		" "		inx
+03F0 : 09		" "		dex
+03F1 : 08		" "		inx
+03F2 : 09		" "		dex
+03F3 : 01		" "		nop
+03F4 : 01		" "		nop
+03F5 : 20 DF		"  "		bra	L03D6
+				;
+03F7				L03F7:
+03F7 : 96 11		"  "		ldaa	X0011
+03F9 : 8D 62		" b"		bsr	L045D
+03FB : 7A 00 1E		"z  "		dec	X001E
+03FE : 26 C1		"& "		bne	L03C1
+
+0400 : 96 03		"  "		ldaa	X0003
+
+0402 : 26 46		"&F"		bne	L044A
+0404 : 96 12		"  "		ldaa	X0012
+0406 : 27 42		"'B"		beq	L044A
+0408 : 7A 00 13		"z  "		dec	X0013
+040B : 27 3D		"'="		beq	L044A
+040D : 9B 1F		"  "		adda	X001F
+040F : 97 1F		"  "		staa	X001F
+0411 : DE 17		"  "		ldx	X0017
+0413 : 5F		"_"		clrb
+0414				L0414:
+0414 : 96 1F		"  "		ldaa	X001F
+0416 : 7D 00 12		"}  "		tst	X0012
+0419 : 2B 06		"+ "		bmi	L0421
+041B : AB 00		"  "		adda	$00,x
+041D : 25 08		"% "		bcs	L0427
+041F : 20 0B		"  "		bra	L042C
+				;
+0421				L0421:
+0421 : AB 00		"  "		adda	$00,x
+0423 : 27 02		"' "		beq	L0427
+0425 : 25 05		"% "		bcs	L042C
+0427				L0427:
+0427 : 5D		"]"		tstb
+0428 : 27 08		"' "		beq	L0432
+042A : 20 0F		"  "		bra	L043B
+				;
+042C				L042C:
+042C : 5D		"]"		tstb
+042D : 26 03		"& "		bne	L0432
+042F : DF 17		"  "		stx	X0017
+0431 : 5C		"\"		incb
+0432				L0432:
+0432 : 08		" "		inx
+0433 : 9C 19		"  "		cpx	X0019
+0435 : 26 DD		"& "		bne	L0414
+0437 : 5D		"]"		tstb
+0438 : 26 01		"& "		bne	L043B
+043A : 39		"9"		rts
+				;
+043B				L043B:
+043B : DF 19		"  "		stx	X0019
+043D : 96 11		"  "		ldaa	X0011
+043F : 27 06		"' "		beq	L0447
+0441 : 8D 08		"  "		bsr	L044B
+0443 : 96 16		"  "		ldaa	X0016
+0445 : 8D 16		"  "		bsr	L045D
+0447				L0447:
+0447 : 7E FB BD		"~  "		jmp	LFBBD
+044A				L044A:
+044A : 39		"9"		rts
+				;
+044B				L044B:
+044B : CE 00 20		"   "		ldx	#$0020
+044E : DF 0B		"  "		stx	X000B
+0450 : DE 14		"  "		ldx	X0014
+0452 : E6 00		"  "		ldab	$00,x
+0454 : 08		" "		inx
+0455 : BD FA E0		"   "		jsr	LFAE0
+0458 : DE 0B		"  "		ldx	X000B
+045A : DF 1B		"  "		stx	X001B
+045C : 39		"9"		rts
+				;
+045D				L045D:
+045D : 4D		"M"		tsta
+045E : 27 2B		"'+"		beq	L048B
+0460 : DE 14		"  "		ldx	X0014
+0462 : DF 09		"  "		stx	X0009
+0464 : CE 00 20		"   "		ldx	#$0020
+0467 : 97 0E		"  "		staa	X000E
+0469				L0469:
+0469 : DF 0B		"  "		stx	X000B
+046B : DE 09		"  "		ldx	X0009
+046D : D6 0E		"  "		ldab	X000E
+046F : D7 0D		"  "		stab	X000D
+0471 : E6 01		"  "		ldab	$01,x
+0473 : 54		"T"		lsrb
+0474 : 54		"T"		lsrb
+0475 : 54		"T"		lsrb
+0476 : 54		"T"		lsrb
+0477 : 08		" "		inx
+0478 : DF 09		"  "		stx	X0009
+047A : DE 0B		"  "		ldx	X000B
+047C : A6 00		"  "		ldaa	$00,x
+047E				L047E:
+047E : 10		" "		sba
+047F : 7A 00 0D		"z  "		dec	X000D
+0482 : 26 FA		"& "		bne	L047E
+0484 : A7 00		"  "		staa	$00,x
+0486 : 08		" "		inx
+0487 : 9C 1B		"  "		cpx	X001B
+0489 : 26 DE		"& "		bne	L0469
+048B				L048B:
+048B : 39		"9"		rts
+				;
+048C : 8E 00 7F		"   "		lds	#$007F
+048F : B6 04 02		"   "		ldaa	X0402
+0492 : 0E		" "		cli
+0493 : 43		"C"		coma
+0494 : 84 1F		"  "		anda	#$1F
+0496 : D6 04		"  "		ldab	X0004
+0498 : 27 03		"' "		beq	L049D
+049A : BD FA 48		"  H"		jsr	LFA48
+049D				L049D:
+049D : 5F		"_"		clrb
+049E : 81 0E		"  "		cmpa	#$0E
+04A0 : 27 02		"' "		beq	L04A4
+04A2 : D7 02		"  "		stab	X0002
+04A4				L04A4:
+04A4 : 81 12		"  "		cmpa	#$12
+04A6 : 27 02		"' "		beq	L04AA
+04A8 : D7 03		"  "		stab	X0003
+04AA				L04AA:
+04AA : 4D		"M"		tsta
+04AB : 27 30		"'0"		beq	L04DD
+04AD : 4A		"J"		deca
+04AE : 81 0C		"  "		cmpa	#$0C
+04B0 : 22 11		"" "		bhi	L04C3
+04B2 : 81 03		"  "		cmpa	#$03
+04B4 : 26 05		"& "		bne	L04BB
+04B6 : BD FC FE		"   "		jsr	LFCFE
+04B9 : 20 22		" ""		bra	L04DD
+				;
+04BB				L04BB:
+04BB : BD FB 57		"  W"		jsr	LFB57
+04BE : BD FB BD		"   "		jsr	LFBBD
+04C1 : 20 1A		"  "		bra	L04DD
+				;
+04C3				L04C3:
+04C3 : 81 1B		"  "		cmpa	#$1B
+04C5 : 22 0E		"" "		bhi	L04D5
+04C7 : 80 0D		"  "		suba	#$0D
+04C9 : 48		"H"		asla
+04CA : CE FD 42		"  B"		ldx	#$FD42
+04CD : 8D 21		" !"		bsr	L04F0
+04CF : EE 00		"  "		ldx	$00,x
+04D1 : AD 00		"  "		jsr	$00,x						;INFO: index jump
+04D3 : 20 08		"  "		bra	L04DD
+				;
+04D5				L04D5:
+04D5 : 80 1C		"  "		suba	#$1C
+04D7 : BD F8 2A		"  *"		jsr	LF82A
+04DA : BD F8 3F		"  ?"		jsr	LF83F
+04DD				L04DD:
+04DD : 96 00		"  "		ldaa	X0000
+04DF : 9A 01		"  "		oraa	X0001
+04E1				L04E1:
+04E1 : 27 FE		"' "		beq	L04E1
+04E3 : 4F		"O"		clra
+04E4 : 97 03		"  "		staa	X0003
+04E6 : 96 00		"  "		ldaa	X0000
+04E8 : 27 03		"' "		beq	L04ED
+04EA : 7E F9 13		"~  "		jmp	LF913
+04ED				L04ED:
+04ED : 7E FB 0A		"~  "		jmp	LFB0A
+				;
+04F0				L04F0:
+04F0 : DF 09		"  "		stx	X0009
+04F2 : 9B 0A		"  "		adda	X000A
+04F4 : 97 0A		"  "		staa	X000A
+04F6 : 24 03		"$ "		bcc	L04FB
+04F8 : 7C 00 09		"|  "		inc	X0009
+04FB				L04FB:
+04FB : DE 09		"  "		ldx	X0009
+04FD : 39		"9"		rts
+				;
+04FE : CE 00 E0		"   "		ldx	#$00E0
+0501				L0501:
+0501 : 86 20		"  "		ldaa	#$20
+0503 : 8D EB		"  "		bsr	L04F0
+0505				L0505:
+0505 : 09		" "		dex
+0506 : 26 FD		"& "		bne	L0505
+0508 : 7F 04 00		"   "		clr	X0400
+050B				L050B:
+050B : 5A		"Z"		decb
+050C : 26 FD		"& "		bne	L050B
+050E : 73 04 00		"s  "		com	X0400
+0511 : DE 09		"  "		ldx	X0009
+0513 : 8C 10 00		"   "		cpx	#$1000
+0516 : 26 E9		"& "		bne	L0501
+0518 : 39		"9"		rts
+				;
+0519				L0519:
+0519 : 0F		" "		sei
+051A : 8E 00 7F		"   "		lds	#$007F
+051D : CE FF FF		"   "		ldx	#$FFFF
+0520 : 5F		"_"		clrb
+0521				L0521:
+0521 : E9 00		"  "		adcb	$00,x
+0523 : 09		" "		dex
+0524 : 8C F8 00		"   "		cpx	#$F800
+0527 : 26 F8		"& "		bne	L0521
+0529 : E1 00		"  "		cmpb	$00,x
+052B : 27 01		"' "		beq	L052E
+052D : 3E		">"		wai
+052E				L052E:
+052E : 86 01		"  "		ldaa	#$01
+0530 : BD F8 2A		"  *"		jsr	LF82A
+0533 : BD F8 3F		"  ?"		jsr	LF83F
+0536 : 86 02		"  "		ldaa	#$02
+0538 : BD FA 4D		"  M"		jsr	LFA4D
+053B : 86 01		"  "		ldaa	#$01
+053D : BD FA 4D		"  M"		jsr	LFA4D
+0540 : 20 D7		"  "		bra	L0519
+				;
+0542 : FB 1F F9		"   "		addb	X1FF9
+				;
+0545 : 13		" "		db	$13
+				;
+0546 : FA FA F8		"   "		orab	XFAF8
+0549 : 8C FB 47		"  G"		cpx	#$FB47
+054C : FA F4 F8		"   "		orab	XF4F8
+				;
+054F : CD		" "		db	$CD
+				;
+0550 : F8 94 F9		"   "		eorb	X94F9
+				;
+0553 : 1C		" "		db	$1C
+				;
+0554 : F9 23 F9		" # "		adcb	X23F9
+0557 : A6 F9		"  "		ldaa	$F9,x
+0559 : D4 F9		"  "		andb	X00F9
+				;
+055B : F3		" "		db	$F3
+				;
+055C : FA 44 FA		" D "		orab	X44FA
+				;
+055F : 87		" "		db	$87
+				;
+0560 : 40		"@"		nega
+0561 : 01		" "		nop
+				;
+0562 : 00		" "		db	$00
+				;
+0563 : 10		" "		sba
+0564 : E1 00		"  "		cmpb	$00,x
+0566 : 80 FF		"  "		suba	#$FF
+0568 : FF 28 01		" ( "		stx	X2801
+				;
+056B : 00		" "		db	$00
+				;
+056C : 08		" "		inx
+056D : 81 02		"  "		cmpa	#$02
+				;
+056F : 00		" "		db	$00
+				;
+0570 : FF FF 28		"  ("		stx	XFF28
+0573 : 81 00		"  "		cmpa	#$00
+				;
+0575 : FC		" "		db	$FC
+				;
+0576 : 01		" "		nop
+				;
+0577 : 02 00 FC		"   "		db	$02, $00, $FC
+				;
+057A : FF FF 01		"   "		stx	XFF01
+				;
+057D : 00 18 41 04	"  A "		db	$00, $18, $41, $04
+				;
+0581 : 80 00		"  "		suba	#$00
+0583 : FF 8C 5B		"  ["		stx	X8C5B
+0586 : B6 40 BF		" @ "		ldaa	X40BF
+0589 : 49		"I"		rola
+058A : A4 73		" s"		anda	$73,x
+058C : 73 A4 49		"s I"		com	XA449
+058F : BF 40 B6		" @ "		sts	X40B6
+				;
+0592 : 5B		"["		db	$5B
+				;
+0593 : 8C 0C 7F		"   "		cpx	#$0C7F
+				;
+0596 : 1D		" "		db	$1D
+				;
+0597 : 0F		" "		sei
+0598 : FB 7F 23		"  #"		addb	X7F23
+059B : 0F		" "		sei
+				;
+059C : 15		" "		db	$15
+				;
+059D : FE 08 50		"  P"		ldx	X0850
+05A0 : 8A 88		"  "		oraa	#$88
+05A2 : 3E		">"		wai
+05A3 : 3F		"?"		swi
+				;
+05A4 : 02		" "		db	$02
+				;
+05A5 : 3E		">"		wai
+05A6 : 7C 04 03		"|  "		inc	X0403
+05A9 : FF 3E 3F		" >?"		stx	X3E3F
+05AC				L05AC:
+05AC : 2C E2		", "		bge	L0590
+05AE : 7C 12 0D		"|  "		inc	X120D
+05B1 : 74 7C 0D		"t| "		lsr	X7C0D
+05B4 : 0E		" "		cli
+				;
+05B5 : 41		"A"		db	$41
+				;
+05B6 : 7C 23 0B		"|# "		inc	X230B
+05B9 : 50		"P"		negb
+05BA : 7C 1D 29		"| )"		inc	X1D29
+05BD : F2 7C 3F		" |?"		sbcb	X7C3F
+				;
+05C0 : 02		" "		db	$02
+				;
+05C1 : 3E		">"		wai
+05C2 : F8 04 03		"   "		eorb	X0403
+05C5 : FF 7C 3F		" |?"		stx	X7C3F
+05C8 : 2C E2		", "		bge	L05AC
+05CA : F8 12 0D		"   "		eorb	X120D
+05CD : 74 F8 0D		"t  "		lsr	XF80D
+05D0 : 0E		" "		cli
+				;
+05D1 : 41		"A"		db	$41
+				;
+05D2 : F8 23 0B		" # "		eorb	X230B
+05D5 : 50		"P"		negb
+05D6 : F8 1D 2F		"  /"		eorb	X1D2F
+05D9 : F2 F8 23		"  #"		sbcb	XF823
+				;
+05DC : 05		" "		db	$05
+				;
+05DD : A8 F8		"  "		eora	$F8,x
+				;
+05DF : 12		" "		db	$12
+				;
+05E0 : 06		" "		tap
+05E1 : BA F8 04		"   "		oraa	XF804
+05E4 : 07		" "		tpa
+05E5 : FF 7C 37		" |7"		stx	X7C37
+				;
+05E8 : 04		" "		db	$04
+				;
+05E9 : C1 7C		" |"		cmpb	#$7C
+05EB : 23 05		"# "		bls	L05F2
+05ED : A8 7C		" |"		eora	$7C,x
+				;
+05EF : 12		" "		db	$12
+				;
+05F0 : 06		" "		tap
+05F1 : BA 3E 04		" > "		oraa	X3E04
+05F4 : 07		" "		tpa
+05F5 : FF 3E 37		" >7"		stx	X3E37
+				;
+05F8 : 04		" "		db	$04
+				;
+05F9 : C1 3E		" >"		cmpb	#$3E
+05FB : 23 05		"# "		bls	L0602
+05FD : A8 1F		"  "		eora	$1F,x
+				;
+05FF : 12		" "		db	$12
+				;
+0600 : 06		" "		tap
+0601 : BA 1F 04		"   "		oraa	X1F04
+0604 : 07		" "		tpa
+0605 : FF 1F 37		"  7"		stx	X1F37
+				;
+0608 : 04		" "		db	$04
+				;
+0609 : C1 1F		"  "		cmpb	#$1F
+060B : 23 16		"# "		bls	L0623
+060D : A0 FE		"  "		suba	$FE,x
+				;
+060F : 1D		" "		db	$1D
+				;
+0610 : 17		" "		tba
+0611 : F9 7F 37		"  7"		adcb	X7F37
+				;
+0614 : 13		" "		db	$13
+				;
+0615 : 06		" "		tap
+0616 : 7F 3F 08		" ? "		clr	X3F08
+0619 : FA FE 04		"   "		orab	XFE04
+061C : 0F		" "		sei
+061D : FF FE 0D		"   "		stx	XFE0D
+0620 : 0E		" "		cli
+				;
+0621 : 41		"A"		db	$41
+				;
+0622 : FE 23 0B		" # "		ldx	X230B
+0625 : 50		"P"		negb
+0626 : FE 1D 5F		"  _"		ldx	X1D5F
+0629 : E4 00		"  "		andb	$00,x
+062B : 47		"G"		asra
+062C : 3F		"?"		swi
+062D : 37		"7"		pshb
+062E : 30		"0"		tsx
+062F : 29 23		")#"		bvs	L0654
+				;
+0631 : 1D		" "		db	$1D
+				;
+0632 : 17		" "		tba
+				;
+0633 : 12		" "		db	$12
+				;
+0634 : 0D		" "		sec
+0635 : 08		" "		inx
+				;
+0636 : 04		" "		db	$04
+				;
+0637 : 08		" "		inx
+0638 : 7F D9 FF		"   "		clr	XD9FF
+063B : D9 7F		"  "		adcb	X007F
+063D : 24 00		"$ "		bcc	L063F
+063F				L063F:
+063F : 24 08		"$ "		bcc	L0649
+				;
+0641 : 00		" "		db	$00
+				;
+0642 : 40		"@"		nega
+0643 : 80 00		"  "		suba	#$00
+0645 : FF 00 80		"   "		stx	X0080
+0648 : 40		"@"		nega
+0649				L0649:
+0649 : 10		" "		sba
+064A : 7F B0 D9		"   "		clr	XB0D9
+064D : F5 FF F5		"   "		bitb	XFFF5
+0650 : D9 B0		"  "		adcb	X00B0
+0652 : 7F 4E 24		" N$"		clr	X4E24
+0655 : 09		" "		dex
+				;
+0656 : 00		" "		db	$00
+				;
+0657 : 09		" "		dex
+0658 : 24 4E		"$N"		bcc	L06A8
+065A : 10		" "		sba
+065B : 7F C5 EC		"   "		clr	XC5EC
+065E : E7 BF		"  "		stab	$BF,x
+0660 : 8D 6D		" m"		bsr	L06CF
+0662 : 6A 7F		"j "		dec	$7F,x
+0664 : 94 92		"  "		anda	X0092
+				;
+0666 : 71		"q"		db	$71
+				;
+0667 : 40		"@"		nega
+0668 : 17		" "		tba
+				;
+0669 : 12		" "		db	$12
+				;
+066A : 39		"9"		rts
+				;
+066B : 10		" "		sba
+066C : FF FF FF		"   "		stx	XFFFF
+066F : FF 00 00		"   "		stx	X0000
+				;
+0672 : 00 00		"  "		db	$00, $00
+				;
+0674 : FF FF FF		"   "		stx	XFFFF
+0677 : FF 00 00		"   "		stx	X0000
+				;
+067A : 00 00		"  "		db	$00, $00
+				;
+067C : 48		"H"		asla
+067D : 8A 95		"  "		oraa	#$95
+067F : A0 AB		"  "		suba	$AB,x
+0681 : B5 BF C8		"   "		bita	XBFC8
+0684 : D1 DA		"  "		cmpb	X00DA
+0686 : E1 E8		"  "		cmpb	$E8,x
+0688 : EE F3		"  "		ldx	$F3,x
+068A : F7 FB FD		"   "		stab	XFBFD
+068D : FE FF FE		"   "		ldx	XFFFE
+				;
+0690 : FD		" "		db	$FD
+				;
+0691 : FB F7 F3		"   "		addb	XF7F3
+0694 : EE E8		"  "		ldx	$E8,x
+0696 : E1 DA		"  "		cmpb	$DA,x
+0698 : D1 C8		"  "		cmpb	X00C8
+069A : BF B5 AB		"   "		sts	XB5AB
+069D : A0 95		"  "		suba	$95,x
+069F : 8A 7F		"  "		oraa	#$7F
+				;
+06A1 : 75		"u"		db	$75
+				;
+06A2 : 6A 5F		"j_"		dec	$5F,x
+06A4 : 54		"T"		lsrb
+06A5 : 4A		"J"		deca
+06A6 : 40		"@"		nega
+06A7 : 37		"7"		pshb
+06A8				L06A8:
+06A8 : 2E 25		".%"		bgt	L06CF
+				;
+06AA : 1E		" "		db	$1E
+				;
+06AB : 17		" "		tba
+06AC : 11		" "		cba
+06AD : 0C		" "		clc
+06AE : 08		" "		inx
+				;
+06AF : 04 02		"  "		db	$04, $02
+				;
+06B1 : 01		" "		nop
+				;
+06B2 : 00		" "		db	$00
+				;
+06B3 : 01		" "		nop
+				;
+06B4 : 02 04		"  "		db	$02, $04
+				;
+06B6 : 08		" "		inx
+06B7 : 0C		" "		clc
+06B8 : 11		" "		cba
+06B9 : 17		" "		tba
+				;
+06BA : 1E		" "		db	$1E
+				;
+06BB : 25 2E		"%."		bcs	L06EB
+06BD : 37		"7"		pshb
+06BE : 40		"@"		nega
+06BF : 4A		"J"		deca
+06C0 : 54		"T"		lsrb
+06C1 : 5F		"_"		clrb
+06C2 : 6A 75		"ju"		dec	$75,x
+06C4 : 7F 10 59		"  Y"		clr	X1059
+				;
+06C7 : 7B		"{"		db	$7B
+				;
+06C8 : 98 AC		"  "		eora	X00AC
+				;
+06CA : B3		" "		db	$B3
+				;
+06CB : AC 98		"  "		cpx	$98,x
+				;
+06CD : 7B		"{"		db	$7B
+				;
+06CE : 59		"Y"		rolb
+06CF				L06CF:
+06CF : 37		"7"		pshb
+06D0 : 19		" "		daa
+06D1 : 06		" "		tap
+				;
+06D2 : 00		" "		db	$00
+				;
+06D3 : 06		" "		tap
+06D4 : 19		" "		daa
+06D5 : 37		"7"		pshb
+06D6 : 81 24		" $"		cmpa	#$24
+				;
+06D8 : 00 00 00		"   "		db	$00, $00, $00
+				;
+06DB : 16		" "		tab
+06DC : 31		"1"		ins
+				;
+06DD : 12 05 1A		"   "		db	$12, $05, $1A
+				;
+06E0				L06E0:
+06E0 : FF 00 27		"  '"		stx	X0027
+06E3 : 6D 11		"m "		tst	$11,x
+				;
+06E5 : 05		" "		db	$05
+				;
+06E6 : 11		" "		cba
+06E7 : 01		" "		nop
+06E8 : 0F		" "		sei
+06E9 : 01		" "		nop
+06EA : 47		"G"		asra
+06EB				L06EB:
+06EB : 11		" "		cba
+06EC : 31		"1"		ins
+				;
+06ED : 00		" "		db	$00
+				;
+06EE : 01		" "		nop
+				;
+06EF : 00		" "		db	$00
+				;
+06F0 : 0D		" "		sec
+06F1 : 1B		" "		aba
+06F2 : F4 12 00		"   "		andb	X1200
+				;
+06F5 : 00 00 14		"   "		db	$00, $00, $14
+				;
+06F8 : 47		"G"		asra
+				;
+06F9 : 41 45 00 00	"AE  "		db	$41, $45, $00, $00
+06FD : 00		" "		db	$00
+				;
+06FE : 0F		" "		sei
+				;
+06FF : 5B 21		"[!"		db	$5B, $21
+				;
+0701 : 35		"5"		txs
+0702 : 11		" "		cba
+0703 : FF 00 0D		"   "		stx	X000D
+0706 : 1B		" "		aba
+				;
+0707 : 15 00 00 FD	"    "		db	$15, $00, $00, $FD
+070B : 00		" "		db	$00
+				;
+070C : 01		" "		nop
+070D : 69 31		"i1"		rol	$31,x
+070F : 11		" "		cba
+				;
+0710 : 00		" "		db	$00
+				;
+0711 : 01		" "		nop
+				;
+0712 : 00 03		"  "		db	$00, $03
+				;
+0714 : 6A 01		"j "		dec	$01,x
+				;
+0716 : 15		" "		db	$15
+				;
+0717 : 01		" "		nop
+0718 : 01		" "		nop
+0719 : 01		" "		nop
+071A : 01		" "		nop
+071B : 47		"G"		asra
+071C : F6 53 03		" S "		ldab	X5303
+				;
+071F : 00 02		"  "		db	$00, $02
+				;
+0721 : 06		" "		tap
+0722 : 94 6A		" j"		anda	X006A
+0724 : 10		" "		sba
+				;
+0725 : 02 00 02		"   "		db	$02, $00, $02
+				;
+0728 : 06		" "		tap
+0729 : 9A 1F		"  "		oraa	X001F
+				;
+072B : 12 00		"  "		db	$12, $00
+				;
+072D : FF 10 04		"   "		stx	X1004
+0730 : 69 31		"i1"		rol	$31,x
+0732 : 11		" "		cba
+				;
+0733 : 00		" "		db	$00
+				;
+0734 : FF 00 0D		"   "		stx	X000D
+				;
+0737 : 00 12		"  "		db	$00, $12
+				;
+0739 : 06		" "		tap
+				;
+073A : 00		" "		db	$00
+				;
+073B : FF 01 09		"   "		stx	X0109
+073E : 28 A0		"( "		bvc	L06E0
+0740 : 98 90		"  "		eora	X0090
+0742 : 88 80		"  "		eora	#$80
+0744 : 78 70 68		"xph"		asl	X7068
+0747 : 60 58		"`X"		neg	$58,x
+0749 : 50		"P"		negb
+074A : 44		"D"		lsra
+074B : 40		"@"		nega
+074C : 01		" "		nop
+074D : 01		" "		nop
+				;
+074E : 02 02 04 04	"    "		db	$02, $02, $04, $04
+				;
+0752 : 08		" "		inx
+0753 : 08		" "		inx
+0754 : 10		" "		sba
+0755 : 10		" "		sba
+0756 : 30		"0"		tsx
+0757 : 60 C0		"` "		neg	$C0,x
+0759 : E0 01		"  "		subb	$01,x
+075B : 01		" "		nop
+				;
+075C : 02 02 03 04	"    "		db	$02, $02, $03, $04
+0760 : 05		" "		db	$05
+				;
+0761 : 06		" "		tap
+0762 : 07		" "		tpa
+0763 : 08		" "		inx
+0764 : 09		" "		dex
+0765 : 0A		" "		clv
+0766 : 0C		" "		clc
+0767 : 80 7C		" |"		suba	#$7C
+0769 : 78 74 70		"xtp"		asl	X7470
+076C : 74 78 7C		"tx|"		lsr	X787C
+076F : 80 01		"  "		suba	#$01
+0771 : 01		" "		nop
+				;
+0772 : 02 02 04 04	"    "		db	$02, $02, $04, $04
+				;
+0776 : 08		" "		inx
+0777 : 08		" "		inx
+0778 : 10		" "		sba
+0779 : 20 28		" ("		bra	L07A3
+				;
+077B : 30		"0"		tsx
+				;
+077C : 38		"8"		db	$38
+				;
+077D : 40		"@"		nega
+077E : 48		"H"		asla
+077F : 50		"P"		negb
+0780 : 60 70		"`p"		neg	$70,x
+0782 : 80 A0		"  "		suba	#$A0
+0784 : B0 C0 08		"   "		suba	XC008
+0787 : 40		"@"		nega
+0788 : 08		" "		inx
+0789 : 40		"@"		nega
+078A : 08		" "		inx
+078B : 40		"@"		nega
+078C : 08		" "		inx
+078D : 40		"@"		nega
+078E : 08		" "		inx
+078F : 40		"@"		nega
+0790 : 08		" "		inx
+0791 : 40		"@"		nega
+0792 : 08		" "		inx
+0793 : 40		"@"		nega
+0794 : 08		" "		inx
+0795 : 40		"@"		nega
+0796 : 08		" "		inx
+0797 : 40		"@"		nega
+0798 : 08		" "		inx
+0799 : 40		"@"		nega
+079A : 01		" "		nop
+				;
+079B : 02 04		"  "		db	$02, $04
+				;
+079D : 08		" "		inx
+079E : 09		" "		dex
+079F : 0A		" "		clv
+07A0 : 0B		" "		sev
+07A1 : 0C		" "		clc
+07A2 : 0E		" "		cli
+07A3				L07A3:
+07A3 : 0F		" "		sei
+07A4 : 10		" "		sba
+				;
+07A5 : 12 14		"  "		db	$12, $14
+				;
+07A7 : 16		" "		tab
+07A8 : 40		"@"		nega
+07A9 : 10		" "		sba
+07AA : 08		" "		inx
+07AB : 01		" "		nop
+07AC : 01		" "		nop
+07AD : 01		" "		nop
+07AE : 01		" "		nop
+07AF : 01		" "		nop
+				;
+07B0 : 02 02 03 03	"    "		db	$02, $02, $03, $03
+07B4 : 04 04 05		"   "		db	$04, $04, $05
+				;
+07B7 : 06		" "		tap
+07B8 : 08		" "		inx
+07B9 : 0A		" "		clv
+07BA : 0C		" "		clc
+07BB : 10		" "		sba
+				;
+07BC : 14 18		"  "		db	$14, $18
+				;
+07BE : 20 30		" 0"		bra	L07F0
+				;
+07C0 : 40		"@"		nega
+07C1 : 50		"P"		negb
+07C2 : 40		"@"		nega
+07C3 : 30		"0"		tsx
+07C4 : 20 10		"  "		bra	L07D6
+				;
+07C6 : 0C		" "		clc
+07C7 : 0A		" "		clv
+07C8 : 08		" "		inx
+07C9 : 07		" "		tpa
+07CA : 06		" "		tap
+				;
+07CB : 05 04 03 02	"    "		db	$05, $04, $03, $02
+07CF : 02		" "		db	$02
+				;
+07D0 : 01		" "		nop
+07D1 : 01		" "		nop
+07D2 : 01		" "		nop
+07D3 : 07		" "		tpa
+07D4 : 08		" "		inx
+07D5 : 09		" "		dex
+07D6				L07D6:
+07D6 : 0A		" "		clv
+07D7 : 0C		" "		clc
+07D8 : 08		" "		inx
+07D9 : 17		" "		tba
+				;
+07DA : 18		" "		db	$18
+				;
+07DB : 19		" "		daa
+				;
+07DC : 1A		" "		db	$1A
+				;
+07DD : 1B		" "		aba
+				;
+07DE : 1C 00 00 00	"    "		db	$1C, $00, $00, $00
+07E2 : 00 00 00 00	"    "		db	$00, $00, $00, $00
+07E6 : 00 00 00 00	"    "		db	$00, $00, $00, $00
+07EA : 00 00 00 00	"    "		db	$00, $00, $00, $00
+07EE : 00 00 00 00	"    "		db	$00, $00, $00, $00
+07F2 : 00 00 00 00	"    "		db	$00, $00, $00, $00
+07F6 : 00 00 FC		"   "		db	$00, $00, $FC
+				;
+07F9 : 8C F8 01		"   "		cpx	#$F801
+				;
+07FC : FD		" "		db	$FD
+				;
+07FD : 19		" "		daa
+				;
+07FE : F8		" "		db	$F8
+				;
+07FF : 01		" "		nop
+
+;--------------------------------------------------------------
+Symbol table
+============
+
+Value		Type	Name
+-----		----	----
+0000		Data	X0000
+0001		Data	X0001
+0002		Data	X0002
+0003		Data	X0003
+0004		Data	X0004
+0005		Data	X0005
+0006		Data	X0006
+0007		Data	X0007
+0008		Data	X0008
+0009		Data	X0009
+000A		Data	X000A
+000B		Data	X000B
+000C		Data	X000C
+000D		Data	X000D
+000E		Data	X000E
+000F		Data	X000F
+0010		Data	X0010
+0011		Data	X0011
+0012		Data	X0012
+0013		Data	X0013
+0014		Data	X0014
+0015		Data	X0015
+0016		Data	X0016
+0017		Data	X0017
+0018		Data	X0018
+0019		Data	X0019
+001B		Data	X001B
+001D		Data	X001D
+001E		Data	X001E
+001F		Data	X001F
+0027		Data	X0027
+0028		Code	L0028
+0044		Code	L0044
+004C		Code	L004C
+004E		Code	L004E
+0053		Code	L0053
+005E		Code	L005E
+0066		Code	L0066
+006A		Data	X006A
+006C		Code	L006C
+007F		Data	X007F
+0080		Data	X0080
+008B		Code	L008B
+0090		Data	X0090
+0092		Data	X0092
+009E		Code	L009E
+00A7		Code	L00A7
+00A9		Code	L00A9
+00AC		Data	X00AC
+00B0		Data	X00B0
+00BC		Code	L00BC
+00BE		Code	L00BE
+00C8		Data	X00C8
+00DA		Data	X00DA
+00DC		Code	L00DC
+00DE		Code	L00DE
+00E0		Code	L00E0
+00E4		Code	L00E4
+00F8		Code	L00F8
+00F9		Data	X00F9
+00FD		Code	L00FD
+0109		Data	X0109
+0112		Code	L0112
+0130		Code	L0130
+0139		Code	L0139
+013E		Code	L013E
+0154		Code	L0154
+015C		Code	L015C
+016E		Code	L016E
+017E		Code	L017E
+0185		Code	L0185
+01AF		Code	L01AF
+01BD		Code	L01BD
+01BF		Code	L01BF
+01C2		Code	L01C2
+01D3		Code	L01D3
+01DA		Code	L01DA
+01DB		Code	L01DB
+01E2		Code	L01E2
+01E4		Code	L01E4
+01F6		Code	L01F6
+0202		Code	L0202
+020A		Code	L020A
+0214		Code	L0214
+022A		Code	L022A
+0236		Code	L0236
+0239		Code	L0239
+024D		Code	L024D
+0255		Code	L0255
+0264		Code	L0264
+026E		Code	L026E
+0286		Code	L0286
+0288		Code	L0288
+028D		Code	L028D
+029C		Code	L029C
+02A4		Code	L02A4
+02DF		Code	L02DF
+02E1		Code	L02E1
+0306		Code	L0306
+0317		Code	L0317
+032B		Code	L032B
+0332		Code	L0332
+033B		Code	L033B
+0342		Code	L0342
+0354		Code	L0354
+0357		Code	L0357
+0381		Code	L0381
+038E		Code	L038E
+03BD		Code	L03BD
+03C1		Code	L03C1
+03C5		Code	L03C5
+03D6		Code	L03D6
+03D9		Code	L03D9
+03DB		Code	L03DB
+03F7		Code	L03F7
+0400		Data	X0400
+0402		Data	X0402
+0403		Data	X0403
+0414		Code	L0414
+0421		Code	L0421
+0427		Code	L0427
+042C		Code	L042C
+0432		Code	L0432
+043B		Code	L043B
+0447		Code	L0447
+044A		Code	L044A
+044B		Code	L044B
+045D		Code	L045D
+0469		Code	L0469
+047E		Code	L047E
+048B		Code	L048B
+049D		Code	L049D
+04A4		Code	L04A4
+04AA		Code	L04AA
+04BB		Code	L04BB
+04C3		Code	L04C3
+04D5		Code	L04D5
+04DD		Code	L04DD
+04E1		Code	L04E1
+04ED		Code	L04ED
+04F0		Code	L04F0
+04FB		Code	L04FB
+0501		Code	L0501
+0505		Code	L0505
+050B		Code	L050B
+0519		Code	L0519
+0521		Code	L0521
+052E		Code	L052E
+0590		Code	L0590
+05AC		Code	L05AC
+05F2		Code	L05F2
+0602		Code	L0602
+0623		Code	L0623
+063F		Code	L063F
+0649		Code	L0649
+0654		Code	L0654
+06A8		Code	L06A8
+06CF		Code	L06CF
+06E0		Code	L06E0
+06EB		Code	L06EB
+07A3		Code	L07A3
+07D6		Code	L07D6
+07F0		Code	L07F0
+0850		Data	X0850
+0F8E		Data	X0F8E
+1004		Data	X1004
+1059		Data	X1059
+1200		Data	X1200
+120D		Data	X120D
+1D29		Data	X1D29
+1D2F		Data	X1D2F
+1D5F		Data	X1D5F
+1F04		Data	X1F04
+1F37		Data	X1F37
+1FF9		Data	X1FF9
+230B		Data	X230B
+23F9		Data	X23F9
+2801		Data	X2801
+3E04		Data	X3E04
+3E37		Data	X3E37
+3E3F		Data	X3E3F
+3F08		Data	X3F08
+40B6		Data	X40B6
+40BF		Data	X40BF
+44FA		Data	X44FA
+4E24		Data	X4E24
+5303		Data	X5303
+7068		Data	X7068
+7470		Data	X7470
+787C		Data	X787C
+7C0D		Data	X7C0D
+7C37		Data	X7C37
+7C3F		Data	X7C3F
+7F23		Data	X7F23
+7F37		Data	X7F37
+8C5B		Data	X8C5B
+94F9		Data	X94F9
+A449		Data	XA449
+B0D9		Data	XB0D9
+B5AB		Data	XB5AB
+BFC8		Data	XBFC8
+C008		Data	XC008
+C5EC		Data	XC5EC
+CE04		Data	XCE04
+D9FF		Data	XD9FF
+F4F8		Data	XF4F8
+F7F3		Data	XF7F3
+F804		Data	XF804
+F80D		Data	XF80D
+F823		Data	XF823
+F82A		Code	LF82A
+F83F		Code	LF83F
+F913		Code	LF913
+FA48		Code	LFA48
+FA4D		Code	LFA4D
+FAE0		Code	LFAE0
+FAF8		Data	XFAF8
+FB0A		Code	LFB0A
+FB57		Code	LFB57
+FBBD		Code	LFBBD
+FBFD		Data	XFBFD
+FC04		Code	LFC04
+FC0F		Code	LFC0F
+FC11		Code	LFC11
+FC4B		Code	LFC4B
+FC5D		Code	LFC5D
+FCDD		Code	LFCDD
+FCF0		Code	LFCF0
+FCFE		Code	LFCFE
+FE04		Data	XFE04
+FE0D		Data	XFE0D
+FF01		Data	XFF01
+FF28		Data	XFF28
+FFF5		Data	XFFF5
+FFFE		Data	XFFFE
+FFFF		Data	XFFFF
+
+Number of symbols:			237
+
+;--------------------------------------------------------------

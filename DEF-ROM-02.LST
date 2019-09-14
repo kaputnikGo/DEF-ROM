@@ -25,6 +25,10 @@ Relative
  ;	Sound 6802/6808 board
  ;	$0000 - $007F RAM (internal to 6802) 
  ;	$0400 - $0403 PIA 
+          0400 Output/Data direction register Port A
+          0401 Control register Port A
+          0402 Output/Data direction register Port B
+          0403 Control register Port B
  ;	$F800 - $FFFF ROM 
  ;	Writing to $400 puts values in the DAC
 
