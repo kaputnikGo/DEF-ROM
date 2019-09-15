@@ -706,7 +706,7 @@ Relative
   FCE8 22 0A               BHI $FCF4       ;branch if higher
   FCEA BD FB 81            JSR $FB81       ;
   FCED BD FB E7            JSR $FBE7       ;
-  FCF0 20 1C               BRA $FD0E       ;
+  FCF0 20 1C               BRA $FD0E       ;branch always
   FCF2 81 1B               CMPA #$1B       ;
   FCF4 22 10               BHI $FD06       ;
   FCF6 80 0D               SUBA #$0D       ;
@@ -715,7 +715,7 @@ Relative
   FCFC 8D 21               BSR CALCOS      ;calc offset into table
   FCFE EE 00               LDX $00,X       ;load vector addr
   FD00 AD 00               JSR $00,X       ;
-  FD02 20 0A               BRA $FD0E       ;
+  FD02 20 0A               BRA $FD0E       ;branch always
   FD04 80 1C               SUBA #$1C       ;
   FD06 BD F8 2A            JSR $F82A       ;
   FD09 BD F8 3F            JSR $F83F       ;
