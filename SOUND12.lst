@@ -55,7 +55,7 @@ Relative
 000C : 86 FF		"  "		ldaa	#$FF    ; load A with FFh (1111 1111)
 000E : A7 00		"  "		staa	$00,x   ; store A in addr X + 00h (0400, all outputs on port A, goes to DAC)
 0010 : 6F 02		"o "		clr	$02,x     ; clear (00) in X + 02h (0402, all inputs on port B, from sound select)
-0012				L0012:
+0012				L0012: GOTO0
 0012 : 86 37		" 7"		ldaa	#$37    ; load A with 37h (0011 0111)
 0014 : A7 03		"  "		staa	$03,x   ; store A in addr X + 03h (0403)
 0016 : 86 3C		" <"		ldaa	#$3C    ; load A with 3Ch(0011 1100)
@@ -78,45 +78,45 @@ PARAM1
 002C : 48		"H"		asla                ; shift left in A
 002D : 48		"H"		asla                ; shift left in A
 002E : 1B		" "		aba                 ; add A + B into A
-002F : CE 00 0F		"   "	ldx	#$000F    ; load X with value in addr 000F
+002F : CE 00 0F		"   "	ldx	#$000F    ; load X with value 000F (0000 0000 0000 1111)
 0032 : DF 0B		"  "		stx	X000B     ; store X in addr 000B
-0034 : CE FD 60		"  `"	ldx	#$FD60    ; load X with value in addr FD60 (SAW at 0560)
-0037 : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine in addr FCF0 (04F0)(CALCOS)
+0034 : CE FD 60		"  `"	ldx	#$FD60    ; load X with value FD60 (SAW)(0560)
+0037 : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine FCF0 (CALCOS)(04F0)
 003A : C6 09		"  "		ldab	#$09    ; load B with 09h (0000 1001)
-003C : 7E FA E0		"~  "	jmp	LFAE0     ; jump to addr FAE0 (label FAE0)(02E0)
+003C : 7E FA E0		"~  "	jmp	LFAE0     ; jump to FAE0 (UTIL1)(02E0)
 **************************************;
 SYNTH1
 **************************************;
 003F : 96 17		"  "		ldaa	X0017   ; load A with value in addr 0017
 0041 : B7 04 00		"   "	staa	X0400   ; store A in addr 0400 (SOUND)
-0044				L0044:
+0044				L0044: LOOP1
 0044 : 96 0F		"  "		ldaa	X000F   ; load A with value in addr 000F
 0046 : 97 18		"  "		staa	X0018   ; store A in addr 0018
 0048 : 96 10		"  "		ldaa	X0010   ; load A with value in addr 0010
 004A : 97 19		"  "		staa	X0019   ; store A in addr 0019
-004C				L004C:
+004C				L004C: LOOP2
 004C : DE 14		"  "		ldx	X0014     ; load X with value in 0014
-004E				L004E:
+004E				L004E: LOOP3
 004E : 96 18		"  "		ldaa	X0018   ; load A with value in addr 0018
-0050 : 73 04 00		"s  "	com	X0400     ; complement 1s in addr 0400 (change all 1 to 0 and 0 to 1)
-0053				L0053:
+0050 : 73 04 00		"s  "	com	X0400     ; complement 1s in addr 0400 (change all 1 to 0 and 0 to 1)(SOUND)
+0053				L0053: LOOP4
 0053 : 09		" "		dex                 ; decrement X (X = X - 1)
-0054 : 27 10		"' "		beq	L0066     ; branch if zero (Z = 1) to Program Counter + 2 + 10h (label 0066)
+0054 : 27 10		"' "		beq	L0066     ; branch if zero (Z = 1) to PC + 2 + 10h (GOTO1)
 0056 : 4A		"J"		deca                ; decrement A (A = A - 1)
-0057 : 26 FA		"& "		bne	L0053     ; branch if not equal zero (Z = 0) to PC + 2 + FAh (label 0053) ?
+0057 : 26 FA		"& "		bne	L0053     ; branch if not equal zero (Z = 0) to PC + 2 + FAh (LOOP4) ?
 0059 : 73 04 00		"s  "	com	X0400     ; complements 1s in addr 0400 (SOUND)
 005C : 96 19		"  "		ldaa	X0019   ; load A with value in 0019
-005E				L005E:
+005E				L005E: LOOP5
 005E : 09		" "		dex                 ; decrement X
-005F : 27 05		"' "		beq	L0066     ; branch if zero to PC + 2 + 05h (label 0066)
+005F : 27 05		"' "		beq	L0066     ; branch if zero to PC + 2 + 05h (GOTO1)
 0061 : 4A		"J"		deca                ; decrement A
-0062 : 26 FA		"& "		bne	L005E     ; branch if not equal zero to PC + 2 + FAh (label 005E) ?
-0064 : 20 E8		"  "		bra	L004E     ; branch always to addr PC + E8h 
-0066				L0066:
+0062 : 26 FA		"& "		bne	L005E     ; branch if not equal zero to PC + 2 + FAh (LOOP5) ?
+0064 : 20 E8		"  "		bra	L004E     ; branch always to addr PC + E8h (LOOP3) 
+0066				L0066: GOTO1
 0066 : B6 04 00		"   "	ldaa	X0400   ; load A with value in addr 0400
-0069 : 2B 01		"+ "		bmi	L006C     ; branch if minus (N = 1) to addr PC + 2 + 01h (label 006C)
+0069 : 2B 01		"+ "		bmi	L006C     ; branch if minus (N = 1) to addr PC + 2 + 01h (GOTO2)
 006B : 43		"C"		coma                ; complements 1s in A
-006C				L006C:
+006C				L006C: GOTO2
 006C : 8B 00		"  "		adda	#$00    ; add A with 00h (A = A + 00h)
 006E : B7 04 00		"   "	staa	X0400   ; store A in addr 0400 (SOUND)
 0071 : 96 18		"  "		ldaa	X0018   ; load A with value in 0018
@@ -127,13 +127,13 @@ SYNTH1
 007B : 97 19		"  "		staa	X0019   ; store A in addr 0019
 007D : 91 13		"  "		cmpa	X0013   ; compare A with value in addr 0013
 
-007F : 26 CB		"& "		bne	L004C     ; branch if not equal zero to PC + 2 + CBh (label 004C) ?
+007F : 26 CB		"& "		bne	L004C     ; branch if not equal zero to PC + 2 + CBh (LOOP2)
 0081 : 96 16		"  "		ldaa	X0016   ; load A with value in 0016
-0083 : 27 06		"' "		beq	L008B     ; branch if zero to PC + 2 + 06h (label 008B)
+0083 : 27 06		"' "		beq	L008B     ; branch if zero to PC + 2 + 06h (GOTO3)
 0085 : 9B 0F		"  "		adda	X000F   ; add A with value in addr 000F
 0087 : 97 0F		"  "		staa	X000F   ; store A in addr 000F
-0089 : 26 B9		"& "		bne	L0044     ; branch if not equal zero to PC + 2 + B9h (label 0044) ?
-008B				L008B:
+0089 : 26 B9		"& "		bne	L0044     ; branch if not equal zero to PC + 2 + B9h (LOOP1)
+008B				L008B: GOTO3
 008B : 39		"9"		rts                 ; return from subroutine
 **************************************;
 PARAM2
@@ -143,7 +143,7 @@ PARAM2
 
 0090 : C6 03		"  "		ldab	#$03    ; load B with 03h (0000 0011)
 
-0092 : 20 0A		"  "		bra	L009E     ; branch always to addr PC + 0Ah
+0092 : 20 0A		"  "		bra	L009E     ; branch always to addr PC + 0Ah (GOTO4 in SYNTH2)
 **************************************;
 SYNTH2
 **************************************;
@@ -151,39 +151,36 @@ SYNTH2
 0096 : 97 16		"  "		staa	X0016   ; store A in addr 0016
 0098 : 86 C0		"  "		ldaa	#$C0    ; load A with C0h (1100 0000)
 009A : C6 10		"  "		ldab	#$10    ; load B with 10h (0001 0000)
-009C : 20 00		"  "		bra	L009E     ; branch always to addr PC + 00h (wait here or next instruction?)
-009E				L009E:
+009C : 20 00		"  "		bra	L009E     ; branch always to addr PC + 00h (GOTO4)
+009E				L009E: GOTO4
 009E : 97 15		"  "		staa	X0015   ; store A in addr 0015
 00A0 : 86 FF		"  "		ldaa	#$FF    ; load A with FFh (1111 1111)
 00A2 : B7 04 00		"   "	staa	X0400   ; store A in addr 0400
 00A5 : D7 11		"  "		stab	X0011   ; store B in addr 0011
-00A7				L00A7:
+00A7				L00A7: LOOP6
 00A7 : D6 11		"  "		ldab	X0011   ; load B with value in addr 0011
-00A9				L00A9:
+00A9				L00A9: LOOP7
 00A9 : 96 06		"  "		ldaa	X0006   ; load A with value in 0006
 00AB : 44		"D"		lsra                ; logic shift right A (LSB is moved to carry bit, 0 inserted as MSB)
-
 00AC : 44		"D"		lsra                ; logic shift right A
 00AD : 44		"D"		lsra                ; logic shift right A
 00AE : 98 06		"  "		eora	X0006   ; exclusive OR in A with value in addr 0006 (a == b = 0, a != b = 1) 
-
 00B0 : 44		"D"		lsra                ; logic shift right A
 00B1 : 76 00 05		"v  "	ror	X0005     ; rotate right in addr 0005 (rotate(shift) one bit left add Carry bit, Carry set to 0)
 00B4 : 76 00 06		"v  "	ror	X0006     ; rotate right in addr 0006
-00B7 : 24 03		"$ "		bcc	L00BC     ; branch if Carry clear (C = 0) to addr PC + 2 + 03h (label 00BC)
+00B7 : 24 03		"$ "		bcc	L00BC     ; branch if Carry clear (C = 0) to addr PC + 2 + 03h (GOTO5)
 00B9 : 73 04 00		"s  "	com	X0400     ; complement 1s in addr 0400 (SOUND)
-00BC				L00BC:
+00BC				L00BC: GOTO5
 00BC : 96 15		"  "		ldaa	X0015   ; load A with value in 0015
-00BE				L00BE:
+00BE				L00BE: LOOP8
 00BE : 4A		"J"		deca                ; decrement A
-00BF : 26 FD		"& "		bne	L00BE     ; branch not equal zero to PC + 2 + FDh (label 00BE) ?
+00BF : 26 FD		"& "		bne	L00BE     ; branch not equal zero to PC + 2 + FDh (LOOP8)
 00C1 : 5A		"Z"		decb                ; decrement B
-00C2 : 26 E5		"& "		bne	L00A9     ; branch not equal zero to PC + 2 + E5h (label 00A9) ?
+00C2 : 26 E5		"& "		bne	L00A9     ; branch not equal zero to PC + 2 + E5h (LOOP7)
 00C4 : 96 15		"  "		ldaa	X0015   ; load A with value in 0015
 00C6 : 9B 16		"  "		adda	X0016   ; add A with value in addr 0016
-
 00C8 : 97 15		"  "		staa	X0015   ; store A in addr 0015
-00CA : 26 DB		"& "		bne	L00A7     ; branch not equal zero to PC + 2 + DBh (label 00A7) ?
+00CA : 26 DB		"& "		bne	L00A7     ; branch not equal zero to PC + 2 + DBh (LOOP6)
 00CC : 39		"9"		rts                 ; return from subroutine
 **************************************;
 SYNTH3
@@ -194,15 +191,15 @@ SYNTH3
 00D3 : 86 01		"  "		ldaa	#$01    ; load A with 01h (0000 0001)
 00D5 : CE 00 01		"   "	ldx	#$0001    ; load X with 0001h (0000 0000 0000 0001)
 00D8 : C6 FF		"  "		ldab	#$FF    ; load B with FFh (1111 1111)
-00DA : 20 00		"  "		bra	L00DC     ; branch always to addr PC + 00h (next instruction?)
-00DC				L00DC:
+00DA : 20 00		"  "		bra	L00DC     ; branch always to addr PC + 00h (GOTO6)
+00DC				L00DC: GOTO6
 00DC : 97 0F		"  "		staa	X000F   ; store A in addr 000F
-00DE				L00DE:
+00DE				L00DE: LOOP9
 00DE : DF 12		"  "		stx	X0012     ; store X in addr 0012
-00E0				L00E0:
+00E0				L00E0: LOOP10
 00E0 : D7 10		"  "		stab	X0010   ; store B in addr 0010
 00E2 : D6 11		"  "		ldab	X0011   ; load B with value in addr 0011
-00E4				L00E4:
+00E4				L00E4: LOOP11
 00E4 : 96 06		"  "		ldaa	X0006   ; load A with value in addr 0006
 00E6 : 44		"D"		lsra                ; logic shift right A
 00E7 : 44		"D"		lsra                ; logic shift right A
@@ -212,26 +209,26 @@ SYNTH3
 00EC : 76 00 05		"v  "		ror	X0005   ; rotate right in addr 0005
 00EF : 76 00 06		"v  "		ror	X0006   ; rotate right in addr 0006
 00F2 : 86 00		"  "		ldaa	#$00    ; load A with 00h (0000 0000)
-00F4 : 24 02		"$ "		bcc	L00F8     ; branch if Carry clear to addr PC + 2 + 02h (label 00F8)
+00F4 : 24 02		"$ "		bcc	L00F8     ; branch if Carry clear to addr PC + 2 + 02h (GOTO7)
 00F6 : 96 10		"  "		ldaa	X0010   ; load A with value in addr 0010
-00F8				L00F8:
+00F8				L00F8: GOTO7
 00F8 : B7 04 00		"   "	staa	X0400   ; store A in addr 0400 (SOUND)
 00FB : DE 12		"  "		ldx	X0012     ; load X with value in addr 0012
-00FD				L00FD:
+00FD				L00FD: LOOP12
 00FD : 09		" "		dex                 ; decrement X
-00FE : 26 FD		"& "		bne	L00FD     ; branch not equal zero to PC + 2 + FDh (label 00FD) ?
+00FE : 26 FD		"& "		bne	L00FD     ; branch not equal zero to PC + 2 + FDh (LOOP12)
 0100 : 5A		"Z"		decb                ; decrement B
-0101 : 26 E1		"& "		bne	L00E4     ; branch not equal zero to PC + 2 + E1h (label 00E4) ?
+0101 : 26 E1		"& "		bne	L00E4     ; branch not equal zero to PC + 2 + E1h (LOOP11)
 0103 : D6 10		"  "		ldab	X0010   ; load B with value in addr 0010
 0105 : D0 0F		"  "		subb	X000F   ; subtract B with value in addr 000F
-0107 : 27 09		"' "		beq	L0112     ; branch if zero to PC + 2 + 09h (label 0112)
+0107 : 27 09		"' "		beq	L0112     ; branch if zero to PC + 2 + 09h (GOTO8)
 
 0109 : DE 12		"  "		ldx	X0012     ; load X with value in addr 0012
 010B : 08		" "		inx                 ; increment X
 010C : 96 14		"  "		ldaa	X0014   ; load A with value in addr 0014
-010E : 27 D0		"' "		beq	L00E0     ; branch if zero to PC + 2 + D0h (label 00E0) ?
-0110 : 20 CC		"  "		bra	L00DE     ; branch always to addr PC + CCh
-0112				L0112:
+010E : 27 D0		"' "		beq	L00E0     ; branch if zero to PC + 2 + D0h (LOOP10)
+0110 : 20 CC		"  "		bra	L00DE     ; branch always to addr PC + CCh (LOOP9)
+0112				L0112: GOTO8
 0112 : 39		"9"		rts                 ; return from subroutine (form of delay via code exe?)
 **************************************;
 PARAM3
@@ -265,10 +262,10 @@ SYNTH4
 0132 : D7 0F		"  "		stab	X000F   ; store B in addr 000F
 0134 : DF 12		"  "		stx	X0012     ; store X in addr 0012
 0136 : 7F 00 11		"   "	clr	X0011     ; clear (00) addr 0011
-0139				L0139:
+0139				L0139: LOOP13
 0139 : DE 12		"  "		ldx	X0012     ; load X with value in addr 0012
 013B : B6 04 00		"   "	ldaa	X0400   ; load A with value in addr 0400
-013E				L013E:
+013E				L013E: LOOP14
 013E : 16		" "		tab                 ; transfer A to B
 013F : 54		"T"		lsrb                ; logic shift right B
 0140 : 54		"T"		lsrb                ; logic shift right B
@@ -279,39 +276,39 @@ SYNTH4
 0148 : 76 00 06		"v  "	ror	X0006     ; rotate right in addr 0006
 014B : D6 0F		"  "		ldab	X000F   ; load B with value in addr 000F
 014D : 7D 00 15		"}  "	tst	X0015     ; test zero or minus in addr 0015, then do below
-0150 : 27 02		"' "		beq	L0154     ; branch if zero to PC + 2 + 02h (label 0154)
+0150 : 27 02		"' "		beq	L0154     ; branch if zero to PC + 2 + 02h (GOTO9)
 0152 : D4 05		"  "		andb	X0005   ; and B with addr 0005 into B
-0154				L0154:
+0154				L0154: GOTO9
 0154 : D7 10		"  "		stab	X0010   ; store B in addr 0010
 0156 : D6 11		"  "		ldab	X0011   ; load B with value in addr 0011
 0158 : 91 06		"  "		cmpa	X0006   ; compare A with value in addr 0006, change Z,C flags, then do below
-015A : 22 12		"" "		bhi	L016E     ; branch if higher (C + Z = 0) to PC + 2 + 12h (label 016E) ?
-015C				L015C:
+015A : 22 12		"" "		bhi	L016E     ; branch if higher (C + Z = 0) to PC + 2 + 12h (LOOP16)
+015C				L015C: LOOP15
 015C : 09		" "		dex                 ; decrement X
 015D : 27 26		"'&"		beq	L0185     ; branch if zero to PC + 2 + 26h (label 0185) ?
 015F : B7 04 00		"   "	staa	X0400   ; store A in addr 0400 (SOUND)
 0162 : DB 11		"  "		addb	X0011   ; add B with value in addr 0011
 0164 : 99 10		"  "		adca	X0010   ; add A with Carry and value in addr 0010 (A + M + C into A)
-0166 : 25 16		"% "		bcs	L017E     ; branch if Carry set (C = 1) to PC + 2 + 16h (label 017E) ?
+0166 : 25 16		"% "		bcs	L017E     ; branch if Carry set (C = 1) to PC + 2 + 16h (GOTO10)
 0168 : 91 06		"  "		cmpa	X0006   ; compare A with value in addr 0006, change Z, C flags, then do below
-016A : 23 F0		"# "		bls	L015C     ; branch if lower or same to PC + 2 + F0h (label 015C) ?
-016C : 20 10		"  "		bra	L017E     ; branch always to addr PC + 10h
-016E				L016E:
+016A : 23 F0		"# "		bls	L015C     ; branch if lower or same to PC + 2 + F0h (LOOP15)
+016C : 20 10		"  "		bra	L017E     ; branch always to addr PC + 10h (GOTO10)
+016E				L016E: LOOP16
 016E : 09		" "		dex                 ; decrement X
-016F : 27 14		"' "		beq	L0185     ; branch if zero to PC + 2 + 14h (label 0185) ?
+016F : 27 14		"' "		beq	L0185     ; branch if zero to PC + 2 + 14h (GOTO11)
 0171 : B7 04 00		"   "	staa	X0400   ; store A to addr 0400 (SOUND)
 0174 : D0 11		"  "		subb	X0011   ; subtract B with value in addr 0011
 0176 : 92 10		"  "		sbca	X0010   ; subtract A with Carry and value in addr 0010 (A - M - C into A)
-0178 : 25 04		"% "		bcs	L017E     ; branch if Carry set to PC + 2 + 04h (label 017E) ?
+0178 : 25 04		"% "		bcs	L017E     ; branch if Carry set to PC + 2 + 04h (GOTO10)
 017A : 91 06		"  "		cmpa	X0006   ; compare A with value in addr 0006, change Z, C flags, then do below
-017C : 22 F0		"" "		bhi	L016E     ; branch if higher to PC + 2 + F0h (label 016E) ?
-017E				L017E:
+017C : 22 F0		"" "		bhi	L016E     ; branch if higher to PC + 2 + F0h (LOOP16)
+017E				L017E: GOTO10
 017E : 96 06		"  "		ldaa	X0006   ; load A with value in addr 0006
 0180 : B7 04 00		"   "	staa	X0400   ; store A in addr 0400 (SOUND)
-0183 : 20 B9		"  "		bra	L013E     ; branch always to addr PC + B9h
-0185				L0185:
+0183 : 20 B9		"  "		bra	L013E     ; branch always to addr PC + B9h (LOOP14)
+0185				L0185: GOTO11
 0185 : D6 14		"  "		ldab	X0014   ; load B with value in 0014
-0187 : 27 B5		"' "		beq	L013E     ; branch if zero to PC + 2 + B5h (label 013E) ?
+0187 : 27 B5		"' "		beq	L013E     ; branch if zero to PC + 2 + B5h (LOOP14)
 0189 : 96 0F		"  "		ldaa	X000F   ; load A with value in 000F
 018B : D6 11		"  "		ldab	X0011   ; load B with value in 0011
 018D : 44		"D"		lsra                ; logic shift right A
@@ -327,9 +324,9 @@ SYNTH4
 0199 : 99 0F		"  "		adca	X000F   ; add A with Carry and value in 000F
 019B : D7 11		"  "		stab	X0011   ; store B in addr 0011
 019D : 97 0F		"  "		staa	X000F   ; store A in addr 000F
-019F : 26 98		"& "		bne	L0139     ; branch if not equal zero to PC + 2 + 98h (label 0139) ?
+019F : 26 98		"& "		bne	L0139     ; branch if not equal zero to PC + 2 + 98h (LOOP13)
 01A1 : C1 07		"  "		cmpb	#$07    ; compare B with 07h (0000 0111)
-01A3 : 26 94		"& "		bne	L0139     ; branch if not equal zero to PC + 2 + 94h (label 0139) ?
+01A3 : 26 94		"& "		bne	L0139     ; branch if not equal zero to PC + 2 + 94h (LOOP13)
 01A5 : 39		"9"		rts                 ; return from subroutine
 **************************************;
 SYNTH5
@@ -338,20 +335,20 @@ SYNTH5
 01A8 : 97 0B		"  "		staa	X000B   ; store A to addr 000B
 01AA : CE 00 64		"  d"	ldx	#$0064    ; load X with 0064h (0000 0000 0110 0100)
 01AD : DF 07		"  "		stx	X0007     ; store X in addr 0007
-01AF				L01AF:
+01AF				L01AF: LOOP17
 01AF : DB 08		"  "		addb	X0008   ; add B with value in 0008
 01B1 : 96 0D		"  "		ldaa	X000D   ; load A with value in 000D
 01B3 : 99 07		"  "		adca	X0007   ; add A with Carry and value in 0007
 01B5 : 97 0D		"  "		staa	X000D   ; store A in addr 000D
 01B7 : DE 07		"  "		ldx	X0007     ; load X with value in 0007
-01B9 : 25 04		"% "		bcs	L01BF     ; branch if Carry set to PC + 2 + 04h (label 01BF)
-01BB : 20 00		"  "		bra	L01BD     ; branch always to addr PC + 00h
-01BD				L01BD:
-01BD : 20 03		"  "		bra	L01C2     ; branch always to addr PC + 03h
-01BF				L01BF:
+01B9 : 25 04		"% "		bcs	L01BF     ; branch if Carry set to PC + 2 + 04h (GOTO13)
+01BB : 20 00		"  "		bra	L01BD     ; branch always to addr PC + 00h (GOTO12)
+01BD				L01BD: GOTO12
+01BD : 20 03		"  "		bra	L01C2     ; branch always to addr PC + 03h (GOTO14)
+01BF				L01BF: GOTO13
 01BF : 08		" "		inx                 ; increment X
-01C0 : 27 11		"' "		beq	L01D3     ; branch if zero to PC + 2 + 11h (label 01D3) ?
-01C2				L01C2:
+01C0 : 27 11		"' "		beq	L01D3     ; branch if zero to PC + 2 + 11h (GOTO15)
+01C2				L01C2: GOTO14
 01C2 : DF 07		"  "		stx	X0007     ; store X in addr 0007
 01C4 : 84 0F		"  "		anda	#$0F    ; and A with value 0Fh (1 and 1 = 1)(0000 1111)
 01C6 : 8B 84		"  "		adda	#$84    ; add A with value 84h (1000 0100)
@@ -359,8 +356,8 @@ SYNTH5
 01CA : DE 0B		"  "		ldx	X000B     ; load X with value in 000B
 01CC : A6 00		"  "		ldaa	$00,x   ; load A with value in X + 00h
 01CE : B7 04 00		"   "	staa	X0400   ; store A in addr 0400 (SOUND)
-01D1 : 20 DC		"  "		bra	L01AF     ; branch always to addr PC + DCh
-01D3				L01D3:
+01D1 : 20 DC		"  "		bra	L01AF     ; branch always to addr PC + DCh (LOOP17)
+01D3				L01D3: GOTO15
 01D3 : 39		"9"		rts                 ; return from subroutine (form of delay via code exe times?)
 **************************************;
 SYNTH6
@@ -368,73 +365,73 @@ SYNTH6
 01D4 : 4F		"O"		clra                ; clear A (00)
 01D5 : B7 04 00		"   "	staa	X0400   ; store A in addr 0400 (SOUND)
 01D8 : 97 0D		"  "		staa	X000D   ; store A in addr 000D
-01DA				L01DA:
+01DA				L01DA: LOOP18
 01DA : 4F		"O"		clra                ; clear A (00)
-01DB				L01DB:
+01DB				L01DB: LOOP19
 01DB : 91 0D		"  "		cmpa	X000D   ; compare A with addr 000D, then do below
-01DD : 26 03		"& "		bne	L01E2     ; branch not equal zero to PC + 2 + 03h (label 01E2)
+01DD : 26 03		"& "		bne	L01E2     ; branch not equal zero to PC + 2 + 03h (GOTO16)
 01DF : 73 04 00		"s  "	com	X0400     ; complement 1s in addr 0400 (SOUND)
-01E2				L01E2:
+01E2				L01E2: GOTO16
 01E2 : C6 12		"  "		ldab	#$12    ; load B with value 12h (0001 0010)
-01E4				L01E4:
+01E4				L01E4: LOOP20
 01E4 : 5A		"Z"		decb                ; decrement B
-01E5 : 26 FD		"& "		bne	L01E4     ; branch not equal zero to PC + 2 + FDh (label 01E4) ?
+01E5 : 26 FD		"& "		bne	L01E4     ; branch not equal zero to PC + 2 + FDh (LOOP20)
 01E7 : 4C		"L"		inca                ; increment A
-01E8 : 2A F1		"* "		bpl	L01DB     ; branch if plus (N = 0) to addr PC +- F1h (label 01DB) (true == - , false == +)
+01E8 : 2A F1		"* "		bpl	L01DB     ; branch if plus (N = 0) to addr PC +- F1h (LOOP19) (true == - , false == +)
 01EA : 73 04 00		"s  "	com	X0400     ; complement 1s in addr 0400 (SOUND)
 01ED : 7C 00 0D		"|  "	inc	X000D     ; increment value in addr 000D
-01F0 : 2A E8		"* "		bpl	L01DA     ; branch if plus to addr PC +- E8h (label 01DA)
+01F0 : 2A E8		"* "		bpl	L01DA     ; branch if plus to addr PC +- E8h (LOOP18)
 01F2 : 39		"9"		rts                 ; return from subroutine
 **************************************;
 SYNTH7
 **************************************;
 01F3 : CE 00 0F		"   "	ldx	#$000F    ; load X with 000Fh (0000 0000 0000 1111)
-01F6				L01F6:
+01F6				L01F6: LOOP21
 01F6 : 6F 00		"o "		clr	$00,x     ; clear (00) X + 00h
 01F8 : 08		" "		inx                 ; increment X
 01F9 : 8C 00 17		"   "	cpx	#$0017    ; compare X with value 0017h (0000 0000 0001 0111)
-01FC : 26 F8		"& "		bne	L01F6     ; branch not equal zero to PC + 2 + F8h (label 01F6)
+01FC : 26 F8		"& "		bne	L01F6     ; branch not equal zero to PC + 2 + F8h (LOOP21)
 01FE : 86 40		" @"		ldaa	#$40    ; load A with value 40h (0100 0000)
 0200 : 97 0F		"  "		staa	X000F   ; store A in addr 000F
-0202				L0202:
+0202				L0202: LOOP22
 0202 : CE 00 0F		"   "	ldx	#$000F    ; load X with 000F (0000 0000 0000 1111)
 0205 : 86 80		"  "		ldaa	#$80    ; load A with 80h (1000 0000)
 0207 : 97 0D		"  "		staa	X000D   ; store A in addr 000D
 0209 : 5F		"_"		clrb                ; clear (00) B
-020A				L020A:
+020A				L020A: LOOP23
 020A : A6 01		"  "		ldaa	$01,x   ; load A with value in X + 01h
 020C : AB 00		"  "		adda	$00,x   ; add A with value in X + 00h
 020E : A7 01		"  "		staa	$01,x   ; store A in X + 01h
-0210 : 2A 02		"* "		bpl	L0214     ; branch if plus to PC +- 02h (label 0214)
+0210 : 2A 02		"* "		bpl	L0214     ; branch if plus to PC +- 02h (GOTO17)
 0212 : DB 0D		"  "		addb	X000D   ; add B with value in 000D
-0214				L0214:
+0214				L0214: GOTO17
 0214 : 74 00 0D		"t  "	lsr	X000D     ; logic shift right in addr 000D
 0217 : 08		" "		inx                 ; increment X
 0218 : 08		" "		inx                 ; increment X
 0219 : 8C 00 17		"   "	cpx	#$0017    ; compare X with value 0017h (0000 0000 0001 0111)
-021C : 26 EC		"& "		bne	L020A     ; branch not equal zero to PC + 2 + ECh (label 020A)
+021C : 26 EC		"& "		bne	L020A     ; branch not equal zero to PC + 2 + ECh (LOOP23)
 021E : F7 04 00		"   "	stab	X0400   ; store B in addr 0400 (SOUND)
 0221 : 7C 00 0E		"|  "	inc	X000E     ; increment in addr 000E
-0224 : 26 DC		"& "		bne	L0202     ; branch not equal zero to PC + 2 + DC (label 0202)
+0224 : 26 DC		"& "		bne	L0202     ; branch not equal zero to PC + 2 + DC (LOOP22)
 0226 : CE 00 0F		"   "	ldx	#$000F    ; load X with 000F (0000 0000 0000 1111)
 0229 : 5F		"_"		clrb                ; clear (00) B
-022A				L022A:
+022A				L022A: LOOP24
 022A : A6 00		"  "		ldaa	$00,x   ; load A with value in X + 00h
-022C : 27 0B		"' "		beq	L0239     ; branch if equal zero to PC + 2 + 0B (label 0239)
+022C : 27 0B		"' "		beq	L0239     ; branch if equal zero to PC + 2 + 0B (GOTO19)
 022E : 81 37		" 7"		cmpa	#$37    ; compare A with value 37h (0011 0111)
-0230 : 26 04		"& "		bne	L0236     ; branch not equal zero to PC + 2 + 04h (label 0236)
+0230 : 26 04		"& "		bne	L0236     ; branch not equal zero to PC + 2 + 04h (GOTO18)
 0232 : C6 41		" A"		ldab	#$41    ; load B with value 41h (0100 0001)
 0234 : E7 02		"  "		stab	$02,x   ; store B in X + 02h
-0236				L0236:
+0236				L0236: GOTO18
 0236 : 6A 00		"j "		dec	$00,x     ; decrement X + 00h
 0238 : 5C		"\"		incb                ; increment B
-0239				L0239:
+0239				L0239: GOTO19
 0239 : 08		" "		inx                 ; increment X
 023A : 08		" "		inx                 ; increment X
 023B : 8C 00 17		"   "	cpx	#$0017    ; compare X with value 0017h (0000 0000 0001 0111)
-023E : 26 EA		"& "		bne	L022A     ; branch not equal zero to PC + 2 + EAh (label 022A)
+023E : 26 EA		"& "		bne	L022A     ; branch not equal zero to PC + 2 + EAh (LOOP24)
 0240 : 5D		"]"		tstb                ; test zero or minus B
-0241 : 26 BF		"& "		bne	L0202     ; branch not equal zero to PC + 2 + BFh (label 0202)
+0241 : 26 BF		"& "		bne	L0202     ; branch not equal zero to PC + 2 + BFh (LOOP22)
 0243 : 39		"9"		rts                 ; return from subroutine
 **************************************;
 PARAM6
@@ -442,10 +439,10 @@ PARAM6
 0244 : 7A 00 04		"z  "	dec	X0004     ; decrement in addr 0004
 0247 : 39		"9"		rts                 ; return from subroutine
 **************************************;
-?
+PATH1 (seems just a control block?)
 **************************************;
 0248 : 8D 03		"  "		bsr	L024D     ; branch to subroutine to addr PC + 03h (PARAM7)
-024A : 7E FC DD		"~  "	jmp	LFCDD     ; jump to addr FCDDh (L04DD)(~IRQ)
+024A : 7E FC DD		"~  "	jmp	LFCDD     ; jump to addr FCDDh (GOTO44 in IRQ)
 **************************************;
 PARAM7
 **************************************;
@@ -453,21 +450,21 @@ PARAM7
 024D : 7F 00 04		"   "	clr	X0004     ; clear (00) addr 0004
 0250 : 97 0D		"  "		staa	X000D   ; store A in addr 000D
 0252 : CE FD 94		"   "	ldx	#$FD94    ; load X with value FD94h (0594)(waveform?)
-0255				L0255:
+0255				L0255: LOOP25
 0255 : A6 00		"  "		ldaa	$00,x   ; load A with value in X + 00h
-0257 : 27 2D		"'-"		beq	L0286     ; branch equal zero to PC + 2 + 2Dh (label 0286)
+0257 : 27 2D		"'-"		beq	L0286     ; branch equal zero to PC + 2 + 2Dh (GOTO21)
 0259 : 7A 00 0D		"z  "	dec	X000D     ; decrement in addr 000D
-025C : 27 06		"' "		beq	L0264     ; branch equal zero to PC + 2 + 06h (label 0264)
+025C : 27 06		"' "		beq	L0264     ; branch equal zero to PC + 2 + 06h (GOTO20)
 025E : 4C		"L"		inca                ; increment A
-025F : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine in addr FCF0h (CALCOS) (04F0)
-0262 : 20 F1		"  "		bra	L0255     ; branch always to addr PC + F1 (label 0255)
-0264				L0264:
+025F : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine in addr FCF0h (CALCOS)
+0262 : 20 F1		"  "		bra	L0255     ; branch always to addr PC + F1 (LOOP25)
+0264				L0264: GOTO20
 0264 : 08		" "		inx                 ; increment X
 0265 : DF 0B		"  "		stx	X000B     ; store X in 000B
-0267 : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine in FCF0h (CALCOS) (04F0)
+0267 : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine in FCF0h (CALCOS)
 026A : DF 09		"  "		stx	X0009     ; store X in 0009
 026C : DE 0B		"  "		ldx	X000B     ; load X with value in 000B
-026E				L026E:
+026E				L026E: LOOP26
 026E : A6 00		"  "		ldaa	$00,x   ; load A with value in X + 00h
 0270 : 97 11		"  "		staa	X0011   ; store A in addr 0011
 0272 : A6 01		"  "		ldaa	$01,x   ; load A with value in X + 01h
@@ -481,32 +478,31 @@ PARAM7
 027F : 08		" "		inx                 ; increment X
 0280 : DF 0B		"  "		stx	X000B     ; store X in addr 000B
 0282 : 9C 09		"  "		cpx	X0009     ; compare X with value in 0009
-0284 : 26 E8		"& "		bne	L026E     ; branch not equal zero to PC + 2 + E8 (label 026E)
-0286				L0286:
+0284 : 26 E8		"& "		bne	L026E     ; branch not equal zero to PC + 2 + E8 (LOOP26)
+0286				L0286: GOTO21
 0286 : 39		"9"		rts                 ; return from subroutine
 0287 : 39		"9"		rts                 ; return from subroutine
 **************************************;
-PARAM8
+PARAM8 - should be a SYNTH as has output
 **************************************;
-0288				L0288:
 0288 : CE 00 12		"   "	ldx	#$0012    ; load X with value 0012h (0000 0000 0001 0010)
 028B : 80 02		"  "		suba	#$02    ; subtract A with value 02h (0000 0010)
-028D				L028D:
-028D : 23 15		"# "		bls	L02A4     ; branch lower or same to PC +- 15h (label 02A4)
+028D				L028D: LOOP27
+028D : 23 15		"# "		bls	L02A4     ; branch lower or same to PC +- 15h (GOTO23)
 028F : 81 03		"  "		cmpa	#$03    ; compare A with value 03h (0000 0011)
-0291 : 27 09		"' "		beq	L029C     ; branch equal zero to PC +- 09h (label 029C)
+0291 : 27 09		"' "		beq	L029C     ; branch equal zero to PC +- 09h (GOTO22)
 0293 : C6 01		"  "		ldab	#$01    ; load B with value 01h (0000 0001)
 0295 : E7 00		"  "		stab	$00,x   ; store B in addr X + 00h
 0297 : 08		" "		inx                 ; increment X
 0298 : 80 02		"  "		suba	#$02    ; subtract A with value 02h (0000 0010)
-029A : 20 F1		"  "		bra	L028D     ; branch always to addr PC + F1h (label 028D)
-029C				L029C:
+029A : 20 F1		"  "		bra	L028D     ; branch always to addr PC + F1h (LOOP27)
+029C				L029C: GOTO22
 029C : C6 91		"  "		ldab	#$91    ; load B with value 91h (1001 0001)
 029E : E7 00		"  "		stab	$00,x   ; store B in X + 00h
 02A0 : 6F 01		"o "		clr	$01,x     ; clear (00) X + 01h
 02A2 : 08		" "		inx                 ; increment X
 02A3 : 08		" "		inx                 ; increment X
-02A4				L02A4:
+02A4				L02A4: GOTO23
 02A4 : C6 7E		" ~"		ldab	#$7E    ; load B with value 7Eh (0111 1110)
 02A6 : E7 00		"  "		stab	$00,x   ; store B in X + 00h
 02A8 : C6 FA		"  "		ldab	#$FA    ; load B with value FAh (1111 1010)
@@ -541,15 +537,15 @@ PARAM8
 02D5 : 48		"H"		asla                ; arithmetic shift left A
 02D6 : B7 04 00		"   "	staa	X0400   ; store A in 0400 (SOUND)
 02D9 : 09		" "		dex                 ; decrement X
-02DA : 27 03		"' "		beq	L02DF     ; branch equal zero PC +- 03h (label 02DF)
-02DC : 7E 00 12		"~  "	jmp	L0012     ; jump to addr 0012
-02DF				L02DF:
+02DA : 27 03		"' "		beq	L02DF     ; branch equal zero PC +- 03h (GOTO24)
+02DC : 7E 00 12		"~  "	jmp	L0012     ; jump to addr 0012 (GOTO0)
+02DF				L02DF: GOTO24
 02DF : 39		"9"		rts                 ; return from subroutine
 **************************************;
 UTIL1
 **************************************;
 02E0 : 36		"6"		psha                ; push A into stack(A into SP) 
-02E1				L02E1:
+02E1				L02E1: LOOP28
 02E1 : A6 00		"  "		ldaa	$00,x   ; load A with value in X + 00h
 02E3 : DF 09		"  "		stx	X0009     ; store X in 0009
 02E5 : DE 0B		"  "		ldx	X000B     ; load X with value in 000B
@@ -559,7 +555,7 @@ UTIL1
 02EC : DE 09		"  "		ldx	X0009     ; load X with value in 0009
 02EE : 08		" "		inx                 ; increment X
 02EF : 5A		"Z"		decb                ; decrement B
-02F0 : 26 EF		"& "		bne	L02E1     ; branch not equal zero to PC +- EFh (label 02E1)
+02F0 : 26 EF		"& "		bne	L02E1     ; branch not equal zero to PC +- EFh (LOOP28)
 02F2 : 32		"2"		pula                ; pull into A from stack (SP into A)
 02F3 : 39		"9"		rts                 ; return from subroutine
 **************************************;
@@ -576,9 +572,9 @@ PARAM11
 02FD : 96 01		"  "		ldaa	X0001   ; load A with value in 0001
 02FF : 84 7F		"  "		anda	#$7F    ; and A with value 7Fh (0111 1111)
 0301 : 81 1D		"  "		cmpa	#$1D    ; compare A with value 1Dh (0001 1101)
-0303 : 26 01		"& "		bne	L0306     ; branch not equal zero PC +- 01h (label 0306)
+0303 : 26 01		"& "		bne	L0306     ; branch not equal zero PC +- 01h (GOTO25)
 0305 : 4F		"O"		clra                ; clear (00) A
-0306				L0306:
+0306				L0306: GOTO25
 0306 : 4C		"L"		inca                ; increment A
 0307 : 97 01		"  "		staa	X0001   ; store A in 0001
 0309 : 39		"9"		rts                 ; return from subroutine
@@ -586,64 +582,64 @@ PARAM11
 UTIL2
 **************************************;
 030A : 86 0E		"  "		ldaa	#$0E    ; load A with value 0Eh (0000 1110)
-030C : BD FB 57		"  W"	jsr	LFB57     ; jump to subroutine FB57 (~PARAM13) (0357)
+030C : BD FB 57		"  W"	jsr	LFB57     ; jump to subroutine FB57 (GOTO28 in PARAM13)
 030F : 96 01		"  "		ldaa	X0001   ; load A with value in 0001
 0311 : 48		"H"		asla                ; arithmetic shift left A
 0312 : 48		"H"		asla                ; arithmetic shift left A
 0313 : 43		"C"		coma                ; complement 1s A
-0314 : BD FC 0F		"   "	jsr	LFC0F     ; jump to subroutine FC0F (~PAAM14) (040F)
-0317				L0317:
+0314 : BD FC 0F		"   "	jsr	LFC0F     ; jump to subroutine FC0F (GOTO49 in PARAM14)
+0317				L0317: LOOP29
 0317 : 7C 00 13		"|  "	inc	X0013     ; increment in addr 0013
-031A : BD FC 11		"   "	jsr	LFC11     ; jump to subroutine FC11 (~PARAM14) (0411)
-031D : 20 F8		"  "		bra	L0317     ; branch always to PC +- F8 (label 0317)
+031A : BD FC 11		"   "	jsr	LFC11     ; jump to subroutine FC11 (GOTO48 in PARAM14)
+031D : 20 F8		"  "		bra	L0317     ; branch always to PC +- F8 (LOOP29)
 **************************************;
 PARAM12
 **************************************;
 031F : 86 03		"  "		ldaa	#$03    ; load A with value 03h (0000 0011)
-0321 : BD F8 2A		"  *"	jsr	LF82A     ; jump to subroutine F82A (PARAM1) (002A)
+0321 : BD F8 2A		"  *"	jsr	LF82A     ; jump to subroutine F82A (PARAM1)
 0324 : D6 02		"  "		ldab	X0002   ; load B with value in 0002
 0326 : C1 1F		"  "		cmpb	#$1F    ; compare B with value 1Fh (0001 1111)
-0328 : 26 01		"& "		bne	L032B     ; brnach not equal zero to PC +- 01 (label 032B)
+0328 : 26 01		"& "		bne	L032B     ; brnach not equal zero to PC +- 01 (GOTO26)
 032A : 5F		"_"		clrb                ; clear (00) B
-032B				L032B:
+032B				L032B: GOTO26
 032B : 5C		"\"		incb                ; increment B
 032C : D7 02		"  "		stab	X0002   ; store B in addr 0002
 032E : 86 20		"  "		ldaa	#$20    ; load A with value 20h (0010 0000)
 0330 : 10		" "		sba                 ; subtract A - B into A
 0331 : 5F		"_"		clrb                ; clear (00) B
-0332				L0332:
+0332				L0332: LOOP30
 0332 : 81 14		"  "		cmpa	#$14    ; compare A with vlaue 14h (0001 0100)
-0334 : 23 05		"# "		bls	L033B     ; branch if lower or same to PC +- 05h (label 033B)
+0334 : 23 05		"# "		bls	L033B     ; branch if lower or same to PC +- 05h (LOOP31)
 0336 : CB 0E		"  "		addb	#$0E    ; add B with value 0Eh (0000 1110)
 0338 : 4A		"J"		deca                ; decrement A
-0339 : 20 F7		"  "		bra	L0332     ; branch always PC +- F7 (label 0332)
-033B				L033B:
+0339 : 20 F7		"  "		bra	L0332     ; branch always PC +- F7 (LOOP30)
+033B				L033B: LOOP31
 033B : CB 05		"  "		addb	#$05    ; add B with value 05h (0000 0101)
 033D : 4A		"J"		deca                ; decrement A
-033E : 26 FB		"& "		bne	L033B     ; branch not equal zero to PC +- FB (label 033B)
+033E : 26 FB		"& "		bne	L033B     ; branch not equal zero to PC +- FB (LOOP31)
 0340 : D7 0F		"  "		stab	X000F   ; store B in addr 000F
-0342				L0342:
-0342 : BD F8 3F		"  ?"	jsr	LF83F     ; jump to subroutine addr F83F (SYNTH 1)(003F)
-0345 : 20 FB		"  "		bra	L0342     ; branch always to PC +- FB (label 0342)
+0342				L0342: LOOP32
+0342 : BD F8 3F		"  ?"	jsr	LF83F     ; jump to subroutine addr F83F (SYNTH 1)
+0345 : 20 FB		"  "		bra	L0342     ; branch always to PC +- FB (LOOP32)
 **************************************;
 PARAM13
 **************************************;
 0347 : 96 03		"  "		ldaa	X0003   ; load A with value in 0003
-0349 : 26 09		"& "		bne	L0354     ; branch not equal zero PC +- 09h (label 0354)
+0349 : 26 09		"& "		bne	L0354     ; branch not equal zero PC +- 09h (GOTO27)
 034B : 7C 00 03		"|  "	inc	X0003     ; increment addr 0003
 034E : 86 0D		"  "		ldaa	#$0D    ; load A with value 0Dh (0000 1101)
-0350 : 8D 05		"  "		bsr	L0357     ; branch to subroutine PC +- 05 (label 0357)
-0352 : 20 69		" i"		bra	L03BD     ; branch always PC +- 69 (label 03BD)(SYNTH 9)
-0354				L0354:
-0354 : 7E FC 04		"~  "	jmp	LFC04     ; jump to FC04 (~PARAM14) (0404)
-0357				L0357:
+0350 : 8D 05		"  "		bsr	L0357     ; branch to subroutine PC +- 05 (GOTO28)
+0352 : 20 69		" i"		bra	L03BD     ; branch always PC +- 69 (SYNTH 9)
+0354				L0354: GOTO27
+0354 : 7E FC 04		"~  "	jmp	LFC04     ; jump to FC04 (GOTO31 in PARAM14)
+0357				L0357: GOTO28
 0357 : 16		" "		tab                 ; transfer A to B
 0358 : 58		"X"		aslb                ; arithmetic shift left B
 0359 : 1B		" "		aba                 ; add A + B into A
 035A : 1B		" "		aba                 ; add A + B into A
 035B : 1B		" "		aba                 ; add A + B into A
 035C : CE FE D6		"   "	ldx	#$FED6    : load X with value FED6 (06D6)(waveform?)
-035F : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine FCF0 (CALCOS) (04F0)
+035F : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine FCF0 (CALCOS)
 0362 : A6 00		"  "		ldaa	$00,x   ; load A with X + 00h
 0364 : 16		" "		tab                 ; transfer A to B
 0365 : 84 0F		"  "		anda	#$0F    ; and A with value 0Fh (0000 1111)
@@ -664,20 +660,20 @@ PARAM13
 037A : 97 0D		"  "		staa	X000D   ; store A in 000D
 037C : DF 07		"  "		stx	X0007     ; store X in 0007
 037E : CE FE 37		"  7"	ldx	#$FE37    ; load X with value FE37 (0637)(waveform?)
-0381				L0381:
+0381				L0381: LOOP33
 0381 : 7A 00 0D		"z  "	dec	X000D     ; decrement 000D
-0384 : 2B 08		"+ "		bmi	L038E     ; branch if minus to PC +- 08h (label 038E)
+0384 : 2B 08		"+ "		bmi	L038E     ; branch if minus to PC +- 08h (GOTO29)
 0386 : A6 00		"  "		ldaa	$00,x   ; load A with value in X + 00h
 0388 : 4C		"L"		inca                ; increment A
-0389 : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine FCF0 (CALCOS) (04F0)
-038C : 20 F3		"  "		bra	L0381     ; branch always to PC +- F3 (label 0381)
-038E				L038E:
+0389 : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine FCF0 (CALCOS)
+038C : 20 F3		"  "		bra	L0381     ; branch always to PC +- F3 (LOOP33)
+038E				L038E: GOTO29
 038E : DF 14		"  "		stx	X0014     ; store X in 0014
-0390 : BD FC 4B		"  K"	jsr	LFC4B     ; jump to subroutine FC4B (PARAM18) (044B)
+0390 : BD FC 4B		"  K"	jsr	LFC4B     ; jump to subroutine FC4B (PARAM18)
 0393 : DE 07		"  "		ldx	X0007     ; load X with value in 0007
 0395 : A6 02		"  "		ldaa	$02,x   ; load A with value in X + 02h
 0397 : 97 16		"  "		staa	X0016   ; store A in 0016
-0399 : BD FC 5D		"  ]"	jsr	LFC5D     ; jump to subroutine FC5D (PARAM19) (045D)
+0399 : BD FC 5D		"  ]"	jsr	LFC5D     ; jump to subroutine FC5D (PARAM19)
 039C : DE 07		"  "		ldx	X0007     ; load X with value in 0007
 039E : A6 03		"  "		ldaa	$03,x   ; load A with value in X + 03h
 03A0 : 97 12		"  "		staa	X0012   ; store A in 0012
@@ -687,23 +683,22 @@ PARAM13
 03A8 : 16		" "		tab                 ; transfer A to B
 03A9 : A6 06		"  "		ldaa	$06,x   ; load A with value in X + 06h
 03AB : CE FF 3F		"  ?"	ldx	#$FF3F    ; load X with value FF3F (073F) (waveform?)
-03AE : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine FCF0 (CALCOS) (04F0)
+03AE : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine FCF0 (CALCOS)
 03B1 : 17		" "		tba                 ; transfer B to A
 03B2 : DF 17		"  "		stx	X0017     ; store X in 0017
 03B4 : 7F 00 1F		"   "	clr	X001F     ; clear (00) 001F
-03B7 : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine FCF0 (CALCOS) (04F0)
+03B7 : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine FCF0 (CALCOS)
 03BA : DF 19		"  "		stx	X0019     ; store X in 0019
 03BC : 39		"9"		rts                 ; return from subroutine
 **************************************;
 SYNTH9
 **************************************;
-03BD				L03BD:
 03BD : 96 0F		"  "		ldaa	X000F   ; load A with value in 000F
 03BF : 97 1E		"  "		staa	X001E   ; store A in 001E
-03C1				L03C1:
+03C1				L03C1: GOTO30
 03C1 : DE 17		"  "		ldx	X0017     ; load X with value in 0017
 03C3 : DF 09		"  "		stx	X0009     ; store X in 0009
-03C5				L03C5:
+03C5				L03C5: LOOP34
 03C5 : DE 09		"  "		ldx	X0009     ; load X with value in 0009
 03C7 : A6 00		"  "		ldaa	$00,x   ; load A with X + 00h
 03C9 : 9B 1F		"  "		adda	X001F   ; add A with value in 001F
@@ -713,20 +708,20 @@ SYNTH9
 03D1 : D6 10		"  "		ldab	X0010   ; load B with value in 0010
 03D3 : 08		" "		inx                 ; increment X
 03D4 : DF 09		"  "		stx	X0009     ; store X in 0009
-03D6				L03D6:
+03D6				L03D6: LOOP35
 03D6 : CE 00 20		"   "	ldx	#$0020    ; load X with value 0020h (0000 0000 0010 0000)
-03D9				L03D9:
+03D9				L03D9: LOOP36
 03D9 : 96 1D		"  "		ldaa	X001D   ; load A with value in 001D
-03DB				L03DB:
+03DB				L03DB: LOOP37
 03DB : 4A		"J"		deca                ; decrement A
-03DC : 26 FD		"& "		bne	L03DB     ; branch not equal zero to PC +- FD (label 03DB)
+03DC : 26 FD		"& "		bne	L03DB     ; branch not equal zero to PC +- FD (LOOP37)
 03DE : A6 00		"  "		ldaa	$00,x   ; load A with value in X + 00
 03E0 : B7 04 00		"   "	staa	X0400   ; store A in 0400 (SOUND)
 03E3 : 08		" "		inx                 ; increment X
 03E4 : 9C 1B		"  "		cpx	X001B     ; compare X with value in 001B
-03E6 : 26 F1		"& "		bne	L03D9     ; branch not equal zero to PC +- F1 (label 03D9)
+03E6 : 26 F1		"& "		bne	L03D9     ; branch not equal zero to PC +- F1 (LOOP36)
 03E8 : 5A		"Z"		decb                ; decrement B
-03E9 : 27 DA		"' "		beq	L03C5     ; branch if equal zero to PC +- DA (label 03C5)
+03E9 : 27 DA		"' "		beq	L03C5     ; branch if equal zero to PC +- DA (LOOP34)
 03EB : 08		" "		inx                 ; increment X
 03EC : 09		" "		dex                 ; decrement X
 03ED : 08		" "		inx                 ; increment X
@@ -737,99 +732,96 @@ SYNTH9
 03F2 : 09		" "		dex                 ; decrement X
 03F3 : 01		" "		nop                 ; no operation, advance PC
 03F4 : 01		" "		nop                 ; no operation, advance PC
-03F5 : 20 DF		"  "		bra	L03D6     ; branch always to PC +- DF (label 03D6)
+03F5 : 20 DF		"  "		bra	L03D6     ; branch always to PC +- DF (LOOP35)
 **************************************;
 PARAM14
 **************************************;
-03F7				L03F7:
 03F7 : 96 11		"  "		ldaa	X0011   ; load A with value in 0011
 03F9 : 8D 62		" b"		bsr	L045D     ; branch to subroutine PC +- 62 (PARAM19)
 03FB : 7A 00 1E		"z  "	dec	X001E     ; decrement value in 001E
-03FE : 26 C1		"& "		bne	L03C1     ; branch not equal zero to PC +- C1 (~SYNTH9)
-
+03FE : 26 C1		"& "		bne	L03C1     ; branch not equal zero to PC +- C1 (GOTO30 in SYNTH9)
 0400 : 96 03		"  "		ldaa	X0003   ; load A with value in 0003
-
-0402 : 26 46		"&F"		bne	L044A     ; branch not equal zero to PC +- 46 (label 044A)
+0402 : 26 46		"&F"		bne	L044A     ; branch not equal zero to PC +- 46 (GOTO36 in PATH2)
+0404 :      L0404: GOTO31
 0404 : 96 12		"  "		ldaa	X0012   ; load A with value in 0012
-0406 : 27 42		"'B"		beq	L044A     ; branch if equal zero to PC +- 42 (label 044A)
+0406 : 27 42		"'B"		beq	L044A     ; branch if equal zero to PC +- 42 (GOTO36 in PATH2)
 0408 : 7A 00 13		"z  "	dec	X0013     ; decrement value in 0013
-040B : 27 3D		"'="		beq	L044A     ; branch if equal zero ti PC +- 3D (label 044A)
+040B : 27 3D		"'="		beq	L044A     ; branch if equal zero ti PC +- 3D (GOTO36 in PATH2)
 040D : 9B 1F		"  "		adda	X001F   ; add A with value in 001F
+040F :      L040F: GOTO49
 040F : 97 1F		"  "		staa	X001F   ; store A in 001F
+0411 :      L0411: GOTO48
 0411 : DE 17		"  "		ldx	X0017     ; load X with value in 0017
 0413 : 5F		"_"		clrb                ; clear (00) B
-0414				L0414:
+0414				L0414: GOTO32
 0414 : 96 1F		"  "		ldaa	X001F   ; load A with value in 001F
 0416 : 7D 00 12		"}  "	tst	X0012     ; test zero or minus in addr 0012
 0419 : 2B 06		"+ "		bmi	L0421     ; branch if minus to PC +- 06 (PARAM15)
 041B : AB 00		"  "		adda	$00,x   ; add A with value in X + 00h
-041D : 25 08		"% "		bcs	L0427     ; branch if Carry set to PC +- 08 (~PARAM15)
+041D : 25 08		"% "		bcs	L0427     ; branch if Carry set to PC +- 08 (GOTO33 in PARAM15)
 041F : 20 0B		"  "		bra	L042C     ; branch always to PC +- 0B (PARAM16)
 **************************************;
 PARAM15
 **************************************;
-0421				L0421:
 0421 : AB 00		"  "		adda	$00,x   ; add A with value in X + 00h
-0423 : 27 02		"' "		beq	L0427     ; branch if equal zero to PC +- 02 (label 0427)
+0423 : 27 02		"' "		beq	L0427     ; branch if equal zero to PC +- 02 (GOTO33)
 0425 : 25 05		"% "		bcs	L042C     ; branch if Carry set to PC +- 05 (PARAM16)
-0427				L0427:
+0427				L0427: GOTO33
 0427 : 5D		"]"		tstb                ; test zero or minus in B
-0428 : 27 08		"' "		beq	L0432     ; branch if equal zero to PC +- 08 (~PARAM16)
+0428 : 27 08		"' "		beq	L0432     ; branch if equal zero to PC +- 08 (GOT34 in PARAM16)
 042A : 20 0F		"  "		bra	L043B     ; branch always to PC +- 0F (PARAM17)
 **************************************;
 PARAM16
 **************************************;
-042C				L042C:
 042C : 5D		"]"		tstb                ; test zero or minus in B
-042D : 26 03		"& "		bne	L0432     ; branch not equal zero to PC +- 03 (label 0432)
+042D : 26 03		"& "		bne	L0432     ; branch not equal zero to PC +- 03 (GOTO34)
 042F : DF 17		"  "		stx	X0017     ; store X in 0017
 0431 : 5C		"\"		incb                ; increment B
-0432				L0432:
+0432				L0432: GOTO34
 0432 : 08		" "		inx                 ; increment X
 0433 : 9C 19		"  "		cpx	X0019     ; compare X with value in 0019
-0435 : 26 DD		"& "		bne	L0414     ; branch not equal zero to PC +- DD (~PARAM14)
+0435 : 26 DD		"& "		bne	L0414     ; branch not equal zero to PC +- DD (GOTO32 in PARAM14)
 0437 : 5D		"]"		tstb                ; test zero or minus in B
 0438 : 26 01		"& "		bne	L043B     ; branch not equal zero to PC +- 01 (PARAM17)
 043A : 39		"9"		rts                 ; return from subroutine
 **************************************;
 PARAM17
 **************************************;
-043B				L043B:
 043B : DF 19		"  "		stx	X0019     ; store X in 0019
 043D : 96 11		"  "		ldaa	X0011   ; load A with value in 0011
-043F : 27 06		"' "		beq	L0447     ; branch equal zero to PC +- 06 (label 0447)
+043F : 27 06		"' "		beq	L0447     ; branch equal zero to PC +- 06 (GOTO35)
 0441 : 8D 08		"  "		bsr	L044B     ; branch to subroutine PC +- 08 (PARAM18)
 0443 : 96 16		"  "		ldaa	X0016   ; load A with value in 0016
 0445 : 8D 16		"  "		bsr	L045D     ; branch to subroutine PC +-16 (PARAM19)
-0447				L0447:
-0447 : 7E FB BD		"~  "	jmp	LFBBD     ; jump to FBBD (03BD)(SYNTH9)
+0447				L0447: GOTO35
+0447 : 7E FB BD		"~  "	jmp	LFBBD     ; jump to FBBD (SYNTH9)
 **************************************;
-044A				L044A:
+PATH2 (control block?)
+**************************************;
+044A				L044A: GOTO36
 044A : 39		"9"		rts                 ; return from subroutine (delaying cycle?)
 **************************************;
 PARAM18
 **************************************;
-044B				L044B:
 044B : CE 00 20		"   "	ldx	#$0020    ; load X with value 0020h (0000 0000 0010 0000)
 044E : DF 0B		"  "		stx	X000B     ; store X in 000B
 0450 : DE 14		"  "		ldx	X0014     ; load X with value in 0014
 0452 : E6 00		"  "		ldab	$00,x   ; load B with value in X + 00h
 0454 : 08		" "		inx                 ; increment X
-0455 : BD FA E0		"   "	jsr	LFAE0     ; jump to subroutine FAE0 (UTIL1)(02E0)
+0455 : BD FA E0		"   "	jsr	LFAE0     ; jump to subroutine FAE0 (UTIL1)
 0458 : DE 0B		"  "		ldx	X000B     ; load X with value in 000B
 045A : DF 1B		"  "		stx	X001B     ; store X in 001B
 045C : 39		"9"		rts                 ; return from subroutine
 **************************************;
 PARAM19
 **************************************;
-045D				L045D:
 045D : 4D		"M"		tsta                ; test zero or minus in A
-045E : 27 2B		"'+"		beq	L048B     ; branch equal zero to PC +- 2B (label 048B)
+045E : 27 2B		"'+"		beq	L048B     ; branch equal zero to PC +- 2B (GOTO37)
 0460 : DE 14		"  "		ldx	X0014     ; load X with value in 0014
 0462 : DF 09		"  "		stx	X0009     ; store X in 0009
 0464 : CE 00 20		"   "	ldx	#$0020    ; load X with value 0020h (0000 0000 0010 0000)
 0467 : 97 0E		"  "		staa	X000E   ; store X in 000E
-0469				L0469:
+0469				L0469: LOOP38
 0469 : DF 0B		"  "		stx	X000B     ; store X in 000B
 046B : DE 09		"  "		ldx	X0009     ; load X with value in 0009
 046D : D6 0E		"  "		ldab	X000E   ; load B with value in 000E
@@ -843,134 +835,132 @@ PARAM19
 0478 : DF 09		"  "		stx	X0009     ; store X in 0009
 047A : DE 0B		"  "		ldx	X000B     ; load X with value in 000B
 047C : A6 00		"  "		ldaa	$00,x   ; load A with value in X + 00h
-047E				L047E:
+047E				L047E: LOOP39
 047E : 10		" "		sba                 ; subtract A - B into A
 047F : 7A 00 0D		"z  "	dec	X000D     ; decrement value in 000D
-0482 : 26 FA		"& "		bne	L047E     ; branch not equal zero to PC +- FA (label 047E)
+0482 : 26 FA		"& "		bne	L047E     ; branch not equal zero to PC +- FA (LOOP39)
 0484 : A7 00		"  "		staa	$00,x   ; store A in X + 00h
 0486 : 08		" "		inx                 ; increment X
 0487 : 9C 1B		"  "		cpx	X001B     ; compare X with value in 001B
-0489 : 26 DE		"& "		bne	L0469     ; branch not equal zero to PC +- DE (label 0469)
-048B				L048B:
+0489 : 26 DE		"& "		bne	L0469     ; branch not equal zero to PC +- DE (LOOP38)
+048B				L048B: GOTO37
 048B : 39		"9"		rts                 ; return from subroutine
 **************************************;
 IRQ handler, select sound
 **************************************;
 048C : 8E 00 7F		"   "	lds	#$007F    ; load SP with value 007F (0000 00000 0111 1111)
-048F : B6 04 02		"   "	ldaa	X0402   ; load A with value in 0402 (PIA sound select)
+048F : B6 04 02		"   "	ldaa	X0402   ; load A with value in 0402 (PIA) (sound select)
 0492 : 0E		" "		cli                 ; clear interrupt mask (I = 0)
 0493 : 43		"C"		coma                ; complement 1s in A
 0494 : 84 1F		"  "		anda	#$1F    ; and A with value 1Fh (0001 1111) (mask first 3 bits)
 0496 : D6 04		"  "		ldab	X0004   ; load B with value in 0004
-0498 : 27 03		"' "		beq	L049D     ; branch equal zero to PC +- 03 (label 049D)
-049A : BD FA 48		"  H"	jsr	LFA48     ; jump to subroutine FA48 (label FA48) (0248)
-049D				L049D:
+0498 : 27 03		"' "		beq	L049D     ; branch equal zero to PC +- 03 (GOTO38)
+049A : BD FA 48		"  H"	jsr	LFA48     ; jump to subroutine FA48 (PATH1)
+049D				L049D: GOTO38
 049D : 5F		"_"		clrb                ; clear (00) B
 049E : 81 0E		"  "		cmpa	#$0E    ; compare A with value 0Eh (0000 1110)
-04A0 : 27 02		"' "		beq	L04A4     ; branch equal zero to PC +- 02 (label 04A4)
+04A0 : 27 02		"' "		beq	L04A4     ; branch equal zero to PC +- 02 (GOTO39)
 04A2 : D7 02		"  "		stab	X0002   ; store B in 0002
-04A4				L04A4:
+04A4				L04A4: GOTO39
 04A4 : 81 12		"  "		cmpa	#$12    ; compare A with value 12h (0001 0010)
-04A6 : 27 02		"' "		beq	L04AA     ; branch equal zero to PC +- 02 (label 04AA)
+04A6 : 27 02		"' "		beq	L04AA     ; branch equal zero to PC +- 02 (GOTO40)
 04A8 : D7 03		"  "		stab	X0003   ; store B in 0003
-04AA				L04AA:
+04AA				L04AA: GOTO40
 04AA : 4D		"M"		tsta                ; test zero or minus A
-04AB : 27 30		"'0"		beq	L04DD     ; branch equal zero  to PC +- 30 (label 04DD)
+04AB : 27 30		"'0"		beq	L04DD     ; branch equal zero  to PC +- 30 (GOTO44)
 04AD : 4A		"J"		deca                ; decrement A
 04AE : 81 0C		"  "		cmpa	#$0C    ; compare A with value 0Ch (0000 1100)
-04B0 : 22 11		"" "		bhi	L04C3     ; branch if higher to PC +- 11 (label 04C3) 
+04B0 : 22 11		"" "		bhi	L04C3     ; branch if higher to PC +- 11 (GOTO42) 
 04B2 : 81 03		"  "		cmpa	#$03    ; compare A with value 03h (0000 0011)
-04B4 : 26 05		"& "		bne	L04BB     ; branch not equal zero to PC +- 05 (label 04BB) 
-04B6 : BD FC FE		"   "	jsr	LFCFE     ; jump to subroutine FCFE (label FCFE) (04FE)
-04B9 : 20 22		" ""		bra	L04DD     ; branch always to PC +- 22 (label 04DD)
-04BB				L04BB:
-04BB : BD FB 57		"  W"	jsr	LFB57     ; jump to subroutine FB57 (~PARAM13) (0357)
-04BE : BD FB BD		"   "	jsr	LFBBD     ; jump to subroutine FBFD (SYNTH9) (03BD)
-04C1 : 20 1A		"  "		bra	L04DD     ; branch always to PC +- 1A (label 04DD)
-04C3				L04C3:
+04B4 : 26 05		"& "		bne	L04BB     ; branch not equal zero to PC +- 05 (GOTO41) 
+04B6 : BD FC FE		"   "	jsr	LFCFE     ; jump to subroutine FCFE (SYNTH10)
+04B9 : 20 22		" ""		bra	L04DD     ; branch always to PC +- 22 (GOTO44)
+04BB				L04BB: GOTO41
+04BB : BD FB 57		"  W"	jsr	LFB57     ; jump to subroutine FB57 (GOTO28 in PARAM13)
+04BE : BD FB BD		"   "	jsr	LFBBD     ; jump to subroutine FBFD (SYNTH9)
+04C1 : 20 1A		"  "		bra	L04DD     ; branch always to PC +- 1A (GOTO44)
+04C3				L04C3: GOTO42
 04C3 : 81 1B		"  "		cmpa	#$1B    ; compare A with value 1Bh (0001 1011)
-04C5 : 22 0E		"" "		bhi	L04D5     ; branch if higher to PC +- 0E (label 04D5)
+04C5 : 22 0E		"" "		bhi	L04D5     ; branch if higher to PC +- 0E (GOTO43)
 04C7 : 80 0D		"  "		suba	#$0D    ; subtract A with value 0Dh (0000 1101)
 04C9 : 48		"H"		asla                ; arithmetic shift left A
-04CA : CE FD 42		"  B"	ldx	#$FD42    ; load X with value FD42h (addr 0542, 1st VWTAB)
-04CD : 8D 21		" !"		bsr	L04F0     ; branch to subroutine PC +- 21h (label 04F0)(CALCOS)
+04CA : CE FD 42		"  B"	ldx	#$FD42    ; load X with value FD42h (VWTAB)
+04CD : 8D 21		" !"		bsr	L04F0     ; branch to subroutine PC +- 21h (CALCOS)
 04CF : EE 00		"  "		ldx	$00,x     ; load X with value in X + 00h (load vector)
 04D1 : AD 00		"  "		jsr	$00,x     ; jump to subroutine addr X + 00h
-04D3 : 20 08		"  "		bra	L04DD     ; branch always to PC +- 08h (label 04DD)
-04D5				L04D5:
+04D3 : 20 08		"  "		bra	L04DD     ; branch always to PC +- 08h (GOTO44)
+04D5				L04D5: GOTO43
 04D5 : 80 1C		"  "		suba	#$1C    ; subtract A with value 1Ch (0001 1100)
-04D7 : BD F8 2A		"  *"	jsr	LF82A     ; jump to subroutine F82A (PARAM1)(002A)
-04DA : BD F8 3F		"  ?"	jsr	LF83F     ; jump to subroutine F83F (SYNTH1) (003F)
-04DD				L04DD:
+04D7 : BD F8 2A		"  *"	jsr	LF82A     ; jump to subroutine F82A (PARAM1)
+04DA : BD F8 3F		"  ?"	jsr	LF83F     ; jump to subroutine F83F (SYNTH1)
+04DD				L04DD: GOTO44
 04DD : 96 00		"  "		ldaa	X0000   ; load A with value in 0000
 04DF : 9A 01		"  "		oraa	X0001   ; OR inclusive, A + value in 0001 into A
-04E1				L04E1:
-04E1 : 27 FE		"' "		beq	L04E1     ; branch equal zero to PC +- FE (label 04E1)
+04E1				L04E1: LOOP40
+04E1 : 27 FE		"' "		beq	L04E1     ; branch equal zero to PC +- FE (LOOP40)
 04E3 : 4F		"O"		clra                ; clear (00) A
 04E4 : 97 03		"  "		staa	X0003   ; store A in 0003
 04E6 : 96 00		"  "		ldaa	X0000   ; load A with value in 0000
-04E8 : 27 03		"' "		beq	L04ED     ; branch equal zero to PC +- 03 (label 04ED) 
-04EA : 7E F9 13		"~  "	jmp	LF913     ; jump to F913 (PARAM3)(0113)
-04ED				L04ED:
-04ED : 7E FB 0A		"~  "	jmp	LFB0A     ; jump to FB0A (UTIL2)(030A)
+04E8 : 27 03		"' "		beq	L04ED     ; branch equal zero to PC +- 03 (GOTO45) 
+04EA : 7E F9 13		"~  "	jmp	LF913     ; jump to F913 (PARAM3)
+04ED				L04ED: GOTO45
+04ED : 7E FB 0A		"~  "	jmp	LFB0A     ; jump to FB0A (UTIL2)
 **************************************;
 CALCOS (calculate offset)
 **************************************;
-04F0				L04F0:
 04F0 : DF 09		"  "		stx	X0009     ; store X in 0009
 04F2 : 9B 0A		"  "		adda	X000A   ; add A with value in 000A
 04F4 : 97 0A		"  "		staa	X000A   ; store A in 000A
-04F6 : 24 03		"$ "		bcc	L04FB     ; branch if Carry clear to PC +- 03 (label 04FB)
+04F6 : 24 03		"$ "		bcc	L04FB     ; branch if Carry clear to PC +- 03 (GOTO46)
 04F8 : 7C 00 09		"|  "	inc	X0009     ; increment value in 0009
-04FB				L04FB:
+04FB				L04FB: GOTO46
 04FB : DE 09		"  "		ldx	X0009     ; load X with value in 0009
 04FD : 39		"9"		rts                 ; return from subroutine
 **************************************;
-?
+SYNTH10
 **************************************;
 04FE : CE 00 E0		"   "	ldx	#$00E0    ; load X with value 00E0h (0000 0000 1110 0000)
-0501				L0501:
+0501				L0501: LOOP41
 0501 : 86 20		"  "		ldaa	#$20    ; load A with value 20h (0010 0000)
 0503 : 8D EB		"  "		bsr	L04F0     ; branch to subroutine PC +- EB (CALCOS)
-0505				L0505:
+0505				L0505: LOOP42
 0505 : 09		" "		dex                 ; decrement X
-0506 : 26 FD		"& "		bne	L0505     ; branch not equal zero to PC +- FD (label 0505)
-0508 : 7F 04 00		"   "	clr	X0400     ; clear (00) 0400 (SOUND)
-050B				L050B:
+0506 : 26 FD		"& "		bne	L0505     ; branch not equal zero to PC +- FD (LOOP42)
+0508 : 7F 04 00		"   "	clr	X0400     ; clear (00) 0400 (SOUND) (is zero'd)
+050B				L050B: LOOP43
 050B : 5A		"Z"		decb                ; decrement B
-050C : 26 FD		"& "		bne	L050B     ; branch not equal zero to PC +- FD (label 050B)
+050C : 26 FD		"& "		bne	L050B     ; branch not equal zero to PC +- FD (LOOP43)
 050E : 73 04 00		"s  "	com	X0400     ; complements 1s in 0400 (SOUND)
 0511 : DE 09		"  "		ldx	X0009     ; load X with value in 0009
 0513 : 8C 10 00		"   "	cpx	#$1000    ; compare X with value 1000h(0001 0000 0000 0000)
-0516 : 26 E9		"& "		bne	L0501     ; branch not equal zero to PC +- E9 (label 0501)
+0516 : 26 E9		"& "		bne	L0501     ; branch not equal zero to PC +- E9 (LOOP41)
 0518 : 39		"9"		rts                 ; return from subroutine
 **************************************;
 NMI , reset button on board
 **************************************;
-0519				L0519:
 0519 : 0F		" "		sei                 ; set interrupt mask (I = 1)
 051A : 8E 00 7F		"   "	lds	#$007F    ; load SP with value 007Fh (0000 0000 0111 1111)
 051D : CE FF FF		"   "	ldx	#$FFFF    ; load X with value FFFFh (1111 1111 1111 1111)
 0520 : 5F		"_"		clrb                ; clear (00) B
-0521				L0521:
+0521				L0521: LOOP44
 0521 : E9 00		"  "		adcb	$00,x   ; add B + x + 00h with Carry into B
 0523 : 09		" "		dex                 ; decrement X
 0524 : 8C F8 00		"   "	cpx	#$F800    ; compare X with value F800h (proper org $F800 ?))
-0527 : 26 F8		"& "		bne	L0521     ; branch not equal zero to PC +- F8 (label 0521)
+0527 : 26 F8		"& "		bne	L0521     ; branch not equal zero to PC +- F8 (LOOP44)
 0529 : E1 00		"  "		cmpb	$00,x   ; compare B with X + 00h
-052B : 27 01		"' "		beq	L052E     ; branch equal zero to PC +- 01 (label 052E)
+052B : 27 01		"' "		beq	L052E     ; branch equal zero to PC +- 01 (GOTO47)
 052D : 3E		">"		wai                 ; wait for interrupt
-052E				L052E:
+052E				L052E: GOTO47
 052E : 86 01		"  "		ldaa	#$01    ; load A with value 01h (0000 0001)
-0530 : BD F8 2A		"  *"	jsr	LF82A     ; jump to subroutine F82A (PARAM1) (002A)
-0533 : BD F8 3F		"  ?"	jsr	LF83F     ; jump to subroutine F83F (SYNTH1) (003F)
+0530 : BD F8 2A		"  *"	jsr	LF82A     ; jump to subroutine F82A (PARAM1)
+0533 : BD F8 3F		"  ?"	jsr	LF83F     ; jump to subroutine F83F (SYNTH1)
 0536 : 86 02		"  "		ldaa	#$02    ; load A with value 02h (0000 0010)
-0538 : BD FA 4D		"  M"	jsr	LFA4D     ; jump to subroutine FA4D (PARAM7) (024D)
+0538 : BD FA 4D		"  M"	jsr	LFA4D     ; jump to subroutine FA4D (PARAM7)
 053B : 86 01		"  "		ldaa	#$01    ; load A with value 01h (0000 0001)
-053D : BD FA 4D		"  M"	jsr	LFA4D     ; jump to subroutine FA4D (PARAM7) (024D)
+053D : BD FA 4D		"  M"	jsr	LFA4D     ; jump to subroutine FA4D (PARAM7)
 0540 : 20 D7		"  "		bra	L0519     ; branch always to PC +- D7 (NMI)
 **************************************;
-VECTORTABLE - VWTAB (what happens with rts from here, nested, fall through?)
+VWTAB - vector table(what happens with rts from here, nested, fall through?)
 **************************************;
 0542 : FB 1F                          ; jump to FB1F (-F800 = 031F) (ok, bra)
 0544 : F9	13                          ; jump to F913 (-F800 = 0113) (ok, bra)
@@ -988,7 +978,7 @@ VECTORTABLE - VWTAB (what happens with rts from here, nested, fall through?)
 055C : FA 44                          ;	jump to FA44 (-F800 = 0244) (ok, rts)
 055E : FA 87                          ;	jump to FA87 (-F800 = 0287) (ok, rts)
 **************************************; 
-VARI VECTORS (modifiers to waveforms?) (FD60)(can inc to get next ones)
+VVECT - vari vectors (modifiers to waveforms?) (FD60)(can inc to get next ones)
 **************************************;
 0560 : 40	01                          ; 0100 0000 0000 0001 - SAW (called from 0034)                    
 0562 : 00	10                          ; 0000 0000 0001 0000
