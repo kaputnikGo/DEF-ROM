@@ -834,7 +834,7 @@ VARBG1  FCB $60,$01,$57,$08,$E1,$02,$00,$FE,$80 ; FDAC
 ;FFF0:  18 19 1a 1b 1c 00 00 00  
 
 
-;	Motorola vector table settings
+;	Motorola vector table settings, pointers
 ;       FDB   IRQ     ;FFF8: FC B6
 ;       FDB   RESET   ;FFFA: F8 01, Software Interrupt
 ;       FDB   NMI     ;FFFC: FD 2F

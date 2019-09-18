@@ -33,31 +33,74 @@ Inherent
 Relative
     Location is specified by an offset value from the address of the instruction currently being executed. Example: BRA 5 causes a branch to be formed that skips five bytes ahead in the instruction stream. Relative addressing is only used in branching instructions. Offsets range in value from -128 to +127, allowing jumps both forward and backward in the instruction stream. 
     
-    
+; MSB [7 ... 0] LSB    
+
  ; Accumulator        A       8 bits
  ; Accumulator        B       8 bits
  ; Index Register     X       16 bits
  ; Program Counter    PC      16 bits
- ; Stack Pointer      SP      16 bits
- ; Status Register    COSZAc  8 bits (Carry, Overflow, Sign, Zero, Aux Carry)(|1|1|Ac|1|S|Z|O|C|)
- ; (assuming org F800) $0000 - $007F RAM (internal to 6802)  
+ ; Stack Pointer      SP      16 bits (located anywhere in RAM, SP is decremented every push)
+ ; Status Register    COSZAc  8 bits (Carry, Overflow, Sign, Zero, Overflow, Carry)(|1|1|Ac|1|S|Z|O|C|)
+ 
+; Condition Code Register ..HINZVC (1, 1, Half Carry, Interrupt, Negative, Zero, Overflow, Carry 
+; Carry flag for arithmetric values that exceed 8 bit capacity
+; Overflow flag is for 2's complement overflow (ie 79 + 64 = 143, larger than max +127 size for decimal number binary equaivalent)
+; Zero flag is set to 1 when an accum equals 0 after data transfer or an operation
+; Negative flag set to 1 when an accum is a negative number
+
+
+
+; (assuming org F800) $0000 - $007F RAM (internal to 6802) 
+;	$0000 - $007F RAM 
+;	$0400 - $0403 PIA 
+;	$F800 - $FFFF ROM  
+;	Motorola vector table settings, address pointers
+;       FDB   IRQ     ;FFF8: FC B6
+;       FDB   SWI     ;FFFA: F8 01, Software Interrupt
+;       FDB   NMI     ;FFFC: FD 2F
+;       FDB   RESET   ;FFFE: F8 01, Hardware Interrupt
   
-; branching (Bxx) is always relative addressing, PC +- value (-128 to +127)  
+; branching (Bxx) is always relative addressing, PCnext +- value (-128 to +127) if MSB = 0 is forward, MSB = 1 is backward
+; use relative addressing: forward is PCdest - PCcurr+2 = offset; backwards has -answer, so 2's complement it to get offset
+
+; accum A,B hold 7 bit decimal +127 to -128 values with bit 7 (MSB) being the sign
+; store 16 bit data using X addressing ($00,x == MSB to 00 then LSB to 01 - flows into next mem location)
+; calling jsr etc will push calling address onto stack. stack builds (LIFO) downwards from 0x007F to 0x0000
+; each irq will save state the registers (PC, X, A, B, CCR) to the stack
+
+; Labels::
+; SYNTH - output to DAC
+; PARAM - 
+; UTIL - 
+; PATH - jump block to fit within addres range limitations?
+; CALCOS - 
+; IRQ - handle PIA sound select and jump to sound
+; NMI - handle reset button depress, play demo sound loop
+; VTAB - 
+; VVECT -
  
 					org	$0000
 				;
-0000 : 78 
+**************************************;
+?
+**************************************;        
+0000 : 78                             ; opcode for ASL ? other roms have FF here
+**************************************;
+RESET
+**************************************;  
 0001 : 0F		" "		sei                 ; set interrupt mask (I = 1) 
 0002 : 8E 00 7F   "   " lds #$007F    ; load SP with 007Fh (0000 0000 0111 1111)
 0005 : CE 0400	 "   "	ldx #$0400    ; load X with 0400h, PIA (DAC) addr
-0008 : 6F 01		"o "		clr	$01,x     ; clear in X + 01h (0401, PIA Data Direction Register for port A) 
-000A : 6F 03		"o "		clr	$03,x     ; clear in X + 03h (0403, PIA DDR for port B)
+0008 : 6F 01		"o "		clr	$01,x     ; clear (00) in addr X + 01h (0401, PIA Data Direction Register for port A) 
+000A : 6F 03		"o "		clr	$03,x     ; clear (00) in addr X + 03h (0403, PIA DDR for port B)
 000C : 86 FF		"  "		ldaa	#$FF    ; load A with FFh (1111 1111)
 000E : A7 00		"  "		staa	$00,x   ; store A in addr X + 00h (0400, all outputs on port A, goes to DAC)
-0010 : 6F 02		"o "		clr	$02,x     ; clear (00) in X + 02h (0402, all inputs on port B, from sound select)
-0012				L0012: GOTO0
+0010 : 6F 02		"o "		clr	$02,x     ; clear (00) in addr X + 02h (0402, all inputs on port B, from sound select)
+**************************************;
+START
+**************************************;
 0012 : 86 37		" 7"		ldaa	#$37    ; load A with 37h (0011 0111)
-0014 : A7 03		"  "		staa	$03,x   ; store A in addr X + 03h (0403)
+0014 : A7 03		"  "		staa	$03,x   ; store A in addr X + 03h (0403) (mask the 5 sound input pins)
 0016 : 86 3C		" <"		ldaa	#$3C    ; load A with 3Ch(0011 1100)
 0018 : A7 01		"  "		staa	$01,x   ; store A in addr X + 01h (0401)
 001A : 97 05		"  "		staa	X0005   ; store A in addr 0005
@@ -79,7 +122,7 @@ PARAM1
 002D : 48		"H"		asla                ; shift left in A
 002E : 1B		" "		aba                 ; add A + B into A
 002F : CE 00 0F		"   "	ldx	#$000F    ; load X with value 000F (0000 0000 0000 1111)
-0032 : DF 0B		"  "		stx	X000B     ; store X in addr 000B
+0032 : DF 0B		"  "		stx	X000B     ; store X in addr 000B ( & 000C)
 0034 : CE FD 60		"  `"	ldx	#$FD60    ; load X with value FD60 (SAW)(0560)
 0037 : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine FCF0 (CALCOS)(04F0)
 003A : C6 09		"  "		ldab	#$09    ; load B with 09h (0000 1001)
@@ -103,14 +146,14 @@ SYNTH1
 0053 : 09		" "		dex                 ; decrement X (X = X - 1)
 0054 : 27 10		"' "		beq	L0066     ; branch if zero (Z = 1) to PC + 2 + 10h (GOTO1)
 0056 : 4A		"J"		deca                ; decrement A (A = A - 1)
-0057 : 26 FA		"& "		bne	L0053     ; branch if not equal zero (Z = 0) to PC + 2 + FAh (LOOP4) ?
+0057 : 26 FA		"& "		bne	L0053     ; branch if not equal zero (Z = 0) to PC + 2 + FAh (LOOP4)
 0059 : 73 04 00		"s  "	com	X0400     ; complements 1s in addr 0400 (SOUND)
 005C : 96 19		"  "		ldaa	X0019   ; load A with value in 0019
 005E				L005E: LOOP5
 005E : 09		" "		dex                 ; decrement X
 005F : 27 05		"' "		beq	L0066     ; branch if zero to PC + 2 + 05h (GOTO1)
 0061 : 4A		"J"		deca                ; decrement A
-0062 : 26 FA		"& "		bne	L005E     ; branch if not equal zero to PC + 2 + FAh (LOOP5) ?
+0062 : 26 FA		"& "		bne	L005E     ; branch if not equal zero to PC + 2 + FAh (LOOP5)
 0064 : 20 E8		"  "		bra	L004E     ; branch always to addr PC + E8h (LOOP3) 
 0066				L0066: GOTO1
 0066 : B6 04 00		"   "	ldaa	X0400   ; load A with value in addr 0400
@@ -383,7 +426,7 @@ SYNTH6
 01F0 : 2A E8		"* "		bpl	L01DA     ; branch if plus to addr PC +- E8h (LOOP18)
 01F2 : 39		"9"		rts                 ; return from subroutine
 **************************************;
-SYNTH7
+SYNTH7 - only stab to 0400
 **************************************;
 01F3 : CE 00 0F		"   "	ldx	#$000F    ; load X with 000Fh (0000 0000 0000 1111)
 01F6				L01F6: LOOP21
@@ -470,7 +513,7 @@ PARAM7
 0272 : A6 01		"  "		ldaa	$01,x   ; load A with value in X + 01h
 0274 : EE 02		"  "		ldx	$02,x     ; load X with value in X + 02h
 0276 : DF 0F		"  "		stx	X000F     ; store X in 000F
-0278 : 8D 0E		"  "		bsr	L0288     ; branch to subroutine to PC + 0Eh (PARAM8)
+0278 : 8D 0E		"  "		bsr	L0288     ; branch to subroutine to PC + 0Eh (SYNTH11)
 027A : DE 0B		"  "		ldx	X000B     ; load X with value in 000B
 027C : 08		" "		inx                 ; increment X
 027D : 08		" "		inx                 ; increment X
@@ -483,7 +526,7 @@ PARAM7
 0286 : 39		"9"		rts                 ; return from subroutine
 0287 : 39		"9"		rts                 ; return from subroutine
 **************************************;
-PARAM8 - should be a SYNTH as has output
+SYNTH11
 **************************************;
 0288 : CE 00 12		"   "	ldx	#$0012    ; load X with value 0012h (0000 0000 0001 0010)
 028B : 80 02		"  "		suba	#$02    ; subtract A with value 02h (0000 0010)
@@ -538,11 +581,11 @@ PARAM8 - should be a SYNTH as has output
 02D6 : B7 04 00		"   "	staa	X0400   ; store A in 0400 (SOUND)
 02D9 : 09		" "		dex                 ; decrement X
 02DA : 27 03		"' "		beq	L02DF     ; branch equal zero PC +- 03h (GOTO24)
-02DC : 7E 00 12		"~  "	jmp	L0012     ; jump to addr 0012 (GOTO0)
+02DC : 7E 00 12		"~  "	jmp	L0012     ; jump to addr 0012 (START)
 02DF				L02DF: GOTO24
 02DF : 39		"9"		rts                 ; return from subroutine
 **************************************;
-UTIL1
+UTIL1 - (envelope loop to zero?)
 **************************************;
 02E0 : 36		"6"		psha                ; push A into stack(A into SP) 
 02E1				L02E1: LOOP28
@@ -559,14 +602,14 @@ UTIL1
 02F2 : 32		"2"		pula                ; pull into A from stack (SP into A)
 02F3 : 39		"9"		rts                 ; return from subroutine
 **************************************;
-PARAM10
+PARAM8
 **************************************;
 02F4 : 4F		"O"		clra                ; clear (00) A
 02F5 : 97 00		"  "		staa	X0000   ; store A into 0000
 02F7 : 97 01		"  "		staa	X0001   ; store A into 0001
 02F9 : 39		"9"		rts                 ; return from subroutine
 **************************************;
-PARAM11
+PARAM9
 **************************************;
 02FA : 7F 00 00		"   "	clr	X0000     ; clear (00) addr 0000
 02FD : 96 01		"  "		ldaa	X0001   ; load A with value in 0001
@@ -582,18 +625,18 @@ PARAM11
 UTIL2
 **************************************;
 030A : 86 0E		"  "		ldaa	#$0E    ; load A with value 0Eh (0000 1110)
-030C : BD FB 57		"  W"	jsr	LFB57     ; jump to subroutine FB57 (GOTO28 in PARAM13)
+030C : BD FB 57		"  W"	jsr	LFB57     ; jump to subroutine FB57 (GOTO28 in PARAM11)
 030F : 96 01		"  "		ldaa	X0001   ; load A with value in 0001
 0311 : 48		"H"		asla                ; arithmetic shift left A
 0312 : 48		"H"		asla                ; arithmetic shift left A
 0313 : 43		"C"		coma                ; complement 1s A
-0314 : BD FC 0F		"   "	jsr	LFC0F     ; jump to subroutine FC0F (GOTO49 in PARAM14)
+0314 : BD FC 0F		"   "	jsr	LFC0F     ; jump to subroutine FC0F (GOTO49 in PARAM12)
 0317				L0317: LOOP29
 0317 : 7C 00 13		"|  "	inc	X0013     ; increment in addr 0013
-031A : BD FC 11		"   "	jsr	LFC11     ; jump to subroutine FC11 (GOTO48 in PARAM14)
+031A : BD FC 11		"   "	jsr	LFC11     ; jump to subroutine FC11 (GOTO48 in PARAM12)
 031D : 20 F8		"  "		bra	L0317     ; branch always to PC +- F8 (LOOP29)
 **************************************;
-PARAM12
+PARAM10
 **************************************;
 031F : 86 03		"  "		ldaa	#$03    ; load A with value 03h (0000 0011)
 0321 : BD F8 2A		"  *"	jsr	LF82A     ; jump to subroutine F82A (PARAM1)
@@ -622,7 +665,7 @@ PARAM12
 0342 : BD F8 3F		"  ?"	jsr	LF83F     ; jump to subroutine addr F83F (SYNTH 1)
 0345 : 20 FB		"  "		bra	L0342     ; branch always to PC +- FB (LOOP32)
 **************************************;
-PARAM13
+PARAM11
 **************************************;
 0347 : 96 03		"  "		ldaa	X0003   ; load A with value in 0003
 0349 : 26 09		"& "		bne	L0354     ; branch not equal zero PC +- 09h (GOTO27)
@@ -631,7 +674,7 @@ PARAM13
 0350 : 8D 05		"  "		bsr	L0357     ; branch to subroutine PC +- 05 (GOTO28)
 0352 : 20 69		" i"		bra	L03BD     ; branch always PC +- 69 (SYNTH 9)
 0354				L0354: GOTO27
-0354 : 7E FC 04		"~  "	jmp	LFC04     ; jump to FC04 (GOTO31 in PARAM14)
+0354 : 7E FC 04		"~  "	jmp	LFC04     ; jump to FC04 (GOTO31 in PARAM12)
 0357				L0357: GOTO28
 0357 : 16		" "		tab                 ; transfer A to B
 0358 : 58		"X"		aslb                ; arithmetic shift left B
@@ -669,11 +712,11 @@ PARAM13
 038C : 20 F3		"  "		bra	L0381     ; branch always to PC +- F3 (LOOP33)
 038E				L038E: GOTO29
 038E : DF 14		"  "		stx	X0014     ; store X in 0014
-0390 : BD FC 4B		"  K"	jsr	LFC4B     ; jump to subroutine FC4B (PARAM18)
+0390 : BD FC 4B		"  K"	jsr	LFC4B     ; jump to subroutine FC4B (PARAM16)
 0393 : DE 07		"  "		ldx	X0007     ; load X with value in 0007
 0395 : A6 02		"  "		ldaa	$02,x   ; load A with value in X + 02h
 0397 : 97 16		"  "		staa	X0016   ; store A in 0016
-0399 : BD FC 5D		"  ]"	jsr	LFC5D     ; jump to subroutine FC5D (PARAM19)
+0399 : BD FC 5D		"  ]"	jsr	LFC5D     ; jump to subroutine FC5D (PARAM17)
 039C : DE 07		"  "		ldx	X0007     ; load X with value in 0007
 039E : A6 03		"  "		ldaa	$03,x   ; load A with value in X + 03h
 03A0 : 97 12		"  "		staa	X0012   ; store A in 0012
@@ -704,7 +747,7 @@ SYNTH9
 03C9 : 9B 1F		"  "		adda	X001F   ; add A with value in 001F
 03CB : 97 1D		"  "		staa	X001D   ; store A in 001D
 03CD : 9C 19		"  "		cpx	X0019     ; compare X with 0019
-03CF : 27 26		"'&"		beq	L03F7     ; branch if equal zero to PC +- 26h (PARAM14)
+03CF : 27 26		"'&"		beq	L03F7     ; branch if equal zero to PC +- 26h (PARAM12)
 03D1 : D6 10		"  "		ldab	X0010   ; load B with value in 0010
 03D3 : 08		" "		inx                 ; increment X
 03D4 : DF 09		"  "		stx	X0009     ; store X in 0009
@@ -734,10 +777,10 @@ SYNTH9
 03F4 : 01		" "		nop                 ; no operation, advance PC
 03F5 : 20 DF		"  "		bra	L03D6     ; branch always to PC +- DF (LOOP35)
 **************************************;
-PARAM14
+PARAM12
 **************************************;
 03F7 : 96 11		"  "		ldaa	X0011   ; load A with value in 0011
-03F9 : 8D 62		" b"		bsr	L045D     ; branch to subroutine PC +- 62 (PARAM19)
+03F9 : 8D 62		" b"		bsr	L045D     ; branch to subroutine PC +- 62 (PARAM17)
 03FB : 7A 00 1E		"z  "	dec	X001E     ; decrement value in 001E
 03FE : 26 C1		"& "		bne	L03C1     ; branch not equal zero to PC +- C1 (GOTO30 in SYNTH9)
 0400 : 96 03		"  "		ldaa	X0003   ; load A with value in 0003
@@ -756,22 +799,22 @@ PARAM14
 0414				L0414: GOTO32
 0414 : 96 1F		"  "		ldaa	X001F   ; load A with value in 001F
 0416 : 7D 00 12		"}  "	tst	X0012     ; test zero or minus in addr 0012
-0419 : 2B 06		"+ "		bmi	L0421     ; branch if minus to PC +- 06 (PARAM15)
+0419 : 2B 06		"+ "		bmi	L0421     ; branch if minus to PC +- 06 (PARAM13)
 041B : AB 00		"  "		adda	$00,x   ; add A with value in X + 00h
-041D : 25 08		"% "		bcs	L0427     ; branch if Carry set to PC +- 08 (GOTO33 in PARAM15)
-041F : 20 0B		"  "		bra	L042C     ; branch always to PC +- 0B (PARAM16)
+041D : 25 08		"% "		bcs	L0427     ; branch if Carry set to PC +- 08 (GOTO33 in PARAM13)
+041F : 20 0B		"  "		bra	L042C     ; branch always to PC +- 0B (PARAM14)
 **************************************;
-PARAM15
+PARAM13
 **************************************;
 0421 : AB 00		"  "		adda	$00,x   ; add A with value in X + 00h
 0423 : 27 02		"' "		beq	L0427     ; branch if equal zero to PC +- 02 (GOTO33)
-0425 : 25 05		"% "		bcs	L042C     ; branch if Carry set to PC +- 05 (PARAM16)
+0425 : 25 05		"% "		bcs	L042C     ; branch if Carry set to PC +- 05 (PARAM14)
 0427				L0427: GOTO33
 0427 : 5D		"]"		tstb                ; test zero or minus in B
-0428 : 27 08		"' "		beq	L0432     ; branch if equal zero to PC +- 08 (GOT34 in PARAM16)
-042A : 20 0F		"  "		bra	L043B     ; branch always to PC +- 0F (PARAM17)
+0428 : 27 08		"' "		beq	L0432     ; branch if equal zero to PC +- 08 (GOT34 in PARAM14)
+042A : 20 0F		"  "		bra	L043B     ; branch always to PC +- 0F (PARAM15)
 **************************************;
-PARAM16
+PARAM14
 **************************************;
 042C : 5D		"]"		tstb                ; test zero or minus in B
 042D : 26 03		"& "		bne	L0432     ; branch not equal zero to PC +- 03 (GOTO34)
@@ -780,19 +823,19 @@ PARAM16
 0432				L0432: GOTO34
 0432 : 08		" "		inx                 ; increment X
 0433 : 9C 19		"  "		cpx	X0019     ; compare X with value in 0019
-0435 : 26 DD		"& "		bne	L0414     ; branch not equal zero to PC +- DD (GOTO32 in PARAM14)
+0435 : 26 DD		"& "		bne	L0414     ; branch not equal zero to PC +- DD (GOTO32 in PARAM12)
 0437 : 5D		"]"		tstb                ; test zero or minus in B
-0438 : 26 01		"& "		bne	L043B     ; branch not equal zero to PC +- 01 (PARAM17)
+0438 : 26 01		"& "		bne	L043B     ; branch not equal zero to PC +- 01 (PARAM15)
 043A : 39		"9"		rts                 ; return from subroutine
 **************************************;
-PARAM17
+PARAM15
 **************************************;
 043B : DF 19		"  "		stx	X0019     ; store X in 0019
 043D : 96 11		"  "		ldaa	X0011   ; load A with value in 0011
 043F : 27 06		"' "		beq	L0447     ; branch equal zero to PC +- 06 (GOTO35)
-0441 : 8D 08		"  "		bsr	L044B     ; branch to subroutine PC +- 08 (PARAM18)
+0441 : 8D 08		"  "		bsr	L044B     ; branch to subroutine PC +- 08 (PARAM16)
 0443 : 96 16		"  "		ldaa	X0016   ; load A with value in 0016
-0445 : 8D 16		"  "		bsr	L045D     ; branch to subroutine PC +-16 (PARAM19)
+0445 : 8D 16		"  "		bsr	L045D     ; branch to subroutine PC +-16 (PARAM17)
 0447				L0447: GOTO35
 0447 : 7E FB BD		"~  "	jmp	LFBBD     ; jump to FBBD (SYNTH9)
 **************************************;
@@ -801,7 +844,7 @@ PATH2 (control block?)
 044A				L044A: GOTO36
 044A : 39		"9"		rts                 ; return from subroutine (delaying cycle?)
 **************************************;
-PARAM18
+PARAM16
 **************************************;
 044B : CE 00 20		"   "	ldx	#$0020    ; load X with value 0020h (0000 0000 0010 0000)
 044E : DF 0B		"  "		stx	X000B     ; store X in 000B
@@ -813,7 +856,7 @@ PARAM18
 045A : DF 1B		"  "		stx	X001B     ; store X in 001B
 045C : 39		"9"		rts                 ; return from subroutine
 **************************************;
-PARAM19
+PARAM17
 **************************************;
 045D : 4D		"M"		tsta                ; test zero or minus in A
 045E : 27 2B		"'+"		beq	L048B     ; branch equal zero to PC +- 2B (GOTO37)
@@ -876,7 +919,7 @@ IRQ handler, select sound
 04B6 : BD FC FE		"   "	jsr	LFCFE     ; jump to subroutine FCFE (SYNTH10)
 04B9 : 20 22		" ""		bra	L04DD     ; branch always to PC +- 22 (GOTO44)
 04BB				L04BB: GOTO41
-04BB : BD FB 57		"  W"	jsr	LFB57     ; jump to subroutine FB57 (GOTO28 in PARAM13)
+04BB : BD FB 57		"  W"	jsr	LFB57     ; jump to subroutine FB57 (GOTO28 in PARAM11)
 04BE : BD FB BD		"   "	jsr	LFBBD     ; jump to subroutine FBFD (SYNTH9)
 04C1 : 20 1A		"  "		bra	L04DD     ; branch always to PC +- 1A (GOTO44)
 04C3				L04C3: GOTO42
@@ -945,7 +988,7 @@ NMI , reset button on board
 0521				L0521: LOOP44
 0521 : E9 00		"  "		adcb	$00,x   ; add B + x + 00h with Carry into B
 0523 : 09		" "		dex                 ; decrement X
-0524 : 8C F8 00		"   "	cpx	#$F800    ; compare X with value F800h (proper org $F800 ?))
+0524 : 8C F8 00		"   "	cpx	#$F800    ; compare X with value F800h (proper org $F800 ?)
 0527 : 26 F8		"& "		bne	L0521     ; branch not equal zero to PC +- F8 (LOOP44)
 0529 : E1 00		"  "		cmpb	$00,x   ; compare B with X + 00h
 052B : 27 01		"' "		beq	L052E     ; branch equal zero to PC +- 01 (GOTO47)
@@ -1009,10 +1052,10 @@ VVECT - vari vectors (modifiers to waveforms?) (FD60)(can inc to get next ones)
 058F : BF 40                          ; 1011 1111 0100 0000
 0591 : B6 5B	                        ; 1011 0110 0101 1011
 0593 : 8C                             ; 1000 1100
-0594 : 0C                             ; 0000 1100 
-0595 : 7F                             ; 0111 1111
-**************************************; uncertain, using double byte data for clarity
-**************************************; possible waveforms (no organ in this ROM)
+**************************************; 
+uncertain, direct call here 10 x 8 fdb + 3 (83)
+**************************************;
+0594 : 0C 7F                          ; 0000 1100 0111 1111
 0596 : 1D 0F 
 0598 : FB 7F 
 059A : 23 0F	
@@ -1020,6 +1063,7 @@ VVECT - vari vectors (modifiers to waveforms?) (FD60)(can inc to get next ones)
 059E : 08 50
 05A0 : 8A 88
 05A2 : 3E	3F
+
 05A4 : 02 3E
 05A6 : 7C 04 
 03 FF 
@@ -1028,6 +1072,7 @@ VVECT - vari vectors (modifiers to waveforms?) (FD60)(can inc to get next ones)
 05AE : 7C 12 
 0D 74 
 7C 0D
+
 05B4 : 0E 41
 05B6 : 7C 23 
 0B 50
@@ -1036,6 +1081,7 @@ VVECT - vari vectors (modifiers to waveforms?) (FD60)(can inc to get next ones)
 7C 3F
 05C0 : 02 3E
 05C2 : F8 04 
+
 03 FF 
 7C 3F
 05C8 : 2C E2
@@ -1044,6 +1090,7 @@ VVECT - vari vectors (modifiers to waveforms?) (FD60)(can inc to get next ones)
 F8 0D
 05D0 : 0E	41
 05D2 : F8 23 
+
 0B 50
 05D6 : F8 1D 
 2F F2 
@@ -1052,6 +1099,7 @@ F8 23
 F8 12
 05E0 : 06 BA 
 F8 04
+
 05E4 : 07	FF 
 7C 37
 05E8 : 04 C1 
@@ -1060,6 +1108,7 @@ F8 04
 7C 12
 05F0 : 06	BA 
 3E 04
+
 05F4 : 07 FF 
 3E 37
 05F8 : 04 C1 
@@ -1068,6 +1117,7 @@ F8 04
 1F 12
 0600 : 06	BA 
 1F 04
+
 0604 : 07	FF 
 1F 37	
 0608 : 04 C1 
@@ -1076,6 +1126,7 @@ F8 04
 FE 1D	
 0610 : 17	F9 
 7F 37	
+
 0614 : 13	06
 0616 : 7F 3F 
 08 FA 
@@ -1084,6 +1135,7 @@ FE 04
 FE 0D
 0620 : 0E	41
 0622 : FE 23 
+
 0B 50
 0626 : FE 1D 
 5F E4 
@@ -1092,15 +1144,21 @@ FE 0D
 062E : 30	29 
 23 1D
 0632 : 17	12
+
 0634 : 0D	08
-0636 : 04	08
-0638 : 7F D9 
-FF D9 
-7F 24 
-00 24 
-08 00
-0642 : 40	80 
-00 FF 
+0636 : 04	
+**************************************; 
+uncertain, direct call here 10 x 8 fdb (79)
+**************************************;
+0637 : 08 7F 
+0639 : D9 FF 
+063B : D9 7F 
+24 00 
+24 08 
+0641 : 00 40	
+80 
+00 FF
+ 
 00 80
 0648 : 40	10
 064A : 7F B0 
@@ -1109,6 +1167,7 @@ FF F5
 0650 : D9 B0
 0652 : 7F 4E 
 24 09
+
 0656 : 00	09
 0658 : 24 4E
 065A : 10	7F 
@@ -1117,6 +1176,7 @@ C5 EC
 0660 : 8D 6D
 0662 : 6A 7F
 0664 : 94 92
+
 0666 : 71	40
 0668 : 17	12
 066A : 39	10
@@ -1125,6 +1185,7 @@ FF FF
 00 00
 0672 : 00 00
 0674 : FF FF 
+
 FF FF 
 00 00	
 067A : 00 00
@@ -1133,6 +1194,7 @@ FF FF
 AB B5 
 BF C8
 0684 : D1 DA
+
 0686 : E1 E8
 0688 : EE F3
 068A : F7 FB 
@@ -1141,6 +1203,7 @@ FF FE
 0690 : FD FB 
 F7 F3
 0694 : EE E8
+
 0696 : E1 DA
 0698 : D1 C8
 069A : BF B5 
@@ -1149,6 +1212,7 @@ AB A0
 7F 75
 06A2 : 6A 5F
 06A4 : 54	4A
+
 06A6 : 40 37
 06A8 : 2E 25
 06AA : 1E	17
@@ -1157,15 +1221,16 @@ AB A0
 02 01
 06B2 : 00	01
 06B4 : 02 04
+
 06B6 : 08	0C
 06B8 : 11	17
-
 06BA : 1E	25 
 2E 37
 06BE : 40 4A
 06C0 : 54	5F
 06C2 : 6A 75
-06C4 : 7F 10 
+06C4 : 7F 10
+ 
 59 7B
 06C8 : 98 AC
 06CA : B3	AC 
@@ -1174,6 +1239,9 @@ AB A0
 06D0 : 19 06
 06D2 : 00 06
 06D4 : 19	37
+**************************************; 
+uncertain, another direct call 
+**************************************; 
 06D6 : 81 24
 06D8 : 00 00 
 00 16
@@ -1182,6 +1250,7 @@ AB A0
 06E0 : FF 00 
 27 6D 
 11 05
+
 06E6 : 11	01
 06E8 : 0F 01
 06EA : 47 11
@@ -1190,6 +1259,7 @@ AB A0
 06F0 : 0D	1B
 06F2 : F4 12 
 00 00 
+
 00 14
 06F8 : 47 41 
 45 00 
@@ -1198,6 +1268,7 @@ AB A0
 21 35
 0702 : 11	FF 
 00 0D
+
 0706 : 1B	15 
 00 00 
 FD 00
@@ -1206,6 +1277,7 @@ FD 00
 0710 : 00 01
 0712 : 00 03
 0714 : 6A 01
+
 0716 : 15	01
 0718 : 01	01
 071A : 01	47
@@ -1214,6 +1286,7 @@ FD 00
 02 06
 0722 : 94 6A
 0724 : 10	02 
+
 00 02
 0728 : 06 9A 
 1F 12 
@@ -1222,11 +1295,16 @@ FD 00
 0730 : 69 31
 0732 : 11 00
 0734 : FF 00 
+
 0D 00 
 12 06
 073A : 00	FF 
 01 09
-073E : 28 A0
+073E : 28 
+**************************************; 
+uncertain, direct call here 6 x 10 fdb + 5 (65)
+**************************************;
+073F : A0
 0740 : 98 90
 0742 : 88 80
 0744 : 78 70 
@@ -1319,10 +1397,10 @@ C0 E0
 07F2 : 00 00 
 00 00
 07F6 : 00 00 
-FC 8C 
-F8 01
-07FC : FD	19
-07FE : F8	01
+07F8 : FC 8C                          ; (FFF8, FFF9) IRQ (048C)
+07FA : F8 01                          ; (FFFA, FFFB) SWI ~ RESET (0001)
+07FC : FD	19                          ; (FFFC, FFFD) NMI (0519)
+07FE : F8	01                          ; (FFFE, FFFF) RESET (0001)
 
 ;--------------------------------------------------------------
 Symbol table
