@@ -48,11 +48,12 @@ Relative
 ; Zero flag is set to 1 when an accum equals 0 after data transfer or an operation
 ; Negative flag set to 1 when an accum is a negative number
 
-
+; FCB form constant byte: multiple operands separated by commas, 8 bit unsigned binary numbers
+; FDB form double byte: each (multiple, separated by commas) operand stored in 2 bytes
 
 ; (assuming org F800) $0000 - $007F RAM (internal to 6802) 
 ;	$0000 - $007F RAM 
-;	$0400 - $0403 PIA 
+;	$0400 - $0403 PIA (A0, A1, [A12, A13, A14, A15 via 7442], VMA)
 ;	$F800 - $FFFF ROM  
 ;	Motorola vector table settings, address pointers
 ;       FDB   IRQ     ;FFF8: FC B6
@@ -67,6 +68,10 @@ Relative
 ; store 16 bit data using X addressing ($00,x == MSB to 00 then LSB to 01 - flows into next mem location)
 ; calling jsr etc will push calling address onto stack. stack builds (LIFO) downwards from 0x007F to 0x0000
 ; each irq will save state the registers (PC, X, A, B, CCR) to the stack
+; incrementing an Accum (A,B) from 0xFF will cause it to rollover to 0x00 (useful in counting to zero : BNE BEQ etc)
+
+; 1 mpu cycle = ~1.0 microseconds
+; variable delays as a subroutine, can use Accum, X or RAM (inc and dec also operate on memory)
 
 ; Labels::
 ; SYNTH - output to DAC
@@ -90,7 +95,7 @@ RESET
 **************************************;  
 0001 : 0F		" "		sei                 ; set interrupt mask (I = 1) 
 0002 : 8E 00 7F   "   " lds #$007F    ; load SP with 007Fh (0000 0000 0111 1111)
-0005 : CE 0400	 "   "	ldx #$0400    ; load X with 0400h, PIA (DAC) addr
+0005 : CE 04 00	 "   "	ldx #$0400    ; load X with 0400h, PIA (DAC) addr
 0008 : 6F 01		"o "		clr	$01,x     ; clear (00) in addr X + 01h (0401, PIA Data Direction Register for port A) 
 000A : 6F 03		"o "		clr	$03,x     ; clear (00) in addr X + 03h (0403, PIA DDR for port B)
 000C : 86 FF		"  "		ldaa	#$FF    ; load A with FFh (1111 1111)
@@ -112,7 +117,7 @@ START
 0025 : 97 04		"  "		staa	X0004   ; store A in addr 0004
 0027 : 0E		" "		cli                 ; clear interrupt mask (0)
 0028				L0028:
-0028 : 20 FE		"  "		bra	L0028     ; branch always to addr PC + FEh
+0028 : 20 FE		"  "		bra	L0028     ; branch always to addr PC +2 -FEh (1111 1110) (goto 052D wai ??)
 **************************************;
 PARAM1
 **************************************;
@@ -518,7 +523,7 @@ PARAM7
 027C : 08		" "		inx                 ; increment X
 027D : 08		" "		inx                 ; increment X
 027E : 08		" "		inx                 ; increment X
-027F : 08		" "		inx                 ; increment X
+027F : 08		" "		inx                 ; increment X (step size x4)
 0280 : DF 0B		"  "		stx	X000B     ; store X in addr 000B
 0282 : 9C 09		"  "		cpx	X0009     ; compare X with value in 0009
 0284 : 26 E8		"& "		bne	L026E     ; branch not equal zero to PC + 2 + E8 (LOOP26)
@@ -893,7 +898,7 @@ IRQ handler, select sound
 **************************************;
 048C : 8E 00 7F		"   "	lds	#$007F    ; load SP with value 007F (0000 00000 0111 1111)
 048F : B6 04 02		"   "	ldaa	X0402   ; load A with value in 0402 (PIA) (sound select)
-0492 : 0E		" "		cli                 ; clear interrupt mask (I = 0)
+0492 : 0E		" "		cli                 ; clear interrupt mask (I = 0) (allows next IRQ be serviced, interrupting this one)
 0493 : 43		"C"		coma                ; complement 1s in A
 0494 : 84 1F		"  "		anda	#$1F    ; and A with value 1Fh (0001 1111) (mask first 3 bits)
 0496 : D6 04		"  "		ldab	X0004   ; load B with value in 0004
@@ -981,7 +986,7 @@ SYNTH10
 **************************************;
 NMI , reset button on board
 **************************************;
-0519 : 0F		" "		sei                 ; set interrupt mask (I = 1)
+0519 : 0F		" "		sei                 ; set interrupt mask (I = 1) (blocks all future IRQs)
 051A : 8E 00 7F		"   "	lds	#$007F    ; load SP with value 007Fh (0000 0000 0111 1111)
 051D : CE FF FF		"   "	ldx	#$FFFF    ; load X with value FFFFh (1111 1111 1111 1111)
 0520 : 5F		"_"		clrb                ; clear (00) B
@@ -992,7 +997,13 @@ NMI , reset button on board
 0527 : 26 F8		"& "		bne	L0521     ; branch not equal zero to PC +- F8 (LOOP44)
 0529 : E1 00		"  "		cmpb	$00,x   ; compare B with X + 00h
 052B : 27 01		"' "		beq	L052E     ; branch equal zero to PC +- 01 (GOTO47)
+**************************************;
+WAI , wait for interrupt
+**************************************;
 052D : 3E		">"		wai                 ; wait for interrupt
+**************************************;
+DEMO , play demo sounds on SW1 press
+**************************************;
 052E				L052E: GOTO47
 052E : 86 01		"  "		ldaa	#$01    ; load A with value 01h (0000 0001)
 0530 : BD F8 2A		"  *"	jsr	LF82A     ; jump to subroutine F82A (PARAM1)
@@ -1397,6 +1408,9 @@ C0 E0
 07F2 : 00 00 
 00 00
 07F6 : 00 00 
+**************************************; 
+6802/8 vector table for interrupt pointers (indirect addressing)
+**************************************;
 07F8 : FC 8C                          ; (FFF8, FFF9) IRQ (048C)
 07FA : F8 01                          ; (FFFA, FFFB) SWI ~ RESET (0001)
 07FC : FD	19                          ; (FFFC, FFFD) NMI (0519)
