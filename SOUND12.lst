@@ -75,14 +75,15 @@ Relative
 
 ; Labels::
 ; SYNTH - output to DAC
-; PARAM - 
-; UTIL - 
+; PARAM - set parameters for waveform generation prior to SYNTH output
+; UTIL1 - loop till zero while inc value of VVECT
+; UTIL2 - 
 ; PATH - jump block to fit within addres range limitations?
 ; CALCOS - 
-; IRQ - handle PIA sound select and jump to sound
+; IRQ - handle PIA sound select and jump to sound via PARAM
 ; NMI - handle reset button depress, play demo sound loop
 ; VTAB - 
-; VVECT -
+; VVECT - 
  
 					org	$0000
 				;
@@ -91,7 +92,7 @@ Relative
 **************************************;        
 0000 : 78                             ; opcode for ASL ? other roms have FF here
 **************************************;
-RESET
+RESET (POWER-ON)
 **************************************;  
 0001 : 0F		" "		sei                 ; set interrupt mask (I = 1) 
 0002 : 8E 00 7F   "   " lds #$007F    ; load SP with 007Fh (0000 0000 0111 1111)
@@ -102,7 +103,7 @@ RESET
 000E : A7 00		"  "		staa	$00,x   ; store A in addr X + 00h (0400, all outputs on port A, goes to DAC)
 0010 : 6F 02		"o "		clr	$02,x     ; clear (00) in addr X + 02h (0402, all inputs on port B, from sound select)
 **************************************;
-START
+START , INIT
 **************************************;
 0012 : 86 37		" 7"		ldaa	#$37    ; load A with 37h (0011 0111)
 0014 : A7 03		"  "		staa	$03,x   ; store A in addr X + 03h (0403) (mask the 5 sound input pins)
@@ -174,7 +175,6 @@ SYNTH1
 0079 : 9B 12		"  "		adda	X0012   ; add A with value in addr 0012
 007B : 97 19		"  "		staa	X0019   ; store A in addr 0019
 007D : 91 13		"  "		cmpa	X0013   ; compare A with value in addr 0013
-
 007F : 26 CB		"& "		bne	L004C     ; branch if not equal zero to PC + 2 + CBh (LOOP2)
 0081 : 96 16		"  "		ldaa	X0016   ; load A with value in 0016
 0083 : 27 06		"' "		beq	L008B     ; branch if zero to PC + 2 + 06h (GOTO3)
@@ -590,7 +590,7 @@ SYNTH11
 02DF				L02DF: GOTO24
 02DF : 39		"9"		rts                 ; return from subroutine
 **************************************;
-UTIL1 - (envelope loop to zero?)
+UTIL1 - (loop till ACCUM B is zero, while inc X value of VVECT)
 **************************************;
 02E0 : 36		"6"		psha                ; push A into stack(A into SP) 
 02E1				L02E1: LOOP28
@@ -686,7 +686,7 @@ PARAM11
 0359 : 1B		" "		aba                 ; add A + B into A
 035A : 1B		" "		aba                 ; add A + B into A
 035B : 1B		" "		aba                 ; add A + B into A
-035C : CE FE D6		"   "	ldx	#$FED6    : load X with value FED6 (06D6)(waveform?)
+035C : CE FE D6		"   "	ldx	#$FED6    : load X with value FED6 (06D6)(waveform or modifier?)
 035F : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine FCF0 (CALCOS)
 0362 : A6 00		"  "		ldaa	$00,x   ; load A with X + 00h
 0364 : 16		" "		tab                 ; transfer A to B
@@ -707,7 +707,7 @@ PARAM11
 0378 : 84 0F		"  "		anda	#$0F    ; and A with value 0Fh (0000 1111)
 037A : 97 0D		"  "		staa	X000D   ; store A in 000D
 037C : DF 07		"  "		stx	X0007     ; store X in 0007
-037E : CE FE 37		"  7"	ldx	#$FE37    ; load X with value FE37 (0637)(waveform?)
+037E : CE FE 37		"  7"	ldx	#$FE37    ; load X with value FE37 (0637)(waveform or modifier?)
 0381				L0381: LOOP33
 0381 : 7A 00 0D		"z  "	dec	X000D     ; decrement 000D
 0384 : 2B 08		"+ "		bmi	L038E     ; branch if minus to PC +- 08h (GOTO29)
@@ -730,7 +730,7 @@ PARAM11
 03A6 : A6 05		"  "		ldaa	$05,x   ; load A with value in X + 05h
 03A8 : 16		" "		tab                 ; transfer A to B
 03A9 : A6 06		"  "		ldaa	$06,x   ; load A with value in X + 06h
-03AB : CE FF 3F		"  ?"	ldx	#$FF3F    ; load X with value FF3F (073F) (waveform?)
+03AB : CE FF 3F		"  ?"	ldx	#$FF3F    ; load X with value FF3F (073F) (waveform or modifier?)
 03AE : BD FC F0		"   "	jsr	LFCF0     ; jump to subroutine FCF0 (CALCOS)
 03B1 : 17		" "		tba                 ; transfer B to A
 03B2 : DF 17		"  "		stx	X0017     ; store X in 0017
@@ -954,7 +954,7 @@ IRQ handler, select sound
 04ED				L04ED: GOTO45
 04ED : 7E FB 0A		"~  "	jmp	LFB0A     ; jump to FB0A (UTIL2)
 **************************************;
-CALCOS (calculate offset)
+CALCOS (calculate offset)(store X in 0009-A, add A with 000A, bcc or inc 0009, X is 0009-A)
 **************************************;
 04F0 : DF 09		"  "		stx	X0009     ; store X in 0009
 04F2 : 9B 0A		"  "		adda	X000A   ; add A with value in 000A
@@ -984,14 +984,14 @@ SYNTH10
 0516 : 26 E9		"& "		bne	L0501     ; branch not equal zero to PC +- E9 (LOOP41)
 0518 : 39		"9"		rts                 ; return from subroutine
 **************************************;
-NMI , reset button on board
+NMI , reset/diagnostic button on board, SW1
 **************************************;
 0519 : 0F		" "		sei                 ; set interrupt mask (I = 1) (blocks all future IRQs)
 051A : 8E 00 7F		"   "	lds	#$007F    ; load SP with value 007Fh (0000 0000 0111 1111)
 051D : CE FF FF		"   "	ldx	#$FFFF    ; load X with value FFFFh (1111 1111 1111 1111)
 0520 : 5F		"_"		clrb                ; clear (00) B
 0521				L0521: LOOP44
-0521 : E9 00		"  "		adcb	$00,x   ; add B + x + 00h with Carry into B
+0521 : E9 00		"  "		adcb	$00,x   ; add B + X + 00h with Carry into B
 0523 : 09		" "		dex                 ; decrement X
 0524 : 8C F8 00		"   "	cpx	#$F800    ; compare X with value F800h (proper org $F800 ?)
 0527 : 26 F8		"& "		bne	L0521     ; branch not equal zero to PC +- F8 (LOOP44)
@@ -1016,23 +1016,23 @@ DEMO , play demo sounds on SW1 press
 **************************************;
 VWTAB - vector table(what happens with rts from here, nested, fall through?)
 **************************************;
-0542 : FB 1F                          ; jump to FB1F (-F800 = 031F) (ok, bra)
-0544 : F9	13                          ; jump to F913 (-F800 = 0113) (ok, bra)
-0546 : FA FA                          ; jump to FAFA (-F800 = 02FA) (ok, rts)
-0548 : F8 8C                          ; jump to F88C (-F800 = 008C) (ok, bra)
-054A : FB 47                          ; jump to FB47 (-F800 = 0347) (ok, bra)
-054C : FA F4                          ; jump to FAF4 (-F800 = 02F4) (ok, rts)
-054E : F8 CD                          ; jump to F8CD (-F800 = 00CD) (ok, bra)
-0550 : F8 94                          ; jump to F894 (-F800 = 0094) (ok, bra)
-0552 : F9 1C                          ;	jump to F91C (-F800 = 011C) (ok, bra)
-0554 : F9 23                          ;	jump to F923 (-F800 = 0123) (ok, bra)
-0556 : F9 A6                          ;	jump to F9A6 (-F800 = 01A6) (ok, bra)
-0558 : F9 D4                          ;	jump to F9D4 (-F800 = 01D4) (ok, rts)
-055A : F9 F3                          ;	jump to F9F3 (-F800 = 01F3) (ok, rts)
-055C : FA 44                          ;	jump to FA44 (-F800 = 0244) (ok, rts)
-055E : FA 87                          ;	jump to FA87 (-F800 = 0287) (ok, rts)
+0542 : FB 1F                          ; jump to FB1F (-F800 = 031F) (ok, bra) (PARAM10)
+0544 : F9	13                          ; jump to F913 (-F800 = 0113) (ok, bra) (PARAM3)
+0546 : FA FA                          ; jump to FAFA (-F800 = 02FA) (ok, rts) (PARAM9)
+0548 : F8 8C                          ; jump to F88C (-F800 = 008C) (ok, bra) (PARAM2)
+054A : FB 47                          ; jump to FB47 (-F800 = 0347) (ok, bra) (PARAM11)
+054C : FA F4                          ; jump to FAF4 (-F800 = 02F4) (ok, rts) (PARAM8)
+054E : F8 CD                          ; jump to F8CD (-F800 = 00CD) (ok, bra) (SYNTH3)
+0550 : F8 94                          ; jump to F894 (-F800 = 0094) (ok, bra) (SYNTH2)
+0552 : F9 1C                          ;	jump to F91C (-F800 = 011C) (ok, bra) (PARAM4)
+0554 : F9 23                          ;	jump to F923 (-F800 = 0123) (ok, bra) (PARAM5)
+0556 : F9 A6                          ;	jump to F9A6 (-F800 = 01A6) (ok, bra) (SYNTH5)
+0558 : F9 D4                          ;	jump to F9D4 (-F800 = 01D4) (ok, rts) (SYNTH6)
+055A : F9 F3                          ;	jump to F9F3 (-F800 = 01F3) (ok, rts) (SYNTH7)
+055C : FA 44                          ;	jump to FA44 (-F800 = 0244) (ok, rts) (PARAM6)
+055E : FA 87                          ;	jump to FA87 (-F800 = 0287) (ok, rts) (just an RTS at bottom of PARAM7)
 **************************************; 
-VVECT - vari vectors (modifiers to waveforms?) (FD60)(can inc to get next ones)
+VVECT - vari vectors (modifiers to waveforms?) (FD60)(can inc to get next ones)(7 * 1 byte, 1 * 16 bit)
 **************************************;
 0560 : 40	01                          ; 0100 0000 0000 0001 - SAW (called from 0034)                    
 0562 : 00	10                          ; 0000 0000 0001 0000
@@ -1064,7 +1064,7 @@ VVECT - vari vectors (modifiers to waveforms?) (FD60)(can inc to get next ones)
 0591 : B6 5B	                        ; 1011 0110 0101 1011
 0593 : 8C                             ; 1000 1100
 **************************************; 
-uncertain, direct call here 10 x 8 fdb + 3 (83)
+FREQ tables, uncertain, direct call here 10 x 8 fdb + 3 (83)
 **************************************;
 0594 : 0C 7F                          ; 0000 1100 0111 1111
 0596 : 1D 0F 
@@ -1159,9 +1159,9 @@ FE 0D
 0634 : 0D	08
 0636 : 04	
 **************************************; 
-uncertain, direct call here 10 x 8 fdb (79)
+uncertain, direct call here from PARAM11, 10 x 8 fdb (79)
 **************************************;
-0637 : 08 7F 
+0637 : 08 7F                          ; 0000 1000 0111 1111
 0639 : D9 FF 
 063B : D9 7F 
 24 00 
@@ -1251,9 +1251,9 @@ AB A0
 06D2 : 00 06
 06D4 : 19	37
 **************************************; 
-uncertain, another direct call 
+uncertain, another direct call from PARAM11 
 **************************************; 
-06D6 : 81 24
+06D6 : 81 24                          ; 1000 0001 0010 0100
 06D8 : 00 00 
 00 16
 06DC : 31 12 
@@ -1313,14 +1313,14 @@ FD 00
 01 09
 073E : 28 
 **************************************; 
-uncertain, direct call here 6 x 10 fdb + 5 (65)
+uncertain, another direct call here from PARAM11 6 x 10 fdb + 5 (65)
 **************************************;
-073F : A0
-0740 : 98 90
-0742 : 88 80
-0744 : 78 70 
-68 60 
-58 50
+073F : A0 98                           ; 1010 0000 1001 1000
+0741 : 90 88                           ; 1001 0000 1000 1000
+0743 : 80 78                           ; 1000 0000 0111 1000
+0745 : 70 68                           ; 0111 0000 0110 1000
+0747 : 60 58                           ; 0110 0000 0101 1000
+0749 : 50
 074A : 44	40
 074C : 01 01
 074E : 02 02 
