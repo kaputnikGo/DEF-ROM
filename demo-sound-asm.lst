@@ -5,148 +5,137 @@
 ; mpu clock speed is default/low, expecting ~894750 cycles per second
 ; not using the actual NMI, IRQ , SWI etc
 ; need 422 bytes for program (can save room by removing dupe PARAM7)
-; user RAM = 197 + 256 bytes
+; user RAM = 197 + 256 bytes = 453
 ; addr 0000 - 00C4 and 0100 - 01FF
 
+; need to move org to 0020, fit to RAM memory map
+; all GOTO, LOOP JMP addr change! move CALCOS
+; OPTIMISE !
+
 ;*************************************;
-;RESET INIT (POWER-ON) org 0001
-;*************************************; 
-0000 : 01         nop                 ; org: 0000 
-0001 : 0F		      sei                 ; set interrupt mask (I = 1) 
-0002 : 8E 00 7F   lds #$007F          ; load SP with 007Fh (0000 0000 0111 1111)
-0005 : CE 80 00	  ldx #$8000          ; load X with 8000h, PIA (DAC) addr
-0008 : 6F 01		  clr	$01,x           ; clear (00) in addr X + 01h (8001, PIA Data Direction Register for port A) 
-000A : 6F 03		  clr	$03,x           ; clear (00) in addr X + 03h (8003, PIA DDR for port B)
-000C : 86 FF		  ldaa	#$FF          ; load A with FFh (1111 1111)
-000E : A7 00		  staa	$00,x         ; store A in addr X + 00h (8000, all outputs on port A, goes to DAC)
-0010 : 6F 02		  clr	$02,x           ; clear (00) in addr X + 02h (8002, all inputs on port B, from sound select)
+; MAIN LOOP mem locations have init:
+0000 : 00 00                          ; clear (00)
+0002 : 00 00                          ; clear (00)
+0004 : 00                             ; clear (00)
+0005 : 3C                             ; value 3Ch(0011 1100)
+0006 :                                ;
+; ~                                   ; 
+0019 :                                ; total 20 bytes
+;*************************************;
+;RESET INIT (POWER-ON) org 0020
+;*************************************;
+; org 0020 
+0020 : 8E 01 FF   lds #$01FF          ; load SP with 01FFh
+0023 : CE 80 00	  ldx #$8000          ; load X with 8000h, PIA (DAC) addr
+0026 : 6F 01		  clr	$01,x           ; clear(00) addr X + 01h (8001, PIA DDR port A) 
+0028 : 86 FF		  ldaa	#$FF          ; load A with FFh (1111 1111)
+002A : A7 00		  staa	$00,x         ; store A in addr X + 00h (8000, port A output)
 ;*************************************;
 ;START
 ;*************************************;
-0012 : 86 37		  ldaa	#$37          ; load A with 37h (0011 0111)
-0014 : A7 03		  staa	$03,x         ; store A in addr X + 03h (8003) (mask the 5 sound input pins)
-0016 : 86 3C		  ldaa	#$3C          ; load A with 3Ch(0011 1100)
-0018 : A7 01		  staa	$01,x         ; store A in addr X + 01h (8001)
-001A : 97 05		  staa	X0005         ; store A in addr 0005
-001C : 4F		      clra                ; clear A (00)
-001D : 97 03		  staa	X0003         ; store A in addr 0003
-001F : 97 00		  staa	X0000         ; store A in addr 0000
-0021 : 97 01		  staa	X0001         ; store A in addr 0001
-0023 : 97 02		  staa	X0002         ; store A in addr 0002
-0025 : 97 04		  staa	X0004         ; store A in addr 0004
+002C : 86 3C		  ldaa	#$3C          ; load A with 3Ch(0011 1100)
+002E : A7 01		  staa	$01,x         ; store A in addr X + 01h (8001)
 ;*************************************;
 ;NMI , reset/diagnostic button on board, SW1
 ;*************************************;
-0027 : 8E 00 7F		lds	#$007F          ; load SP with value 007Fh (0000 0000 0111 1111)
-002A : CE FF FF		ldx	#$FFFF          ; load X with value FFFFh (1111 1111 1111 1111)
-002D : 5F		      clrb                ; clear (00) B
-;L002E: LOOP44
-002E : E9 00		  adcb	$00,x         ; add B + X + 00h with Carry into B
-0030 : 09		      dex                 ; decrement X
-0031 : 8C 00 01		cpx	#$0001          ; compare X with value 0001h (proper org $F800 ?)
-0034 : 26 F7		  bne	L002E           ; branch not equal zero to PC - F7 (LOOP44)(-8)
-0036 : E1 00		  cmpb	$00,x         ; compare B with X + 00h
-0038 : 01		      nop                 ; replacing a bne to wai with nop
-0039 : 01         nop
-;*************************************;
-003A : 86 01		  ldaa	#$01          ; load A with value 01h (0000 0001)
+0030 : CE FF FF		ldx	#$FFFF          ; load X with value FFFFh ( or 78h )
+0033 : 5F		      clrb                ; clear (00) B
+0034 : E9 00		  adcb	$00,x         ; add B + X + 00h with Carry into B
+0036 : 86 01		  ldaa	#$01          ; load A with value 01h (0000 0001)
 ;*************************************;
 ;PARAM1
 ;*************************************;
-003C : 16		      tab                 ; transfer A to B
-003D : 48		      asla                ; shift left in A
-003E : 48		      asla                ; shift left in A
-003F : 48		      asla                ; shift left in A
-0040 : 1B		      aba                 ; add A + B into A
-0041 : CE 00 0F		ldx	#$000F          ; load X with value 000F (0000 0000 0000 1111)
-0044 : DF 0B		  stx	X000B           ; store X in addr 000B ( & 000C)
-0046 : CE 01 D2		ldx	#$01D2           ; load X with value 01D2 (SAW)
-0049 : 8D	03      bsr L004C           ; branch CALCOS PC + 03h(+3)
-004B : C6 09		  ldab	#$09          ; load B with 09h (0000 1001)
-004B : 20	0F	    bra L005C           ; branch always to UTIL1 PC + 0Fh(+15)
-;*************************************;
-;CALCOS (calculate offset) (jump to from PARAM7 in 4 separate locations)
-;*************************************;
-004D : DF 09		  stx	X0009           ; store X in 0009
-004F : 9B 0A		  adda	X000A         ; add A with value in 000A
-0051 : 97 0A		  staa	X000A         ; store A in 000A
-0053 : 24 03		  bcc	L0057           ; branch if Carry clear to PC + 03 (GOTO46)(+3)
-0055 : 7C 00 09		inc	X0009           ; increment value in 0009
-;L0057: GOTO46
-0058 : DE 09		  ldx	X0009           ; load X with value in 0009
-005A : 39		      rts                 ; return from subroutine
-005B : 01         nop                 ; fall-thru, no operation
+0038 : 16		      tab                 ; transfer A to B
+0039 : 48		      asla                ; shift left in A
+003A : 48		      asla                ; shift left in A
+003B : 48		      asla                ; shift left in A
+003C : 1B		      aba                 ; add A + B into A
+003D : CE 00 0F		ldx	#$000F          ; load X with value 000F (0000 0000 0000 1111)
+0040 : DF 0B		  stx	X000B           ; store X in addr 000B ( & 000C)
+0042 : CE 01 D2		ldx	#$01D2          ; load X with value 01D2 (SAW)
+0045 : 8D	03      bsr L004C           ; branch CALCOS PC + 03h(+3)
+0047 : C6 09		  ldab	#$09          ; load B with 09h (0000 1001)
 ;*************************************;
 ;UTIL1 - (loop till ACCUM B is zero, while inc X value of VVECT)
 ;**************************************;
-005C : 36		      psha                ; push A into stack(A into SP) 
+0049 : 36		      psha                ; push A into stack(A into SP) 
 ;L005D: LOOP28
-005D : A6 00		  ldaa	$00,x         ; load A with value in X + 00h
-005F : DF 09		  stx	X0009           ; store X in 0009
-0061 : DE 0B		  ldx	X000B           ; load X with value in 000B
-0063 : A7 00		  staa	$00,x         ; store A in X + 00h
-0065 : 08		      inx                 ; increment X
-0066 : DF 0B		  stx	X000B           ; store X in 000B
-0068 : DE 09		  ldx	X0009           ; load X with value in 0009
-006A : 08		      inx                 ; increment X
-006B : 5A		      decb                ; decrement B
-006C : 26 EF		  bne	L005D           ; branch not equal zero to PC - EFh (LOOP28)(-17)
-006E : 32		      pula                ; pull into A from stack (SP into A)
-006F : 01		      nop                 ; fall-thru, no operation (replacing an RTS)
+004A : A6 00		  ldaa	$00,x         ; load A with value in X + 00h
+004C : DF 09		  stx	X0009           ; store X in 0009
+004E : DE 0B		  ldx	X000B           ; load X with value in 000B
+0050 : A7 00		  staa	$00,x         ; store A in X + 00h
+0052 : 08		      inx                 ; increment X
+0053 : DF 0B		  stx	X000B           ; store X in 000B
+0055 : DE 09		  ldx	X0009           ; load X with value in 0009
+0057 : 08		      inx                 ; increment X
+0058 : 5A		      decb                ; decrement B
+0059 : 26 EF		  bne	L005D           ; branch not equal zero to PC - EFh (LOOP28)(-17)
+005B : 32		      pula                ; pull into A from stack (SP into A)
 ;*************************************;
 ;SYNTH1
 ;*************************************;
-0070 : 96 17		  ldaa	X0017         ; load A with value in addr 0017
-0072 : B7 80 00		staa	X8000         ; store A in addr 8000 (SOUND)
+005C : 96 17		  ldaa	X0017         ; load A with value in addr 0017
+005E : B7 80 00		staa	X8000         ; store A in addr 8000 (SOUND)
 ;L0075: LOOP1
-0075 : 96 0F		  ldaa	X000F         ; load A with value in addr 000F
-0077 : 97 18		  staa	X0018         ; store A in addr 0018
-0079 : 96 10		  ldaa	X0010         ; load A with value in addr 0010
-007B : 97 19		  staa	X0019         ; store A in addr 0019
+0061 : 96 0F		  ldaa	X000F         ; load A with value in addr 000F
+0063 : 97 18		  staa	X0018         ; store A in addr 0018
+0065 : 96 10		  ldaa	X0010         ; load A with value in addr 0010
+0067 : 97 19		  staa	X0019         ; store A in addr 0019
 ;L007D: LOOP2
-007D : DE 14		  ldx	X0014           ; load X with value in 0014
+0069 : DE 14		  ldx	X0014           ; load X with value in 0014
 ;L004E: LOOP3
-007F : 96 18		  ldaa	X0018         ; load A with value in addr 0018
-0081 : 73 80 00		com	X8000           ; complement 1s in addr 8000 (change all 1 to 0 and 0 to 1)(SOUND)
+006B : 96 18		  ldaa	X0018         ; load A with value in addr 0018
+006D : 73 80 00		com	X8000           ; complement 1s in addr 8000 (invert)(SOUND)
 ;L0084: LOOP4
-0084 : 09		      dex                 ; decrement X (X = X - 1)
-0085 : 27 10		  beq	L0066           ; branch if zero (Z = 1) to PC + 10h (GOTO1)(+16)
-0087 : 4A		      deca                ; decrement A (A = A - 1)
-0088 : 26 FA		  bne	L0053           ; branch if not equal zero (Z = 0) to PC - FAh (LOOP4)(-6)
-008A : 73 80 00		com	X8000           ; complements 1s in addr 8000 (SOUND)
-008D : 96 19		  ldaa	X0019         ; load A with value in 0019
+0070 : 09		      dex                 ; decrement X (X = X - 1)
+0071 : 27 10		  beq	L0066           ; branch if zero (Z = 1) to PC + 10h (GOTO1)(+16)
+0073 : 4A		      deca                ; decrement A (A = A - 1)
+0074 : 26 FA		  bne	L0053           ; branch if not equal zero (Z = 0) to PC - FAh (LOOP4)(-6)
+0076 : 73 80 00		com	X8000           ; complements 1s in addr 8000 (SOUND)
+0079 : 96 19		  ldaa	X0019         ; load A with value in 0019
 ;L008F: LOOP5
-008F : 09		      dex                 ; decrement X
-0090 : 27 05		  beq	L0066           ; branch if zero to PC + 05h (GOTO1)(+5)
-0092 : 4A		      deca                ; decrement A
-0093 : 26 FA		  bne	L005E           ; branch if not equal zero to PC - FAh (LOOP5)(-6)
-0095 : 20 E8		  bra	L004E           ; branch always to addr PC - E8h (LOOP3)(-24) 
+007B : 09		      dex                 ; decrement X
+007C : 27 05		  beq	L0066           ; branch if zero to PC + 05h (GOTO1)(+5)
+007E : 4A		      deca                ; decrement A
+007F : 26 FA		  bne	L005E           ; branch if not equal zero to PC - FAh (LOOP5)(-6)
+0081 : 20 E8		  bra	L004E           ; branch always to addr PC - E8h (LOOP3)(-24) 
 ;L0097: GOTO1
-0097 : B6 80 00		ldaa	X8000         ; load A with value in addr 8000
-009A : 2B 01		  bmi	L006C           ; branch if minus (N = 1) to addr PC + 01h (GOTO2)
-009C : 43		      coma                ; complements 1s in A
+0083 : B6 80 00		ldaa	X8000         ; load A with value in addr 8000
+0086 : 2B 01		  bmi	L006C           ; branch if minus (N = 1) to addr PC + 01h (GOTO2)
+0088 : 43		      coma                ; complements 1s in A
 ;L009D: GOTO2
-009D : 8B 00		  adda	#$00          ; add A with 00h (A = A + 00h)
-009F : B7 80 00		staa	X8000         ; store A in addr 8000 (SOUND)
-00A2 : 96 18		  ldaa	X0018         ; load A with value in 0018
-00A4 : 9B 11		  adda	X0011         ; add A with value in addr 0011
-00A6 : 97 18		  staa	X0018         ; store A in addr 0018
-00A8 : 96 19		  ldaa	X0019         ; load A with value in 0019
-00AA : 9B 12		  adda	X0012         ; add A with value in addr 0012
-00AC : 97 19		  staa	X0019         ; store A in addr 0019
-00AE : 91 13		  cmpa	X0013         ; compare A with value in addr 0013
-00B0 : 26 CB	  	bne	L007D           ; branch if not equal zero to PC - CBh (LOOP2)(-53)
-00B2 : 96 16		  ldaa	X0016         ; load A with value in 0016
-00B4 : 27 06		  beq	L00BC           ; branch if zero to PC + 06h (GOTO3)(+6)
-00B6 : 9B 0F			adda	X000F         ; add A with value in addr 000F
-00B8 : 97 0F		  staa	X000F         ; store A in addr 000F
-00BA : 26 B9		  bne	L0075           ; branch if not equal zero to PC - B9h (LOOP1)(-71)
+0089 : 8B 00		  adda	#$00          ; add A with 00h (A = A + 00h)
+008B : B7 80 00		staa	X8000         ; store A in addr 8000 (SOUND)
+008E : 96 18		  ldaa	X0018         ; load A with value in 0018
+0090 : 9B 11		  adda	X0011         ; add A with value in addr 0011
+0092 : 97 18		  staa	X0018         ; store A in addr 0018
+0094 : 96 19		  ldaa	X0019         ; load A with value in 0019
+0096 : 9B 12		  adda	X0012         ; add A with value in addr 0012
+0098 : 97 19		  staa	X0019         ; store A in addr 0019
+009A : 91 13		  cmpa	X0013         ; compare A with value in addr 0013
+009C : 26 CB	  	bne	L007D           ; branch if not equal zero to PC - CBh (LOOP2)(-53)
+009E : 96 16		  ldaa	X0016         ; load A with value in 0016
+00A0 : 27 06		  beq	L00BC           ; branch if zero to PC + 06h (GOTO3)(+6)
+00A2 : 9B 0F			adda	X000F         ; add A with value in addr 000F
+00A4 : 97 0F		  staa	X000F         ; store A in addr 000F
+00A6 : 26 B9		  bne	L0075           ; branch if not equal zero to PC - B9h (LOOP1)(-71)
 ;L00BC: GOTO3
-00BC : 01		      nop                 ; fall-thru, no operation (replacing an RTS)
+00A8 : 86 02		  ldaa	#$02          ; load A with value 02h (0000 0010)
 ;*************************************;
-00BD : 86 02		  ldaa	#$02          ; load A with value 02h (0000 0010)
+;CALCOS (calculate offset) (jump to from PARAM7 in 4 separate locations)
 ;*************************************;
-;PARAM7 (move program org here to 0100 for IC16,IC17)
+00B0 : DF 09		  stx	X0009           ; store X in 0009
+00B2 : 9B 0A		  adda	X000A         ; add A with value in 000A
+00B4 : 97 0A		  staa	X000A         ; store A in 000A
+00B6 : 24 03		  bcc	L0057           ; branch if Carry clear to PC + 03 (GOTO46)(+3)
+00B8 : 7C 00 09		inc	X0009           ; increment value in 0009
+;L0057: GOTO46
+00BB : DE 09		  ldx	X0009           ; load X with value in 0009
+00BD : 39		      rts                 ; return from subroutine
+;*************************************;
+; must end before 00C4
+;*************************************;
+;PARAM7 (program org 0100 for IC16,IC17)
 ;*************************************;
 ; org 0100
 0100 : 7F 00 04		clr	X0004           ; clear (00) addr 0004
@@ -184,82 +173,80 @@
 ;L0139: GOTO21
 0139 : 86 01		  ldaa	#$01          ; load A with value 01h (0000 0001)
 ;*************************************;
-013B : 01         nop                 ; should repeat PARAM7 once more then jump to NMI
-013C : 01         nop                 ; fall-thru, no operation
-;*************************************;
 ;PARAM7
 ;*************************************;
-013D : 7F 00 04		clr	X0004           ; clear (00) addr 0004
-0140 : 97 0D		  staa	X000D         ; store A in addr 000D
-0142 : CE 01 DB		ldx	#$01DB          ; load X with value 01DBh (01DB)(waveform)
+013B : 7F 00 04		clr	X0004           ; clear (00) addr 0004
+013E : 97 0D		  staa	X000D         ; store A in addr 000D
+0140 : CE 01 DB		ldx	#$01DB          ; load X with value 01DBh (01DB)(waveform)
 ;L0145: LOOP25
-0145 : A6 00		  ldaa	$00,x         ; load A with value in X + 00h
-0147 : 27 2D		  beq	L0176           ; branch equal zero to PC + 2Dh (GOTO21)(+45)
-0149 : 7A 00 0D		dec	X000D           ; decrement in addr 000D
-014C : 27 06		  beq	L0154           ; branch equal zero to PC + 06h (GOTO20)(+6)
-014E : 4C		      inca                ; increment A
-014F : BD 00 4C		jsr	L004C           ; jump to subroutine in addr FCF0h (CALCOS - 004C)
-0152 : 20 F1		  bra	L0145           ; branch always to addr PC + F1 (LOOP25)(-15)
+0143 : A6 00		  ldaa	$00,x         ; load A with value in X + 00h
+0145 : 27 2D		  beq	L0176           ; branch equal zero to PC + 2Dh (GOTO21)(+45)
+0147 : 7A 00 0D		dec	X000D           ; decrement in addr 000D
+014A : 27 06		  beq	L0154           ; branch equal zero to PC + 06h (GOTO20)(+6)
+014C : 4C		      inca                ; increment A
+014D : BD 00 4C		jsr	L004C           ; jump to subroutine in addr FCF0h (CALCOS - 004C)
+0150 : 20 F1		  bra	L0145           ; branch always to addr PC + F1 (LOOP25)(-15)
 ;L0154: GOTO20
-0154 : 08		      inx                 ; increment X
-0155 : DF 0B		  stx	X000B           ; store X in 000B
-0157 : BD 00 4C		jsr	L004C           ; jump to subroutine in FCF0h (CALCOS - 004C)
-015A : DF 09		  stx	X0009           ; store X in 0009
-015C : DE 0B		  ldx	X000B           ; load X with value in 000B
+0152 : 08		      inx                 ; increment X
+0153 : DF 0B		  stx	X000B           ; store X in 000B
+0155 : BD 00 4C		jsr	L004C           ; jump to subroutine in FCF0h (CALCOS - 004C)
+0158 : DF 09		  stx	X0009           ; store X in 0009
+015A : DE 0B		  ldx	X000B           ; load X with value in 000B
 ;L015E: LOOP26
-015E : A6 00		  ldaa	$00,x         ; load A with value in X + 00h
-0160 : 97 11		  staa	X0011         ; store A in addr 0011
-0162 : A6 01		  ldaa	$01,x         ; load A with value in X + 01h
-0164 : EE 02		  ldx	$02,x           ; load X with value in X + 02h
-0166 : DF 0F		  stx	X000F           ; store X in 000F
-0168 : 8D 10		  bsr	L017A           ; branch to subroutine to PC + 10h (SYNTH11)(+16)
-016A : DE 0B		  ldx	X000B           ; load X with value in 000B
+015C : A6 00		  ldaa	$00,x         ; load A with value in X + 00h
+015E : 97 11		  staa	X0011         ; store A in addr 0011
+0160 : A6 01		  ldaa	$01,x         ; load A with value in X + 01h
+0162 : EE 02		  ldx	$02,x           ; load X with value in X + 02h
+0164 : DF 0F		  stx	X000F           ; store X in 000F
+0166 : 8D 10		  bsr	L017A           ; branch to subroutine to PC + 10h (SYNTH11)(+16)
+0168 : DE 0B		  ldx	X000B           ; load X with value in 000B
+016A : 08		      inx                 ; increment X
+016B : 08		      inx                 ; increment X
 016C : 08		      inx                 ; increment X
-016D : 08		      inx                 ; increment X
-016E : 08		      inx                 ; increment X
-016F : 08		      inx                 ; increment X (step size x4)
-0170 : DF 0B		  stx	X000B           ; store X in addr 000B
-0172 : 9C 09		  cpx	X0009           ; compare X with value in 0009
-0174 : 26 E8		  bne	L015E           ; branch not equal zero to PC + 2 + E8 (LOOP26)(-24)
+016D : 08		      inx                 ; increment X (step size x4)
+016E : DF 0B		  stx	X000B           ; store X in addr 000B
+0170 : 9C 09		  cpx	X0009           ; compare X with value in 0009
+0172 : 26 E8		  bne	L015E           ; branch not equal zero PC + E8h (LOOP26)(-24)
 ;L0176: GOTO21
-0176 : 01		      nop                 ; fall-thru, no operation(replacing an RTS)
-0177 : 7E 00 27		jmp	L0027           ; jump endless NMI loop (or make it a HALT)
+0174 : 7E 00 27		jmp	L0027           ; jump endless NMI loop (or make it a HALT)
 ;*************************************;
 ;END MAIN LOOP
 ;*************************************;
 ;SYNTH11 - jump from PARAM7 in two sep locations
 ;*************************************;
-017A : CE 00 12		ldx	#$0012          ; load X with value 0012h (0000 0000 0001 0010)
-017D : 80 02		  suba	#$02          ; subtract A with value 02h (0000 0010)
+0177 : CE 00 12		ldx	#$0012          ; load X with value 0012h (0000 0000 0001 0010)
+017A : 80 02		  suba	#$02          ; subtract A with value 02h (0000 0010)
 ;L017F: LOOP27
-017F : 23 15		  bls	L0196           ; branch lower or same to PC + 15h (GOTO23)(+22)
-0181 : 81 03		  cmpa	#$03          ; compare A with value 03h (0000 0011)
-0183 : 27 09		  beq	L018E           ; branch equal zero to PC + 09h (GOTO22)(+9)
-0185 : C6 01		  ldab	#$01          ; load B with value 01h (0000 0001)
-0187 : E7 00		  stab	$00,x         ; store B in addr X + 00h
-0189 : 08		      inx                 ; increment X
-018A : 80 02		  suba	#$02          ; subtract A with value 02h (0000 0010)
-018C : 20 F1		  bra	L017F           ; branch always to addr PC - F1h (LOOP27)(-15)
+017C : 23 15		  bls	L0196           ; branch lower or same to PC + 15h (GOTO23)(+22)
+017E : 81 03		  cmpa	#$03          ; compare A with value 03h (0000 0011)
+0180 : 27 09		  beq	L018E           ; branch equal zero to PC + 09h (GOTO22)(+9)
+0182 : C6 01		  ldab	#$01          ; load B with value 01h (0000 0001)
+0184 : E7 00		  stab	$00,x         ; store B in addr X + 00h
+0186 : 08		      inx                 ; increment X
+0187 : 80 02		  suba	#$02          ; subtract A with value 02h (0000 0010)
+0189 : 20 F1		  bra	L017F           ; branch always to addr PC - F1h (LOOP27)(-15)
 ;L018E: GOTO22
-018E : C6 91		  ldab	#$91          ; load B with value 91h (1001 0001)
-0190 : E7 00		  stab	$00,x         ; store B in X + 00h
-0192 : 6F 01		  clr	$01,x           ; clear (00) X + 01h
-0194 : 08		      inx                 ; increment X
-0195 : 08		      inx                 ; increment X
+018B : C6 91		  ldab	#$91          ; load B with value 91h (1001 0001)
+018D : E7 00		  stab	$00,x         ; store B in X + 00h
+018F : 6F 01		  clr	$01,x           ; clear (00) X + 01h
+0191 : 08		      inx                 ; increment X
+0192 : 08		      inx                 ; increment X
 ;L0196: GOTO23
-0196 : C6 7E		  ldab	#$7E          ; load B with value 7Eh (0111 1110)
-0198 : E7 00		  stab	$00,x         ; store B in X + 00h
-019A : C6 FA		  ldab	#$FA          ; load B with value FAh (1111 1010)
-019C : E7 01		  stab	$01,x         ; store B in X + 01h
-019E : C6 B2		  ldab	#$B2          ; load B with value B2h (1011 0010)
-01A0 : E7 02		  stab	$02,x         ; store B in X + 02h
-01A2 : DE 0F		  ldx	X000F           ; load X with value in 000F
-01A4 : 4F		      clra                ; clear A (00)
-01A5 : F6 00 0E		ldab	X000E         ; load A with value in 000E
-01A8 : 5C		      incb                ; increment B
-01A9 : D7 0E		  stab	X000E         ; store B in 000E
-01AB : D4 11		  andb	X0011         ; and B with value in 0011
-01AD : 54		      lsrb                ; logic shift right B ( 0 -> [b7...b0] -> C )
+0193 : C6 7E		  ldab	#$7E          ; load B with value 7Eh (0111 1110)
+0195 : E7 00		  stab	$00,x         ; store B in X + 00h
+0197 : C6 FA		  ldab	#$FA          ; load B with value FAh (1111 1010)
+0199 : E7 01		  stab	$01,x         ; store B in X + 01h
+019B : C6 B2		  ldab	#$B2          ; load B with value B2h (1011 0010)
+019D : E7 02		  stab	$02,x         ; store B in X + 02h
+019F : DE 0F		  ldx	X000F           ; load X with value in 000F
+01A1 : 4F		      clra                ; clear A (00)
+01A2 : F6 00 0E		ldab	X000E         ; load A with value in 000E
+01A5 : 5C		      incb                ; increment B
+01A6 : D7 0E		  stab	X000E         ; store B in 000E
+01A8 : D4 11		  andb	X0011         ; and B with value in 0011
+01AA : 54		      lsrb                ; logic shift right B ( 0 -> [b7...b0] -> C )
+01AB : 89 00		  adca	#$00          ; add A + 00h + Carry into A
+01AD : 54		      lsrb                ; logic shift right B
 01AE : 89 00		  adca	#$00          ; add A + 00h + Carry into A
 01B0 : 54		      lsrb                ; logic shift right B
 01B1 : 89 00		  adca	#$00          ; add A + 00h + Carry into A
@@ -271,39 +258,43 @@
 01BA : 89 00		  adca	#$00          ; add A + 00h + Carry into A
 01BC : 54		      lsrb                ; logic shift right B
 01BD : 89 00		  adca	#$00          ; add A + 00h + Carry into A
-01BF : 54		      lsrb                ; logic shift right B
-01C0 : 89 00		  adca	#$00          ; add A + 00h + Carry into A
-01C2 : 1B		      aba                 ; add A + B into A
-01C3 : 48		      asla                ; arithmetic shift left A ( C <- [b7...b0] <- 0 )
+01BF : 1B		      aba                 ; add A + B into A
+01C0 : 48		      asla                ; arithmetic shift left A ( C <- [b7...b0] <- 0 )
+01C1 : 48		      asla                ; arithmetic shift left A
+01C2 : 48		      asla                ; arithmetic shift left A
+01C3 : 48		      asla                ; arithmetic shift left A
 01C4 : 48		      asla                ; arithmetic shift left A
-01C5 : 48		      asla                ; arithmetic shift left A
-01C6 : 48		      asla                ; arithmetic shift left A
-01C7 : 48		      asla                ; arithmetic shift left A
-01C8 : B7 80 00		staa	X8000         ; store A in 8000 (SOUND)
-01CB : 09		      dex                 ; decrement X
-01CC : 27 03		  beq	L01D1           ; branch equal zero PC + 03h (GOTO24)(+3)
-01CE : 7E 00 12		jmp	L0012           ; jump to addr 0012 (START)
+01C5 : B7 80 00		staa	X8000         ; store A in 8000 (SOUND)
+01C8 : 09		      dex                 ; decrement X
+01C9 : 27 03		  beq	L01D1           ; branch equal zero PC + 03h (GOTO24)(+3)
+01CB : 7E 00 12		jmp	L0012           ; jump to addr 0012 (START)
 ;L01D1: GOTO24
-01D1 : 39		      rts                 ; return from subroutine
+01CE : 39		      rts                 ; return from subroutine
 ;*************************************;
-;WAVEFORM FDB
+;WAVEFORM FDB SAW
 ;*************************************;
-01D2 : 40	01                          ; 0100 0000 0000 0001 - SAW (called from 0046)                    
-01D4 : 00	10                          ; 0000 0000 0001 0000
-01D6 : E1 00                          ; 1110 0001 0000 0000
-01D8 : 80 FF                          ; 1000 0000 1111 1111
-01DA : FF                             ; 1111 1111 
+01CF : 40	01                          ; 0100 0000 0000 0001 - SAW (0046)                    
+01D1 : 00	10                          ; 0000 0000 0001 0000
+01D3 : E1 00                          ; 1110 0001 0000 0000
+01D5 : 80 FF                          ; 1000 0000 1111 1111
+01D7 : FF                             ; 1111 1111 
 ;*************************************; 
 ;FREQ waveform - need more/less fdb ?
 ;*************************************;
-01DB : 0C 7F                          ; 0000 1100 0111 1111
-01DD : 1D 0F 
-01DF : FB 7F 
-01E1 : 23 0F	
-01E3 : 15 FE 
-01E5 : 08 50
-01E7 : 8A 88
-01E9 : 3E	3F
+01D8 : 0C 7F                          ; 0000 1100 0111 1111
+01DA : 1D 0F 
+01DC : FB 7F 
+01DE : 23 0F	
+01E0 : 15 FE 
+01E2 : 08 50
+01E4 : 8A 88
+01E6 : 3E	3F
 ;*************************************; 
 ;END OF COMPLETE PROGRAM (0000-00BD) + (0100-01E9) = (189) + (233) = 422
+;*************************************;
+; Stack Pointer RAM block 
+;*************************************;
+01E8 :                                ; last SP
+; ~                                   ; 23 bytes
+01FF :                                ; initial SP
 ;*************************************;

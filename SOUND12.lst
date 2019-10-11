@@ -90,7 +90,7 @@ Relative
 **************************************;
 ?
 **************************************;        
-0000 : 78                             ; opcode for ASL ? other roms have FF here
+0000 : 78                             ; other roms have FF here, referenced in NMI cpx opcode
 **************************************;
 RESET (POWER-ON)
 **************************************;  
@@ -993,7 +993,7 @@ NMI , reset/diagnostic button on board, SW1
 0521				L0521: LOOP44
 0521 : E9 00		"  "		adcb	$00,x   ; add B + X + 00h with Carry into B
 0523 : 09		" "		dex                 ; decrement X
-0524 : 8C F8 00		"   "	cpx	#$F800    ; compare X with value F800h (proper org $F800 ?)
+0524 : 8C F8 00		"   "	cpx	#$F800    ; compare X with value F800h (proper org $F800 has unique, odd value 0x78)
 0527 : 26 F8		"& "		bne	L0521     ; branch not equal zero to PC +- F8 (LOOP44)
 0529 : E1 00		"  "		cmpb	$00,x   ; compare B with X + 00h
 052B : 27 01		"' "		beq	L052E     ; branch equal zero to PC +- 01 (GOTO47)
