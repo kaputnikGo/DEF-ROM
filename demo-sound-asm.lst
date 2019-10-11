@@ -2,9 +2,9 @@
 ; RESET BUTTON PUSH DEMO SOUNDS CODE
 ; hack for Heathkit ET-3400 Audio Setup
 ; using PIA addr 8000 (not 0400)
-; mpu clock speed is deafult/low, expecting ~894750 cycles per second
+; mpu clock speed is default/low, expecting ~894750 cycles per second
 ; not using the actual NMI, IRQ , SWI etc
-; need 423 bytes for program (can save room by removing dup PARAM7)
+; need 422 bytes for program (can save room by removing dupe PARAM7)
 ; user RAM = 197 + 256 bytes
 ; addr 0000 - 00C4 and 0100 - 01FF
 
@@ -294,7 +294,7 @@
 01D8 : 80 FF                          ; 1000 0000 1111 1111
 01DA : FF                             ; 1111 1111 
 ;*************************************; 
-;FREQ waveform - need more fdb ?
+;FREQ waveform - need more/less fdb ?
 ;*************************************;
 01DB : 0C 7F                          ; 0000 1100 0111 1111
 01DD : 1D 0F 
@@ -305,5 +305,5 @@
 01E7 : 8A 88
 01E9 : 3E	3F
 ;*************************************; 
-;END OF COMPLETE PROGRAM (0000 - 01A7 = 423)
+;END OF COMPLETE PROGRAM (0000-00BD) + (0100-01E9) = (189) + (233) = 422
 ;*************************************;
