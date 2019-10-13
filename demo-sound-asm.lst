@@ -4,12 +4,13 @@
 ; using PIA addr 8000 (not 0400)
 ; mpu clock speed is default/low, expecting ~894750 cycles per second
 ; not using the actual NMI, IRQ , SWI etc
-; need 414 bytes for program (can save room by removing dupe PARAM7)
+; 414 bytes for program
 ; user RAM = 197 + 256 bytes = 453
 ; addr 0000 - 00C4 and 0100 - 01FF
-
 ; move org to 0020, fit to RAM memory map
-;
+
+; 2nd PARAM7 use mem location 001F init 00, check mem for value, run PARAM7, set as FF, bra if FF
+; sort out each end of PARAM 7 jsr, bra loops
 
 ;*************************************;
 ; MAIN LOOP mem reserve locations, have init:
@@ -20,8 +21,8 @@
 0006 :                                ;
 ; ~                                   ;
 0019 :                                ; last used address (19 bytes)
-; ~                                   ; can rem these?
-001F :                                ; total 31 bytes
+; ~                                   ; can rem these? total 31 bytes
+001F : 00                             ; used for PARAM7 repeat switch (00 or FF)
 ;*************************************;
 ;RESET INIT (POWER-ON) org 0020
 ;*************************************;
@@ -171,6 +172,7 @@
 0133 : DF 0B		  stx	X000B           ; store X in addr 000B
 0135 : 9C 09		  cpx	X0009           ; compare X with value in 0009
 0137 : 26 E8		  bne	L0121           ; branch != zero PC - E8h (LOOP26)(-24)
+;*************************************;
 ;L0139: GOTO21
 0139 : 86 01		  ldaa	#$01          ; load A with value 01h (0000 0001)
 ;*************************************;
@@ -208,6 +210,7 @@
 016E : DF 0B		  stx	X000B           ; store X in addr 000B
 0170 : 9C 09		  cpx	X0009           ; compare X with value in 0009
 0172 : 26 E8		  bne	L015E           ; branch != zero PC + E8h (LOOP26)(-24)
+;*************************************;
 ;L0174: GOTO21
 0174 : 7E 00 27		jmp	L0027           ; jump endless NMI loop (or make it a HALT)
 ;*************************************;
