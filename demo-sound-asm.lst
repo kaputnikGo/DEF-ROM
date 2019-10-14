@@ -3,12 +3,21 @@
 ; hack for Heathkit ET-3400 Audio Setup
 ; using PIA addr 8000 (not 0400)
 ; mpu clock speed is default/low (quoted as 0.5 MHz), expecting ~894750 cycles per second
+; also quoted as clocked at 100kHz <- seems more likely given sound output
 ; not using the actual NMI, IRQ , SWI etc
 ; user RAM = 197 + 256 bytes = 453
 ; addr 0000 - 00C4 and 0100 - 01FF
 ; move org to 0020, fit to RAM memory map
 
-; refactor to DefRom only PARAM1 and SYNTH1
+; refactor to DefRom only PARAM1 and SYNTH1 - FUNCTIONING (~ playback speed 50%)
+; mem 0019 constant value changes
+; PIA sometimes pin 9 stuck hi
+
+;              04    16  <- alt values for below
+; 0008 : 00 01 08 00 18 00 00 FF 
+; 0010 : 01 00 18 41 04 80 00 FF <- SAW wavform (cabshk etc)
+; 0018 : FF nn (constant changes)
+; 
 
 ;*************************************;
 ; MAIN LOOP mem reserve locations, have init:
@@ -20,7 +29,8 @@
 ; ~                                   ;
 0019 :                                ; last used address (19 bytes)
 ; ~                                   ; 
-001E : 00 00                          ; total 31 bytes
+001E : 00                             ;
+001F : FF                             ; total 31 bytes
 ;*************************************;
 ;RESET INIT (POWER-ON) org 0020
 ;*************************************;
@@ -128,36 +138,34 @@
 00AD : DF 09		  stx	X0009           ; store X in 0009
 00AF : 9B 0A		  adda	X000A         ; add A with value in 000A
 00B1 : 97 0A		  staa	X000A         ; store A in 000A
-00B3 : 24 03		  bcc	L00BB           ; branch if Carry clear to PC + 03 (GOTO46)
+00B3 : 24 05		  bcc	L00BA           ; branch if Carry clear to PC + 05 (GOTO46)
 00B5 : 7C 00 09		inc	X0009           ; increment value in 0009
-;L00B5: GOTO46
 00B8 : DE 09		  ldx	X0009           ; load X with value in 0009
+;L00BA: GOTO46
 00BA : 39		      rts                 ; return from subroutine
 ;*************************************;
 ; must end before 00C4
 ;*************************************;
 ; program org 0100 for IC16,IC17)
 ;*************************************;
-;WAVEFORM FDB SAW
+;WAVEFORM FDB (all are endless loops)
 ;*************************************;
-0100 : 40	01                          ; 0100 0000 0000 0001 - SAW (0046)                    
-0102 : 00	10                          ; 0000 0000 0001 0000
-0104 : E1 00                          ; 1110 0001 0000 0000
-0106 : 80 FF                          ; 1000 0000 1111 1111
-0108 : FF                             ; 1111 1111 
+0100 : 40	01 00	10 E1 00 80 FF FF     ; DEFAULT, SAW
 ;*************************************; 
-;FREQ waveform - need more/less fdb ?
+;EXTRA WAVEFORMS (tested for PARAM1/SYNTH1)
 ;*************************************;
-0109 : 0C 7F                          ; 0000 1100 0111 1111
-010B : 1D 0F 
-010D : FB 7F 
-010F : 23 0F	
-0111 : 15 FE 
-0113 : 08 50
-0115 : 8A 88
-0117 : 3E	3F
+; Pt += 3L, 2L += 4L, while != 6L
+;    :|Pt|2L|3L|4L|5L|6L|In|count     ; |Pt|start pitch|2L|loop length|3L|vibrato|4L|release
+                                      ; |5L|decay/sustain|6L|arpeg speed(hi=fast)|In|init sound 
+0109 : 40 01 00 10 E1 00 80 FF FF     ; SAW <- 4x arpeg pulses rising
+0112 : 28 01 00 08 81 02 00 FF FF     ; FOSHIT <- rising pulses, loop at high
+011B : 28 81 00 FC 01 02 00 FC FF     ; QUASAR <- boot carpet THIS ONE
+0124 : FF 01 00 18 41 04 80 00 FF     ; CABSHK <- low heavy pulses
+012D : 00 FF 08 FF 68 04 80 00 FF     ; CSCADE <- 5x ramp down saws
+0136 : 60 01 57 08 E1 02 00 FE 80     ; VARBG1 <- 2 tone heavy pulses oscils up, really good
+013F : FF 01 57 08 68 08 80 00 80     ; MADEUP
 ;*************************************; 
-;END OF COMPLETE PROGRAM (0000-00B7) + (0100-01E6) = (184) + (230) = 414
+;END OF COMPLETE PROGRAM (0000-00BA) + (0100-013F) = (187) + (63) = 250
 ;*************************************;
 ; Stack Pointer RAM addrs reserved
 ;*************************************;

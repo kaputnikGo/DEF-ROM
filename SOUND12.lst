@@ -959,10 +959,10 @@ CALCOS (calculate offset)(store X in 0009-A, add A with 000A, bcc or inc 0009, X
 04F0 : DF 09		"  "		stx	X0009     ; store X in 0009
 04F2 : 9B 0A		"  "		adda	X000A   ; add A with value in 000A
 04F4 : 97 0A		"  "		staa	X000A   ; store A in 000A
-04F6 : 24 03		"$ "		bcc	L04FB     ; branch if Carry clear to PC +- 03 (GOTO46)
+04F6 : 24 05		"$ "		bcc	L04FD     ; branch if Carry clear to PC +- 05 (GOTO46)
 04F8 : 7C 00 09		"|  "	inc	X0009     ; increment value in 0009
-04FB				L04FB: GOTO46
 04FB : DE 09		"  "		ldx	X0009     ; load X with value in 0009
+04FD				L04FD: GOTO46
 04FD : 39		"9"		rts                 ; return from subroutine
 **************************************;
 SYNTH10
@@ -1032,7 +1032,7 @@ VWTAB - vector table(what happens with rts from here, nested, fall through?)
 055C : FA 44                          ;	jump to FA44 (-F800 = 0244) (ok, rts) (PARAM6)
 055E : FA 87                          ;	jump to FA87 (-F800 = 0287) (ok, rts) (just an RTS at bottom of PARAM7)
 **************************************; 
-VVECT - vari vectors (modifiers to waveforms?) (FD60)(can inc to get next ones)(7 * 1 byte, 1 * 16 bit)
+VVECT - vari vectors (FD60)(7 * 1 byte, 1 * 16 bit)
 **************************************;
 0560 : 40	01                          ; 0100 0000 0000 0001 - SAW (called from 0034)                    
 0562 : 00	10                          ; 0000 0000 0001 0000
@@ -1053,7 +1053,8 @@ VVECT - vari vectors (modifiers to waveforms?) (FD60)(can inc to get next ones)(
 057D : 00 18                          ; 0000 0000 0001 1000 
 057F : 41 04                          ; 0100 0001 0000 0100
 0581 : 80 00                          ; 1000 0000 0000 0000
-0583 : FF                             ; 1111 1111  
+0583 : FF                             ; 1111 1111
+**************************************;  
 0584 : 8C 5B                          ; 1000 1100 0101 1011 - UNKNWN
 0586 : B6 40                          ; 1011 0110 0100 0000
 0588 : BF 49                          ; 1011 1111 0100 1001
