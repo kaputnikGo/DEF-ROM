@@ -8,15 +8,11 @@
 ; user RAM = 197 + 256 bytes = 453
 ; addr 0000 - 00C4 and 0100 - 01FF
 ; move org to 0020, fit to RAM memory map
+; (0000-00BA) + (0100-013F) = (187) + (63) = 250
 
 ; refactor to DefRom only PARAM1 and SYNTH1 - FUNCTIONING (~ playback speed 50%)
-; mem 0019 constant value changes
 ; PIA sometimes pin 9 stuck hi
-
-;              04    16  <- alt values for below
-; 0008 : 00 01 08 00 18 00 00 FF 
-; 0010 : 01 00 18 41 04 80 00 FF <- SAW wavform (cabshk etc)
-; 0018 : FF nn (constant changes)
+; some addrs not resetting when changing 0100 params
 ; 
 
 ;*************************************;
@@ -62,7 +58,7 @@
 003C : 1B		      aba                 ; add A + B into A
 003D : CE 00 0F		ldx	#$000F          ; load X with value 000F
 0040 : DF 0B		  stx	X000B           ; store X in addr 000B ( & 000C)
-0042 : CE 01 00		ldx	#$0100          ; load X with value 0100 (SAW)
+0042 : CE 01 00		ldx	#$0100          ; load X with value 0100 (SAW) <- add switch? 
 0045 : 8D	66      bsr L00AD           ; branch CALCOS PC + 63h(+99) to 00AD
 0047 : C6 09		  ldab	#$09          ; load B with 09h (0000 1001)
 ;*************************************;
@@ -110,7 +106,7 @@
 007F : 26 FA		  bne	L007B           ; branch if not equal zero to PC - FAh (LOOP5)(-6)
 0081 : 20 E8		  bra	L006B           ; branch always to addr PC - E8h (LOOP3)(-24) 
 ;L0083: GOTO1
-0083 : B6 80 00		ldaa	X8000         ; load A with value in addr 8000
+0083 : B6 80 00		ldaa	X8000         ; load A with value in addr 8000 (SOUND)
 0086 : 2B 01		  bmi	L0089           ; branch if minus (N = 1) to PC + 01h (GOTO2)
 0088 : 43		      coma                ; complements 1s in A
 ;L0089: GOTO2
@@ -144,32 +140,47 @@
 ;L00BA: GOTO46
 00BA : 39		      rts                 ; return from subroutine
 ;*************************************;
-; must end before 00C4
+; must end before 00C4, org 0100 for IC16,IC17
 ;*************************************;
-; program org 0100 for IC16,IC17)
-;*************************************;
-;WAVEFORM FDB (all are endless loops)
+;PARAM WAVEFORM FDB (all are endless loops)
 ;*************************************;
 0100 : 40	01 00	10 E1 00 80 FF FF     ; DEFAULT, SAW
 ;*************************************; 
-;EXTRA WAVEFORMS (tested for PARAM1/SYNTH1)
+;KNOWN PARAM WAVEFORMS (tested for PARAM1/SYNTH1)
 ;*************************************;
-; Pt += 3L, 2L += 4L, while != 6L
-;    :|Pt|2L|3L|4L|5L|6L|In|count     ; |Pt|start pitch|2L|loop length|3L|vibrato|4L|release
-                                      ; |5L|decay/sustain|6L|arpeg speed(hi=fast)|In|init sound 
+;    :|p1|p2|p3|p4|p5|p6|p7|count     ; 
 0109 : 40 01 00 10 E1 00 80 FF FF     ; SAW <- 4x arpeg pulses rising
 0112 : 28 01 00 08 81 02 00 FF FF     ; FOSHIT <- rising pulses, loop at high
-011B : 28 81 00 FC 01 02 00 FC FF     ; QUASAR <- boot carpet THIS ONE
+011B : 28 81 00 FC 01 02 00 FC FF     ; QUASAR <- boot carpet
 0124 : FF 01 00 18 41 04 80 00 FF     ; CABSHK <- low heavy pulses
 012D : 00 FF 08 FF 68 04 80 00 FF     ; CSCADE <- 5x ramp down saws
-0136 : 60 01 57 08 E1 02 00 FE 80     ; VARBG1 <- 2 tone heavy pulses oscils up, really good
-013F : FF 01 57 08 68 08 80 00 80     ; MADEUP
+0136 : 60 01 57 08 E1 02 00 FE 80     ; VARBG1 <- 2 tone heavy pulses oscils up !!
 ;*************************************; 
-;END OF COMPLETE PROGRAM (0000-00BA) + (0100-013F) = (187) + (63) = 250
+;EXPERIMENTAL PARAM WAVEFORMS (tested for PARAM1/SYNTH1)
 ;*************************************;
-; Stack Pointer RAM addrs reserved
+013F : FF 01 57 08 68 08 80 00 80     ; 
+0148 : 10 01 01 18 81 02 08 00 80     ; rapid 2 tone phasing bass pulses
+; 50 8b 88 3e 3f 02 3e 7c 04          ;
+; 03 ff 3e 3f 2c e2 7c 12 0d          ; slow tones with pitch
+; 74 7c 0d 0e 41 7c 23 0b 50          ; pitch down arpeg, slow
+; 7c 1d 29 f2 7c 3f 02 3e f8          ; pitch down arpeg, not slow
+; 04 03 ff 7c 3f 2c e2 f8 12          ; 2 tone pitch up arpeg, not slow
+; f8 12 06 ba f8 04 07 ff 7c          ; rapid 2 tone pulses, up arpeg, long slow !!
+; 37 04 c1 7c 23 05 a8 7c 12          ; rapid trill 2 tone arpegs up
+; 29 23 1d 17 12 0d 08 04 08          ; rapid rand arpeg down, not slow.
+; 7f d9 ff d9 7f 24 00 24 08          ; low, then hi, rand arpeg up, slow
+
+
+;*************************************;
+; Stack Pointer RAM addrs reserve
 ;*************************************;
 01E8 :                                ; last SP
 ; ~                                   ; 23 bytes
 01FF :                                ; initial SP
 ;*************************************;
+;   outer loop : 
+; vars p1, p2 | condition p1 += p6 while != 0
+;   middle loop   : 
+; vars count, p1 += p3, p2 += p4 | condition while p2 != p5 | p7 waveform output
+;   inner loop : 
+; vars p1, p2 |p7 waveform output
