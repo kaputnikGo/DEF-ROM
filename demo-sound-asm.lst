@@ -1,20 +1,17 @@
 
 ; RESET BUTTON PUSH DEMO SOUNDS CODE
 ; hack for Heathkit ET-3400 Audio Setup
-; using PIA addr 8000 (not 0400)
-; mpu clock speed is default/low (quoted as 0.5 MHz), expecting ~894750 cycles per second
-; also quoted as clocked at 100kHz <- seems more likely given sound output
-; not using the actual NMI, IRQ , SWI etc
 ; user RAM = 197 + 256 bytes = 453
 ; addr 0000 - 00C4 and 0100 - 01FF
-; move org to 0020, fit to RAM memory map
-; (0000-00BA) + (0100-013F) = (187) + (63) = 250
-
-; refactor to DefRom only PARAM1 and SYNTH1 - FUNCTIONING (~ playback speed 50%)
-; PIA sometimes pin 9 stuck hi
-; some addrs not resetting when changing 0100 params
+; using PIA addr 8000 (not 0400)
+; not using actual NMI, IRQ , SWI etc
+; mpu clock speed is default/low (quoted as 0.5 MHz), expecting ~894750 cycles per second
+; also quoted as clocked at 100kHz 
 ; 
-
+; Audacity playback approx. at 2.50x
+; using edited subroutines RESET, NMI, PARAM1, CALCOS, UTIL1, SYNTH1
+; (0000-00BA) + (0100-013F) = (187) + (63) = 250
+; 
 ;*************************************;
 ; MAIN LOOP mem reserve locations, have init:
 0000 : 00 00                          ; clear (00)
@@ -144,33 +141,35 @@
 ;*************************************;
 ;PARAM WAVEFORM FDB (all are endless loops)
 ;*************************************;
-0100 : 40	01 00	10 E1 00 80 FF FF     ; DEFAULT, SAW
+0100 : 28 01 00 08 81 02 00 FF FF     ; FOSHIT, Williams Boot
 ;*************************************; 
 ;KNOWN PARAM WAVEFORMS (tested for PARAM1/SYNTH1)
 ;*************************************;
 ;    :|p1|p2|p3|p4|p5|p6|p7|count     ; 
 0109 : 40 01 00 10 E1 00 80 FF FF     ; SAW <- 4x arpeg pulses rising
-0112 : 28 01 00 08 81 02 00 FF FF     ; FOSHIT <- rising pulses, loop at high
-011B : 28 81 00 FC 01 02 00 FC FF     ; QUASAR <- boot carpet
+0112 : 28 01 00 08 81 02 00 FF FF     ; FOSHIT <- Williams Boot, rising pulses, loop at high
+011B : 28 81 00 FC 01 02 00 FC FF     ; QUASAR <- Boot Carpet
 0124 : FF 01 00 18 41 04 80 00 FF     ; CABSHK <- low heavy pulses
 012D : 00 FF 08 FF 68 04 80 00 FF     ; CSCADE <- 5x ramp down saws
 0136 : 60 01 57 08 E1 02 00 FE 80     ; VARBG1 <- 2 tone heavy pulses oscils up !!
 ;*************************************; 
-;EXPERIMENTAL PARAM WAVEFORMS (tested for PARAM1/SYNTH1)
+;defrom FDB PARAM WAVEFORMS (tested for PARAM1/SYNTH1) 
+; ar(pegio), d(ow)n, s(low), t(wo)t(one), q(uick), pu(lse), r(an)d, 
+; d(istor)t, t(one), sq(uare), m(id speed), up,
 ;*************************************;
-013F : FF 01 57 08 68 08 80 00 80     ; 
-0148 : 10 01 01 18 81 02 08 00 80     ; rapid 2 tone phasing bass pulses
-; 50 8b 88 3e 3f 02 3e 7c 04          ;
-; 03 ff 3e 3f 2c e2 7c 12 0d          ; slow tones with pitch
-; 74 7c 0d 0e 41 7c 23 0b 50          ; pitch down arpeg, slow
-; 7c 1d 29 f2 7c 3f 02 3e f8          ; pitch down arpeg, not slow
-; 04 03 ff 7c 3f 2c e2 f8 12          ; 2 tone pitch up arpeg, not slow
-; f8 12 06 ba f8 04 07 ff 7c          ; rapid 2 tone pulses, up arpeg, long slow !!
-; 37 04 c1 7c 23 05 a8 7c 12          ; rapid trill 2 tone arpegs up
-; 29 23 1d 17 12 0d 08 04 08          ; rapid rand arpeg down, not slow.
-; 7f d9 ff d9 7f 24 00 24 08          ; low, then hi, rand arpeg up, slow
-
-
+013F : FF 01 57 08 68 08 80 00 80     ; ardns <- mid-speed arpeg pulses down, slight rand
+0148 : 10 01 01 18 81 02 08 00 80     ; ttpuq <- rapid 2 tone phasing bass pulses
+;    : 50 8b 88 3e 3f 02 3e 7c 04     ; pudndt <- 
+;    : 03 ff 3e 3f 2c e2 7c 12 0d     ; stsqrd <- slow tones with pitch
+;    : 74 7c 0d 0e 41 7c 23 0b 50     ; stsqdn <- pitch down arpeg, slow
+;    : 7c 1d 29 f2 7c 3f 02 3e f8     ; ardnm <- pitch down arpeg, not slow
+;    : 04 03 ff 7c 3f 2c e2 f8 12     ; ttupm <- 2 tone pitch up arpeg, not slow
+;    : f8 12 06 ba f8 04 07 ff 7c     ; ttarup <-rapid 2 tone pulses, up arpeg, long slow !!
+;    : 37 04 c1 7c 23 05 a8 7c 12     ; ttupq <- rapid trill 2 tone arpegs up
+;    : 29 23 1d 17 12 0d 08 04 08     ; arrddn <- rapid rand arpeg down, not slow 
+;    : 29 23 1d 17 12 0d 80 04 08     ; arrdm <- vary of above, rapid rand arpeg down, not slow 
+;    : 7f d9 ff d9 7f 24 00 24 08     ; arups <- slower rand arpeg up, slow
+; 
 ;*************************************;
 ; Stack Pointer RAM addrs reserve
 ;*************************************;
