@@ -698,7 +698,7 @@ Relative
   FCD8 F6 EF FD            LDAB >$EFFD     ;$FCDA, ?
   FCDB C1 7E               CMPB #$7E       ;
   FCDD 26 05               BNE $FCE4       ;
-  FCDF BD EF FD            JSR $EFFD       ;?
+  FCDF BD EF FD            JSR $EFFD       ;? BD 9E EF
   FCE2 4D                  TSTA            ;
   FCE3 27 29               BEQ $FD0E       ;
   FCE5 4A                  DECA            ;

@@ -1,0 +1,195 @@
+
+; SYNTH8 SOUNDS CODE
+; hack for Heathkit ET-3400 Audio Setup
+; user RAM = 197 + 256 bytes = 453
+; addr 0000 - 00C4 and 0100 - 01FF
+; using PIA addr 8000 (not 0400)
+; not using actual NMI, IRQ , SWI etc
+; mpu clock speed is default/low (quoted as 0.5 MHz), expecting ~894750 cycles per second
+; also quoted as clocked at 100kHz 
+; 
+; Audacity playback approx. at 2.50x
+; using edited subroutines RESET, NMI, IRQ, PARAM9, SYNTH8, CALCOS
+; (0000-00BD) + (0100-010E) = (190) + (15) = 205
+; 
+; rewrites on ram to 003C
+; 
+;*************************************;
+; MAIN LOOP mem reserve locations, have init:
+0000 : 00 00                          ; clear (00)
+0002 : 00 00                          ; clear (00)
+0004 : 00                             ; clear (00)
+0005 : 3C                             ; value 3Ch(0011 1100)
+0006 :                                ;
+; ~                                   ;
+000E : 00                             ; last used address for index
+; ~                                   ; 
+001E : 00                             ;
+001F : FF                             ; total 31 bytes
+;*************************************;
+;RESET INIT (POWER-ON) org 0020
+;*************************************;
+; org 0020 
+0020 : 8E 01 FF   lds #$01FF          ; load SP with 01FFh
+0023 : CE 80 00	  ldx #$8000          ; load X with 8000h, PIA (DAC) addr
+0026 : 6F 01		  clr	$01,x           ; clear(00) addr X + 01h (8001, PIA DDR port A) 
+0028 : 86 FF		  ldaa	#$FF          ; load A with FFh (1111 1111)
+002A : A7 00		  staa	$00,x         ; store A in addr X + 00h (8000, port A output)
+;*************************************;
+;START
+;*************************************;
+002C : 86 3C		  ldaa	#$3C          ; load A with 3Ch(0011 1100)
+002E : A7 01		  staa	$01,x         ; store A in addr X + 01h (8001)
+;*************************************;
+;NMI / IRQ
+;*************************************;
+0030 : CE FF FF		ldx	#$FFFF          ; load X with value FFFFh ( or 78h )
+0033 : 5F		      clrb                ; clear (00) B
+0034 : E9 00		  adcb	$00,x         ; add B + X + 00h with Carry into B
+0036 : 86 01		  ldaa	#$01          ; load A with value 01h (0000 0001)
+;*************************************;
+;PARAM9 - bypass?
+;*************************************;
+0038 : F6 00 08   ldab  $0008         ;$FA89, currently 0008 is 00
+;FA8C : 27 0A      BEQ $0045          ; rem'd, branch equal zero to SYNTH8
+003B : D6 15      ldab $15            ; may need to rem below if BEQ needed 
+003E : 58         aslb                ;arithmetic shift left
+003E : 58         aslb                ;
+003F : 58         aslb                ;
+0040 : 58         aslb                ;
+0041 : 1B         aba                 ;add accums
+0042 : 97 15      staa $15            ;
+0044 : 4F         clra                ;
+;*************************************;
+;SYNTH8
+;*************************************;
+0045 : 4A         deca                ;
+0046 : 81 0B      cmpa #$0B           ;
+0048 : 23 01      bls L004B           ;branch if lower or same
+004A : 4F         clra                ;
+;L004B: GOTO
+004B : CE 01 00   ldx #$0100          ;load waveform
+004E : BD 00 B5   jsr L00B5           ;jump sub to CALCOS
+0051 : A6 00      ldaa $00,X          ;
+0053 : CE FF FF   ldx #$FFFF          ;
+0056 : DF 13      stx $13             ;
+0058 : 8D 04      bsr L0059           ;branch to subroutine
+;L0055: LOOP
+005A : 8D 2A      bsr L0081           ;branch 0x2A (+42) to subroutine
+005C : 20 FC      bra L0055           ;branch above
+;L0059: GOTO
+005E : CE 00 16   ldx #$0016          ;$FAB3,subroutine
+;L005C: GOTO
+0061 : 81 00      cmpa #$00           ;$FAB6
+0063 : 27 15      beq L0075           ;branch equal zero 0x15 (+21)
+0065 : 81 03      cmpa #$03           ;
+0067 : 27 09      beq L006D           ;branch equal zero 0x09 (+9)
+0069 : C6 01      ldab #$01           ;
+006B : E7 00      stab $00,X          ;
+006D : 08         inx                 ;
+006E : 80 02      suba #$02           ;
+0070 : 20 EF      bra L005C           ;branch always 0xEF (-17)
+;L006D: GOTO
+0072 : C6 91      ldab #$91           ;$FAC7
+0074 : E7 00      stab $00,X          ;
+0076 : 6F 01      clr $01,X           ;
+0078 : 08         inx                 ;
+0079 : 08         inx                 ;
+;L0075: GOTO
+007A : C6 7E      ldab #$7E           ;$FACF
+007C : E7 00      stab $00,X          ;
+007E : C6 FA      ldab #$FA           ;
+0080 : E7 00      stab $00,X          ;
+0082 : C6 DD      ldab #$DD           ;
+0084 : E7 02      stab $02,X          ;
+;L0081: GOTO
+0086 : DE 13      ldx $13             ;$FADB,subroutine
+0088 : 4F         clra                ;
+0089 : F6 00 12   ldab $0012          ;
+008C : 5C         incb                ;
+008D : D7 12      stab  $12           ;
+008F : D4 15      andb  $15           ;
+0091 : 54         lsrb                ;logical shift right
+0092 : 89 00      adca #$00           ;add with Carry
+0094 : 54         lsrb                ;
+0095 : 89 00      adca #$00           ;
+0097 : 54         lsrb                ;
+0098 : 89 00      adca #$00           ;
+009A : 54         lsrb                ;
+009B : 89 00      adca #$00           ;
+009D : 54         lsrb                ;
+009E : 89 00      adca #$00           ;
+00A0 : 54         lsrb                ;
+00A1 : 89 00      adca #$00           ;
+00A3 : 54         lsrb                ;
+00A4 : 89 00      adca #$00           ;
+00A6 : 1B         aba                 ;add accums
+00A7 : 48         asla                ;
+00A8 : 48         asla                ;
+00A9 : 48         asla                ;
+00AA : 48         asla                ;
+00AB : B7 80 00   staa $8000          ;DAC output (SOUND)
+00AE : 09         dex                 ;decr index reg
+00AF : 27 03      beq L00AF           ;
+00B1 : 7E 00 30   jmp L0030           ; extended addr, jump to NMI (was $0016 in RAM?)
+;L00AF: GOTO
+00B4 : 39         rts                 ;$FB09,return to PARAM7 ?
+;*************************************;
+;CALCOS (calculate offset)
+;*************************************;
+00B5 : DF 0D		  stx	X000D           ; store X in 000D
+00B7 : 9B 0E		  adda	X000E         ; add A with value in 000E
+00B9 : 97 0E		  staa	X000E         ; store A in 000E
+00BB : 24 05		  bcc	L00BD           ; branch if Carry clear to PC + 05 (GOTO46)
+00BD : 7C 00 0D		inc	X000D           ; increment value in 000D
+00C0 : DE 0D		  ldx	X000D           ; load X with value in 000D
+;L00BA: GOTO46
+00C2 : 39		      rts                 ; return from subroutine
+;*************************************;
+; must end before 00C4, org 0100 for IC16,IC17
+;*************************************;
+;PARAM WAVEFORM FDB (all are endless loops)
+;*************************************;
+0100 : 47 3f 37 30 29 23 1d 17 12     ; load for SYNTH8 unknown num bytes, at least 16 bits
+0109 : 0d 08 04 08 7f d9              ;
+;*************************************; 
+;KNOWN PARAM WAVEFORMS (tested for PARAM1/SYNTH1)
+;*************************************;
+;    :|p1|p2|p3|p4|p5|p6|p7|count     ; 
+;0109 : 40 01 00 10 E1 00 80 FF FF     ; SAW <- 4x arpeg pulses rising
+;0112 : 28 01 00 08 81 02 00 FF FF     ; FOSHIT <- Williams Boot, rising pulses, loop at high
+;011B : 28 81 00 FC 01 02 00 FC FF     ; QUASAR <- Boot Carpet
+;0124 : FF 01 00 18 41 04 80 00 FF     ; CABSHK <- low heavy pulses
+;012D : 00 FF 08 FF 68 04 80 00 FF     ; CSCADE <- 5x ramp down saws
+;0136 : 60 01 57 08 E1 02 00 FE 80     ; VARBG1 <- 2 tone heavy pulses oscils up !!
+;*************************************; 
+;defrom FDB PARAM WAVEFORMS (tested for PARAM1/SYNTH1) 
+; ar(pegio), d(ow)n, s(low), t(wo)t(one), q(uick), pu(lse), r(an)d, 
+; d(istor)t, t(one), sq(uare), m(id speed), up,
+;*************************************;
+;013F : FF 01 57 08 68 08 80 00 80     ; ardns <- mid-speed arpeg pulses down, slight rand
+;0148 : 10 01 01 18 81 02 08 00 80     ; ttpuq <- rapid 2 tone phasing bass pulses
+;    : 50 8b 88 3e 3f 02 3e 7c 04     ; pudndt <- 
+;    : 03 ff 3e 3f 2c e2 7c 12 0d     ; stsqrd <- slow tones with pitch
+;    : 74 7c 0d 0e 41 7c 23 0b 50     ; stsqdn <- pitch down arpeg, slow
+;    : 7c 1d 29 f2 7c 3f 02 3e f8     ; ardnm <- pitch down arpeg, not slow
+;    : 04 03 ff 7c 3f 2c e2 f8 12     ; ttupm <- 2 tone pitch up arpeg, not slow
+;    : f8 12 06 ba f8 04 07 ff 7c     ; ttarup <-rapid 2 tone pulses, up arpeg, long slow !!
+;    : 37 04 c1 7c 23 05 a8 7c 12     ; ttupq <- rapid trill 2 tone arpegs up
+;    : 29 23 1d 17 12 0d 08 04 08     ; arrddn <- rapid rand arpeg down, not slow 
+;    : 29 23 1d 17 12 0d 80 04 08     ; arrdm <- vary of above, rapid rand arpeg down, not slow 
+;    : 7f d9 ff d9 7f 24 00 24 08     ; arups <- slower rand arpeg up, slow
+
+;*************************************;
+; Stack Pointer RAM addrs reserve
+;*************************************;
+01E8 :                                ; last SP
+; ~                                   ; 23 bytes
+01FF :                                ; initial SP
+;*************************************;
+;   outer loop : 
+; vars p1, p2 | condition p1 += p6 while != 0
+;   middle loop   : 
+; vars count, p1 += p3, p2 += p4 | condition while p2 != p5 | p7 waveform output
+;   inner loop : 
+; vars p1, p2 |p7 waveform output

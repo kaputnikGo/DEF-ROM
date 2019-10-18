@@ -336,7 +336,7 @@ PARAM7  CLR >$0008	  ;FA48, param 7
         LDAA $01,X	  ;
         LDX $02,X	    ;
         STX <$13	    ;
-        BSR $FAB3	    ;branch below
+        BSR $FAB3	    ;branch below to SYNTH8
         LDX <$0F	    ;
         INX			      ;
         INX			      ;
@@ -697,7 +697,7 @@ IRQ		  LDS #$007F	  ;FCB6, IRQ handler,select sound,load stack pointer, vector a
         LDAB >$EFFD	  ;FCDA
         CMPB #$7E	    ;
         BNE $FCE4	    ;
-        JSR $EFFD	    ;jump sub ?
+        JSR $EFFD	    ;jump sub ? jump to a label?
         TSTA		      ;
         BEQ IRQ2	    ;branch below FD0E if = 0
         DECA		      ;
@@ -783,19 +783,18 @@ SAW     FCB $40,$01,$00,$10,$E1,$00,$80,$FF,$FF ; FD76
 FOSHIT  FCB $28,$01,$00,$08,$81,$02,$00,$FF,$FF ; FD7F, FD80
 QUASAR  FCB $28,$81,$00,$FC,$01,$02,$00,$FC,$FF ; FD88
 CABSHK  FCB $FF,$01,$00,$18,$41,$04,$80,$00,$FF ; FD91
-                      ;8c 5b b6 40 bf 49 a4 73 73
-                      ;a4 49 bf 40 b6 5b 8c 0c 7f
-                      ;1d 0f fb 7f 23 0f 15 fe 08
-                      ; below are from diff rom
+
+              ; below are from diff rom
 CSCALE  FCB $00,$FF,$08,$FF,$68,$04,$80,$00,$FF ; FD9A
 MOSQTO  FCB $28,$81,$00,$FC,$01,$02,$00,$FC,$FF ; FDA3, dupe QUASAR
 VARBG1  FCB $60,$01,$57,$08,$E1,$02,$00,$FE,$80 ; FDAC
+              ; end diff rom
 
-;FD76:                    40 01  00 10 e1 00 80 ff ff 28  |...D..@........(|
-;FD80:  01 00 08 81 02 00 ff ff  28 81 00 fc 01 02 00 fc  |........(.......|
-;FD90:  ff ff 01 00 18 41 04 80  00 ff 8c 5b b6 40 bf 49  |.....A.....[.@.I|
-;FDA0:  a4 73 73 a4 49 bf 40 b6  5b 8c 0c 7f 1d 0f fb 7f  |.ss.I.@.[.......|
-;FDB0:  23 0f 15 fe 08 
+;FD9A:  8c 5b b6 40 bf 49 a4 73 73  ; potentially another VVECT
+;FDA3:  a4 49 bf 40 b6 5b 8c        ; unknown
+;
+; FDAA called by PARAM7
+;FDAA:  0c 7f 1d 0f fb 7f 23 0f 15 fe 08 
 ; 50 8b 88 3e 3f 02 3e 7c 04 
 ; 03 ff 3e 3f 2c e2 7c 12 0d 
 ; 74 7c 0d 0e 41 7c 23 0b 50
@@ -811,10 +810,14 @@ VARBG1  FCB $60,$01,$57,$08,$E1,$02,$00,$FE,$80 ; FDAC
 ; 23 16 a0 fe 1d 17 f9 7f 37 
 ; 13 06 7f 3f 08 fa fe 04 0f 
 ; ff fe 0d 0e 41 fe 23 0b 50 
-; fe 1d 5f e4 00 47 3f 37 30 
-; 29 23 1d 17 12 0d 08 04 08 
-; 7f d9 ff d9 7f 24 00 24 08 
-; 00 40 80 00 ff 00 80 40 10 ; checked to here
+; fe 1d 5f e4 00 
+;
+; FE41 called by SYNTH8
+;FE41: 47 3f 37 30 29 23 1d 17 12 0d 08 04 
+;
+; FE4D called by PARAM13
+;FE4D: 08 7f d9 ff d9 7f 24 00 24 08 
+;FE57:  00 40 80 00 ff 00 80 40 10 
 ;FE60:  7f b0 d9 f5 ff f5 d9 b0  7f 4e 24 09 00 09 24 4e  |.........N$...$N|
 ;FE70:  10 7f c5 ec e7 bf 8d 6d  6a 7f 94 92 71 40 17 12  |.......mj...q@..|
 ;FE80:  39 10 ff ff ff ff 00 00  00 00 ff ff ff ff 00 00  |9...............|
@@ -823,14 +826,20 @@ VARBG1  FCB $60,$01,$57,$08,$E1,$02,$00,$FE,$80 ; FDAC
 ;FEB0:  bf b5 ab a0 95 8a 7f 75  6a 5f 54 4a 40 37 2e 25  |.......uj_TJ@7.%|
 ;FEC0:  1e 17 11 0c 08 04 02 01  00 01 02 04 08 0c 11 17  |................|
 ;FED0:  1e 25 2e 37 40 4a 54 5f  6a 75 7f 10 59 7b 98 ac  |.%.7@JT_ju..Y{..|
-;FEE0:  b3 ac 98 7b 59 37 19 06  00 06 19 37 81 24 00 00  |...{Y7.....7.$..|
+;FEE0:  b3 ac 98 
+;
+; FEEC called by PARAM13
+;FEEC: 7b 59 37 19 06  00 06 19 37 81 24 00 00 
 ;FEF0:  00 16 31 12 05 1a ff 00  27 6d 11 05 11 01 0f 01  |..1.....'m......|
 ;FF00:  47 11 31 00 01 00 0d 1b  f4 12 00 00 00 14 47 41  |G.1...........GA|
 ;FF10:  45 00 00 00 0f 5b 21 35  11 ff 00 0d 1b 15 00 00  |E....[!5........|
 ;FF20:  fd 00 01 69 31 11 00 01  00 03 6a 01 15 01 01 01  |...i1.....j.....|
 ;FF30:  01 47 f6 53 03 00 02 06  94 6a 10 02 00 02 06 9a  |.G.S.....j......|
 ;FF40:  1f 12 00 ff 10 04 69 31  11 00 ff 00 0d 00 12 06  |......i1........|
-;FF50:  00 ff 01 09 28 a0 98 90  88 80 78 70 68 60 58 50  |....(.....xph`XP|
+;FF50:  00 ff 01 09 28 
+;
+; FF55 called by PARAM13
+;FF55: a0 98 90  88 80 78 70 68 60 58 50
 ;FF60:  44 40 01 01 02 02 04 04  08 08 10 10 30 60 c0 e0  |D@..........0`..|
 ;FF70:  01 01 02 02 03 04 05 06  07 08 09 0a 0c 80 7c 78  |..............|x|
 ;FF80:  74 70 74 78 7c 80 01 01  02 02 04 04 08 08 10 20  |tptx|.......... |
