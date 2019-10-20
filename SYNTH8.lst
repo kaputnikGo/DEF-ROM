@@ -1,4 +1,3 @@
-
 ; SYNTH8 SOUNDS CODE
 ; hack for Heathkit ET-3400 Audio Setup
 ; user RAM = 197 + 256 bytes = 453
@@ -9,9 +8,9 @@
 ; also quoted as clocked at 100kHz 
 ; 
 ; Audacity playback approx. at 2.50x
-; using edited subroutines RESET, NMI, IRQ, PARAM9, SYNTH8, CALCOS
-; (0000-00BD) + (0100-010E) = (190) + (15) = 205
-; 
+; using edited subroutines RESET, IRQ, PARAM9, SYNTH8, CALCOS
+; IRQ uses accum A 
+; (0000-00BD) + (0100-010E) = (190) + (15) = 205 
 ; rewrites on ram to 00BF (CALCOS rts)
 ; 
 ;*************************************;
@@ -25,7 +24,7 @@
 000E : 00                             ; last used address for index
 ; ~                                   ; 
 001E : 00                             ;
-001F : 00                             ; total 31 bytes
+001F : 16                             ; PIA spoof value, total 31 bytes
 ;*************************************;
 ;RESET INIT (POWER-ON) org 0020
 ;*************************************;
@@ -41,25 +40,25 @@
 002C : 86 3C		  ldaa	#$3C          ; load A with 3Ch(0011 1100)
 002E : A7 01		  staa	$01,x         ; store A in addr X + 01h (8001)
 ;*************************************;
-;NMI / IRQ
+;IRQ
 ;*************************************;
-0030 : CE FF FF		ldx	#$FFFF          ; load X with value FFFFh ( or 78h )
-0033 : 5F		      clrb                ; clear (00) B
-0034 : E9 00		  adcb	$00,x         ; add B + X + 00h with Carry into B
-0036 : 86 01		  ldaa	#$01          ; load A with value 01h (0000 0001)
+0030 : B6 00 1F		ldaa	#$001F        ; load A with value from PIA (need a sound select value here)
+0033 : 43		      coma                ; complement A
+0034 : 84 1F      anda  #$1F		      ; and A with mask bits
+0036 : F6 00 08   ldab  $0008         ;$FA89, currently 0008 is 00
+0039 : 4A         deca                ;
 ;*************************************;
-;PARAM9 - bypass?
+;PARAM9 
 ;*************************************;
-0038 : F6 00 08   ldab  $0008         ;$FA89, currently 0008 is 00
-;003B : 27 0A      BEQ $0045          ; rem'd, branch equal zero to SYNTH8
-003B : D6 15      ldab $15            ; may need to rem below if BEQ needed 
+003A : 01         nop                 ;nop
+003B : D6 15      ldab $15            ; may need to rem below if BEQ needed - KIT rewrites < here
 003D : 58         aslb                ;arithmetic shift left
 003E : 58         aslb                ;
 003F : 58         aslb                ;
 0040 : 58         aslb                ;
 0041 : 1B         aba                 ;add accums
 0042 : 97 15      staa $15            ;
-0044 : 4F         clra                ;
+0044 : 01         nop                 ;
 ;*************************************;
 ;SYNTH8
 ;*************************************;
@@ -130,63 +129,30 @@
 00AA : 48         asla                ;
 00AB : B7 80 00   staa $8000          ;DAC output (SOUND)
 00AE : 09         dex                 ;decr index reg
-00AF : 7E 00 20   jmp L0020           ; extended addr, jump to $0016 in RAM?
+00AF : 7E 00 16   jmp L0016           ; jump to $0016, wrong value can cause rewrites ~ 00BF
 ;*************************************;
 ;CALCOS (calculate offset)
 ;*************************************;
 00B2 : DF 0D		  stx	X000D           ; store X in 000D
 00B4 : 9B 0E		  adda	X000E         ; add A with value in 000E
 00B6 : 97 0E		  staa	X000E         ; store A in 000E
-00B8 : 24 05		  bcc	L00C2           ; branch if Carry clear to PC + 05 (GOTO46)
+00B8 : 24 05		  bcc	L00BF           ; branch if Carry clear to PC + 05 (GOTO46)
 00BA : 7C 00 0D		inc	X000D           ; increment value in 000D
 00BD : DE 0D		  ldx	X000D           ; load X with value in 000D
-;L00C2: GOTO46
+;L00BF: GOTO46
 00BF : 39		      rts                 ; return from subroutine
 ;*************************************;
 ; must end before 00C4, org 0100 for IC16,IC17
 ;*************************************;
-;PARAM WAVEFORM FDB (all are endless loops)
+;PARAM WAVEFORM FDB
 ;*************************************;
 0100 : 47 3f 37 30 29 23 1d 17 12     ; load for SYNTH8 unknown num bytes, at least 16 bits
 0109 : 0d 08 04 08 7f d9              ;
 ;*************************************; 
-;KNOWN PARAM WAVEFORMS (tested for PARAM1/SYNTH1)
-;*************************************;
-;    :|p1|p2|p3|p4|p5|p6|p7|count     ; 
-;0109 : 40 01 00 10 E1 00 80 FF FF     ; SAW <- 4x arpeg pulses rising
-;0112 : 28 01 00 08 81 02 00 FF FF     ; FOSHIT <- Williams Boot, rising pulses, loop at high
-;011B : 28 81 00 FC 01 02 00 FC FF     ; QUASAR <- Boot Carpet
-;0124 : FF 01 00 18 41 04 80 00 FF     ; CABSHK <- low heavy pulses
-;012D : 00 FF 08 FF 68 04 80 00 FF     ; CSCADE <- 5x ramp down saws
-;0136 : 60 01 57 08 E1 02 00 FE 80     ; VARBG1 <- 2 tone heavy pulses oscils up !!
-;*************************************; 
-;defrom FDB PARAM WAVEFORMS (tested for PARAM1/SYNTH1) 
-; ar(pegio), d(ow)n, s(low), t(wo)t(one), q(uick), pu(lse), r(an)d, 
-; d(istor)t, t(one), sq(uare), m(id speed), up,
-;*************************************;
-;013F : FF 01 57 08 68 08 80 00 80     ; ardns <- mid-speed arpeg pulses down, slight rand
-;0148 : 10 01 01 18 81 02 08 00 80     ; ttpuq <- rapid 2 tone phasing bass pulses
-;    : 50 8b 88 3e 3f 02 3e 7c 04     ; pudndt <- 
-;    : 03 ff 3e 3f 2c e2 7c 12 0d     ; stsqrd <- slow tones with pitch
-;    : 74 7c 0d 0e 41 7c 23 0b 50     ; stsqdn <- pitch down arpeg, slow
-;    : 7c 1d 29 f2 7c 3f 02 3e f8     ; ardnm <- pitch down arpeg, not slow
-;    : 04 03 ff 7c 3f 2c e2 f8 12     ; ttupm <- 2 tone pitch up arpeg, not slow
-;    : f8 12 06 ba f8 04 07 ff 7c     ; ttarup <-rapid 2 tone pulses, up arpeg, long slow !!
-;    : 37 04 c1 7c 23 05 a8 7c 12     ; ttupq <- rapid trill 2 tone arpegs up
-;    : 29 23 1d 17 12 0d 08 04 08     ; arrddn <- rapid rand arpeg down, not slow 
-;    : 29 23 1d 17 12 0d 80 04 08     ; arrdm <- vary of above, rapid rand arpeg down, not slow 
-;    : 7f d9 ff d9 7f 24 00 24 08     ; arups <- slower rand arpeg up, slow
-
-;*************************************;
 ; Stack Pointer RAM addrs reserve
 ;*************************************;
 01E8 :                                ; last SP
 ; ~                                   ; 23 bytes
 01FF :                                ; initial SP
 ;*************************************;
-;   outer loop : 
-; vars p1, p2 | condition p1 += p6 while != 0
-;   middle loop   : 
-; vars count, p1 += p3, p2 += p4 | condition while p2 != p5 | p7 waveform output
-;   inner loop : 
-; vars p1, p2 |p7 waveform output
+;
