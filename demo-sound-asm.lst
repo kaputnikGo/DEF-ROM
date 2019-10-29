@@ -15,8 +15,13 @@
 ;*************************************;
 ; INIT VARS & MEM reserve locations:
 0000 : 00 00                          ; clear (00)
-0002 : 00 00                          ; use for vector jumps?
-0004 : 00 00                          ; 
+;    : 4F         clra                ; clear A
+;    : B6 80 02   ldaa X8002          ; load A with PIA B
+;    : 43         coma                ; complement A (flip bits)
+;    ; B7 01 00   staa X0100          ; store A in 0100 (parameter 1 of waveform)
+;    ; 39         rts                 ; return from subroutine
+0002 : 00 00                          ; use for vector jumps to > 0109h ?
+0004 : 00 00                          ; or read PIA and STAA to 0100
 0006 : 00 00                          ;
 0008 : 00                             ; last free mem location
 ;*************************************;
@@ -26,7 +31,7 @@
 ;*************************************;
 001A : 00 00                          ; MOVE RESET INIT HERE (will change synth end jmp)
 001C : 00 00                          ;
-001E : 00 FF                          ; total 31 bytes
+001E : 00 00                          ; total 31 bytes
 ;*************************************;
 ;RESET INIT (POWER-ON) org 0020
 ;*************************************;
@@ -34,13 +39,14 @@
 0020 : 8E 01 FF   lds #$01FF          ; load SP with 01FFh
 0023 : CE 80 00	  ldx #$8000          ; load X with 8000h, PIA (DAC) addr
 0026 : 6F 01		  clr	$01,x           ; clear(00) addr X + 01h (8001, PIA DDR port A) 
+;    : 6F 02      clr $03,x           ; clear(00) addr X + 03h (8003, PIA DDR port B)
+;    : 6F 03      clr $02,x           ; clear(00) addr X + 02h (8002, port B input)
 0028 : 86 FF		  ldaa	#$FF          ; load A with FFh (1111 1111)
 002A : A7 00		  staa	$00,x         ; store A in addr X + 00h (8000, port A output)
-;*************************************; <-- add init PIA B to input (8002)
-;START
-;*************************************;
-002C : 86 3C		  ldaa	#$3C          ; load A with 3Ch(0011 1100)
+002C : 86 3C		  ldaa	#$3C          ; load A with 3Ch(0011 1100)(CA2 is output, output reg selected)
 002E : A7 01		  staa	$01,x         ; store A in addr X + 01h (8001)
+;    : 86 37      ldaa  #$37          ; load A with 37h(0011 0111)(CB2 is output, output reg selected) 5 bit sound select mask?
+;    : A7 03      staa  $03,x         ; store A in addr X + 03h (8003) 
 ;*************************************;
 ;NMI - MAIN LOOP start
 ;*************************************;
@@ -126,6 +132,7 @@
 00A4 : 97 0F		  staa	X000F         ; store A in addr 000F
 00A6 : 26 B9		  bne	L0061           ; branch != zero to PC - B9h (LOOP1)(-71)
 ;L00A8: GOTO3
+;    : BD 00 00   jsr L0000           ; jump sub to PIA B read (or bsr 8D xx relative if in range) needs A
 00A8 : 86 02		  ldaa	#$02          ; load A with value 02h (0000 0010)
 00AA : 7E 00 30		jmp L0030           ; jump to start L0030
 ;*************************************;
@@ -139,6 +146,7 @@
 00B8 : DE 09		  ldx	X0009           ; load X with value in 0009
 ;L00BA: GOTO46
 00BA : 39		      rts                 ; return from subroutine
+; 00BC allocated
 ;*************************************;
 ; must end before 00C4, org 0100 for IC16,IC17
 ;*************************************;
