@@ -13,17 +13,20 @@
 ; (0000-00BA) + (0100-013F) = (187) + (63) = 250
 ; 
 ;*************************************;
-; MAIN LOOP mem reserve locations, have init:
+; INIT VARS & MEM reserve locations:
 0000 : 00 00                          ; clear (00)
-0002 : 00 00                          ; clear (00)
-0004 : 00                             ; clear (00)
-0005 : 3C                             ; value 3Ch(0011 1100)
-0006 :                                ;
-; ~                                   ;
-0019 :                                ; last used address (19 bytes)
-; ~                                   ; 
-001E : 00                             ;
-001F : FF                             ; total 31 bytes
+0002 : 00 00                          ; use for vector jumps?
+0004 : 00 00                          ; 
+0006 : 00 00                          ;
+0008 : 00                             ; last free mem location
+;*************************************;
+0009 :                                ; used by main loop
+; ~       RESERVED                    ;
+0019 :                                ; end main loop mem (19 bytes)
+;*************************************;
+001A : 00 00                          ; MOVE RESET INIT HERE (will change synth end jmp)
+001C : 00 00                          ;
+001E : 00 FF                          ; total 31 bytes
 ;*************************************;
 ;RESET INIT (POWER-ON) org 0020
 ;*************************************;
@@ -33,13 +36,13 @@
 0026 : 6F 01		  clr	$01,x           ; clear(00) addr X + 01h (8001, PIA DDR port A) 
 0028 : 86 FF		  ldaa	#$FF          ; load A with FFh (1111 1111)
 002A : A7 00		  staa	$00,x         ; store A in addr X + 00h (8000, port A output)
-;*************************************;
+;*************************************; <-- add init PIA B to input (8002)
 ;START
 ;*************************************;
 002C : 86 3C		  ldaa	#$3C          ; load A with 3Ch(0011 1100)
 002E : A7 01		  staa	$01,x         ; store A in addr X + 01h (8001)
 ;*************************************;
-;NMI , reset/diagnostic button on board, SW1
+;NMI - MAIN LOOP start
 ;*************************************;
 0030 : CE FF FF		ldx	#$FFFF          ; load X with value FFFFh ( or 78h )
 0033 : 5F		      clrb                ; clear (00) B
