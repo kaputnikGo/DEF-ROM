@@ -10,9 +10,8 @@
 ; 
 ; Audacity playback approx. at 2.50x
 ; using edited subroutines RESET, NMI, PARAM1, CALCOS, UTIL1, SYNTH1
-; (0000-00BA) + (0100-013F) = (187) + (63) = 250
+; (0000-00BF) + (0100-0108) = (192) + (9) = 201
 ; 
-; CHANGE ALL LABEL ADDRS
 ;*************************************;
 ; PIA B read subroutine
 ;*************************************;
