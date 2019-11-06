@@ -1,0 +1,135 @@
+; SYNTH4 CODE - 06 Nov 2019
+; hack for Heathkit ET-3400 Audio Setup - PIA B input var parameter, tested, working
+; user RAM = 197 + 256 bytes = 453
+; addr 0000 - 00C4 and 0100 - 01FF
+; using PIA addr 8000 (not 0400)
+; not using actual NMI, IRQ , SWI etc
+; mpu clock speed is default/low (quoted as 0.5 MHz), expecting ~894750 cycles per second
+; also quoted as clocked at 100kHz 
+
+;*************************************;
+; PIA B read subroutine
+;*************************************;
+0000 : 4F         clra                ; clear A
+0001 : B6 80 02   ldaa  X8002         ; load A with PIA B
+0004 : 43         coma                ; complement A (flip bits)
+0005 : B7 01 00   staa  X0100         ; store A in 0100 (parameter 1 of waveform)
+0008 : 39         rts                 ; return from subroutine
+;*************************************;
+0009 :                                ; used by main loop
+; ~       RESERVED                    ;
+0019 :                                ; end main loop mem (19 bytes)
+;*************************************;
+;RESET INIT (POWER-ON) org 001A
+;*************************************;
+001A : 8E 01 FF   lds #$01FF          ; load SP with 01FFh
+001D : CE 80 00	  ldx #$8000          ; load X with 8000h, PIA (DAC) addr
+0020 : 6F 01		  clr	$01,x           ; clear(00) addr X + 01h (8001, PIA DDR port A) 
+0022 : 6F 03      clr $03,x           ; clear(00) addr X + 03h (8003, PIA DDR port B)
+0024 : 6F 02      clr $02,x           ; clear(00) addr X + 02h (8002, port B input)
+0026 : 86 FF		  ldaa	#$FF          ; load A with FFh (1111 1111)
+0028 : A7 00		  staa	$00,x         ; store A in addr X + 00h (8000, port A output)
+002A : 86 3C		  ldaa	#$3C          ; load A with 3Ch(0011 1100)
+002C : A7 01		  staa	$01,x         ; store A in addr X + 01h (8001)
+002E : 86 37      ldaa  #$37          ; load A with 37h(0011 0111)(28h 0010 1000)
+0030 : A7 03      staa  $03,x         ; store A in addr X + 03h (8003) 
+;*************************************;
+;NMI - MAIN LOOP start
+;*************************************;
+0032 : CE FF FF		ldx	#$FFFF          ; load X with value FFFFh ( or 78h )
+0035 : 5F		      clrb                ; clear (00) B
+0036 : E9 00		  adcb	$00,x         ; add B + X + 00h with Carry into B
+;*************************************;
+;IRQ - modified
+;*************************************;
+0038 B6 80 02     ldaa $8002          ;load A with PIA B
+003B 0E           cli                 ;clear interrupt mask
+003C 43           coma                ;complement A,flip bits
+003D 84 1F        anda  #$1F          ;mask upper 3 bits (0001 1111)
+003F D6 08        ldab  $08           ;
+;*************************************;
+;IRQ2
+;*************************************;
+0041 96 04        ldaa  $04           ;$FD0E
+0043 9A 05        oraa  $05           ;inclusive OR accum
+;FD10 27 00        beq LFD12           ; ? filler branch, NOP + NOP for 2 instructions?
+0045 4F           clra                ;LFD12
+0046 97 07        staa  $07           ;
+0048 96 04        ldaa  $04           ;
+;*************************************;
+;SYNTH4, org 004C
+;*************************************;
+004A 97 18        staa  $18           ;$F930
+004C D7 13        stab  $13           ;
+004E DF 16        stx $16             ;store index register
+0050 7F 00 15     clr $0015           ;clear addr 0015
+;LF939: LOOP1
+0053 DE 16        ldx $16             ;LF939,load index reg
+0055 B6 04 00     ldaa  $8000         ;SOUND
+;LF93E: LOOP2
+0058 16           tab                 ;LF93E,transfer accums
+0059 54           lsrb                ;logical shift right
+005A 54           lsrb                ;
+005B 54           lsrb                ;
+005C D8 0A        eorb  $0A           ;exclusive OR
+005E 54           lsrb                ;
+005F 76 00 09     ror $0009           ;rotate right
+0062 76 00 0A     ror $000A           ;
+0065 D6 13        ldab  $13           ;
+0067 7D 00 19     tst $0019           ;test for 0 or negative
+006A 27 02        beq LF954           ;branch if = 0
+006C D4 09        andb  $09           ;logical and
+;LF954: GOTO1
+006E D7 14        stab  $14           ;LF954
+0070 D6 15        ldab  $15           ;
+0072 91 0A        cmpa  $0A           ;compare
+0074 22 12        bhi LF96E           ;branch if higher
+;LF95C: LOOP3
+0076 09           dex                 ;LF95C,decr index reg
+0077 27 26        beq LF985           ;
+0079 B7 04 00     staa  $8000         ;SOUND
+007C DB 15        addb  $15           ;
+007E 99 14        adca  $14           ;add with Carry
+0080 25 16        bcs LF97E           ;branch if Carry set
+0082 91 0A        cmpa  $0A           ;
+0084 23 F0        bls LF95C           ;branch if lower or same
+0086 20 10        bra LF97E           ;
+;LF96E: LOOP4
+0088 09           dex                 ;LF96E
+0089 27 14        beq LF985           ;
+008B B7 04 00     staa  $8000         ;SOUND
+008E D0 15        subb  $15           ;
+0090 92 14        sbca  $14           ;subtract with Carry
+0092 25 04        bcs LF97E           ;
+0094 91 0A        cmpa  $0A           ;
+0096 22 F0        bhi LF96E           ;branch if higher
+;LF97E: GOTO2
+0098 96 0A        ldaa  $0A           ;LF97E
+009A B7 04 00     staa  $8000         ;SOUND
+009D 20 B9        bra LF93E           ;
+;LF985: GOTO3
+009F D6 18        ldab  $18           ;LF985
+00A1 27 B5        beq LF93E           ;
+00A3 96 13        ldaa  $13           ;
+00A5 D6 15        ldab  $15           ;
+00A7 44           lsra                ;logical shift right A
+00A8 56           rorb                ;rotate right B
+00A9 44           lsra                ;
+00AA 56           rorb                ;
+00AB 44           lsra                ;
+00AC 56           rorb                ;
+00AD 43           coma                ;complement 1s A
+00AE 50           negb                ;negate (complement 2s) B
+00AF 82 FF        sbca  #$FF          ;subtract with Carry
+00B1 DB 15        addb  $15           ;
+00B3 99 13        adca  $13           ;add with Carry
+00B5 D7 15        stab  $15           ;
+00B7 97 13        staa  $13           ;
+00B9 26 98        bne LF939           ;
+00BB C1 07        cmpb  #$07          ;
+00BD 26 94        bne LF939           ;
+00BF 7E 00 32     jmp L0032           ; jump to start L0032
+;00C2
+;00C3
+;00C4 NO NO NO NO
+
