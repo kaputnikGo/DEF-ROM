@@ -1002,7 +1002,7 @@ WAI , wait for interrupt
 **************************************;
 052D : 3E		">"		wai                 ; wait for interrupt
 **************************************;
-DEMO , play demo sounds on SW1 press
+DEMO , play demo sounds on SW1 press - NMI
 **************************************;
 052E				L052E: GOTO47
 052E : 86 01		"  "		ldaa	#$01    ; load A with value 01h (0000 0001)

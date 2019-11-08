@@ -5,20 +5,23 @@
 ; using PIA addr 8000 (not 0400)
 ; not using actual NMI, IRQ , SWI etc
 ; mpu clock speed is default/low (quoted as 0.5 MHz), expecting ~894750 cycles per second
-; also quoted as clocked at 100kHz 
+; also quoted as clocked at 100kHz
+; working but not as expected (2.5x unheard) 
 
 ;*************************************;
-; PIA B read subroutine
+; PIA B read subroutine - NOT NEEDED, IRQ reads PIA B
 ;*************************************;
 0000 : 4F         clra                ; clear A
 0001 : B6 80 02   ldaa  X8002         ; load A with PIA B
 0004 : 43         coma                ; complement A (flip bits)
-0005 : B7 01 00   staa  X0100         ; store A in 0100 (parameter 1 of waveform)
+0005 : B7 80 00   staa  X8000         ; store A in 8000 - was 0100 (parameter 1 of waveform)
 0008 : 39         rts                 ; return from subroutine
 ;*************************************;
-0009 :                                ; used by main loop
+0009 : 00 00                          ; used by main loop
+000B : 03                             ; set for IRQ B read
+000C : 00                             ; used by main loop
 ; ~       RESERVED                    ;
-0019 :                                ; end main loop mem (19 bytes)
+0019 : 00                             ; end main loop mem (19 bytes)
 ;*************************************;
 ;RESET INIT (POWER-ON) org 001A
 ;*************************************;
@@ -45,89 +48,81 @@
 0038 B6 80 02     ldaa $8002          ;load A with PIA B
 003B 43           coma                ;complement A,flip bits
 003C 84 1F        anda  #$1F          ;mask upper 3 bits (0001 1111)
-003E D6 08        ldab  $08           ;
-;*************************************;
-;IRQ2
-;*************************************;
-0040 96 04        ldaa  $04           ;$FD0E
-0042 9A 05        oraa  $05           ;inclusive OR accum
-0044 4F           clra                ;LFD12
-0045 97 07        staa  $07           ;
-0047 96 04        ldaa  $04           ;
+003E D6 09        ldab  $0B           ; <- value 0x03 ? was $08
 ;*************************************;
 ;SYNTH4, org 004C
 ;*************************************;
-0049 97 18        staa  $18           ;$F930
-004B D7 13        stab  $13           ;
-004D DF 16        stx $16             ;store index register
-004F 7F 00 15     clr $0015           ;clear addr 0015
+0040 97 18        staa  $18           ;$F930
+0042 D7 13        stab  $13           ;
+0044 DF 16        stx $16             ;store index register
+0046 7F 00 15     clr $0015           ;clear addr 0015
 ;LF939: LOOP1
-0052 DE 16        ldx $16             ;LF939,load index reg
-0054 B6 80 00     ldaa  $8000         ;SOUND
+0049 DE 16        ldx $16             ;LF939,load index reg from $16
+004B B6 80 00     ldaa  $8000         ;load A with SOUND <- prob, as it 00?
 ;LF93E: LOOP2
-0057 16           tab                 ;LF93E,transfer accums
-0058 54           lsrb                ;logical shift right
-0059 54           lsrb                ;
-005A 54           lsrb                ;
-005B D8 0A        eorb  $0A           ;exclusive OR
-005D 54           lsrb                ;
-005E 76 00 09     ror $0009           ;rotate right
-0061 76 00 0A     ror $000A           ;
-0064 D6 13        ldab  $13           ;
-0066 7D 00 19     tst $0019           ;test for 0 or negative
-0069 27 02        beq LF954           ;branch if = 0
-006B D4 09        andb  $09           ;logical and
+004E 16           tab                 ;LF93E,transfer accum A to B
+004F 54           lsrb                ;logical shift right B
+0050 54           lsrb                ;
+0051 54           lsrb                ;
+0052 D8 0A        eorb  $0A           ;exclusive OR $0A into B
+0054 54           lsrb                ;
+0055 76 00 09     ror $0009           ;rotate right (C -> b7 - b0 -> C )
+0058 76 00 0A     ror $000A           ;
+005B D6 13        ldab  $13           ;
+005D 7D 00 19     tst $0019           ;test for 0 or negative
+0060 27 02        beq LF954           ;branch if = 0
+0062 D4 09        andb  $09           ;logical and B
 ;LF954: GOTO1
-006D D7 14        stab  $14           ;LF954
-006F D6 15        ldab  $15           ;
-0071 91 0A        cmpa  $0A           ;compare
-0073 22 12        bhi LF96E           ;branch if higher
+0064 D7 14        stab  $14           ;LF954
+0066 D6 15        ldab  $15           ;
+0068 91 0A        cmpa  $0A           ;compare
+006A 22 12        bhi LF96E           ;branch if higher
 ;LF95C: LOOP3
-0075 09           dex                 ;LF95C,decr index reg
-0076 27 26        beq LF985           ;
-0078 B7 80 00     staa  $8000         ;SOUND
-007B DB 15        addb  $15           ;
-007D 99 14        adca  $14           ;add with Carry
-007F 25 16        bcs LF97E           ;branch if Carry set
-0081 91 0A        cmpa  $0A           ;
-0083 23 F0        bls LF95C           ;branch if lower or same
-0085 20 10        bra LF97E           ;
+006C 09           dex                 ;LF95C,decr index reg
+006D 27 26        beq LF985           ;
+006F B7 80 00     staa  $8000         ;SOUND
+0072 DB 15        addb  $15           ;
+0074 99 14        adca  $14           ;add with Carry
+0076 25 16        bcs LF97E           ;branch if Carry set
+0078 91 0A        cmpa  $0A           ;
+007A 23 F0        bls LF95C           ;branch if lower or same
+007C 20 10        bra LF97E           ;
 ;LF96E: LOOP4
-0087 09           dex                 ;LF96E
-0088 27 14        beq LF985           ;
-008A B7 80 00     staa  $8000         ;SOUND
-008D D0 15        subb  $15           ;
-008F 92 14        sbca  $14           ;subtract with Carry
-0091 25 04        bcs LF97E           ;
-0093 91 0A        cmpa  $0A           ;
-0095 22 F0        bhi LF96E           ;branch if higher
+007E 09           dex                 ;LF96E
+007F 27 14        beq LF985           ;
+0081 B7 80 00     staa  $8000         ;SOUND
+0084 D0 15        subb  $15           ;
+0086 92 14        sbca  $14           ;subtract with Carry
+0088 25 04        bcs LF97E           ;
+008A 91 0A        cmpa  $0A           ;
+008C 22 F0        bhi LF96E           ;branch if higher
 ;LF97E: GOTO2
-0097 96 0A        ldaa  $0A           ;LF97E
-0099 B7 80 00     staa  $8000         ;SOUND
-009C 20 B9        bra LF93E           ;
+008E 96 0A        ldaa  $0A           ;LF97E
+0090 B7 80 00     staa  $8000         ;SOUND
+0093 20 B9        bra LF93E           ;
 ;LF985: GOTO3
-009E D6 18        ldab  $18           ;LF985
-00A0 27 B5        beq LF93E           ;
-00A2 96 13        ldaa  $13           ;
-00A4 D6 15        ldab  $15           ;
-00A6 44           lsra                ;logical shift right A
-00A7 56           rorb                ;rotate right B
-00A8 44           lsra                ;
-00A9 56           rorb                ;
-00AA 44           lsra                ;
-00AB 56           rorb                ;
-00AC 43           coma                ;complement 1s A
-00AD 50           negb                ;negate (complement 2s) B
-00AE 82 FF        sbca  #$FF          ;subtract with Carry
-00B0 DB 15        addb  $15           ;
-00B2 99 13        adca  $13           ;add with Carry
-00B4 D7 15        stab  $15           ;
-00B6 97 13        staa  $13           ;
-00B8 26 98        bne LF939           ;
-00BA C1 07        cmpb  #$07          ;
-00BC 26 94        bne LF939           ;
-00BE BD 00 00     jsr L0000           ; jump sub to PIA B read
-00C1 7E 00 32     jmp L0032           ; jump to start L0032
+0095 D6 18        ldab  $18           ;LF985
+0097 27 B5        beq LF93E           ;
+0099 96 13        ldaa  $13           ;
+009B D6 15        ldab  $15           ;
+009D 44           lsra                ;logical shift right A
+009E 56           rorb                ;rotate right B
+009F 44           lsra                ;
+00A0 56           rorb                ;
+00A1 44           lsra                ;
+00A2 56           rorb                ;
+00A3 43           coma                ;complement 1s A
+00A4 50           negb                ;negate (complement 2s) B
+00A5 82 FF        sbca  #$FF          ;subtract with Carry
+00A7 DB 15        addb  $15           ;
+00A9 99 13        adca  $13           ;add with Carry
+00AB D7 15        stab  $15           ;
+00AD 97 13        staa  $13           ;
+00AF 26 98        bne LF939           ;
+00B1 C1 07        cmpb  #$07          ;
+00B3 26 94        bne LF939           ;
+00B5 BD 00 00     jsr L0000           ; jump sub to PIA B read
+00B8 7E 00 32     jmp L0032           ; jump to start L0032
 
 ;00C4 NO NO NO NO
 

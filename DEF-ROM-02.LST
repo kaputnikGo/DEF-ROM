@@ -1,10 +1,10 @@
-  ADDR B1 B2 B3 B4 C:\Users\admin\Documents\ASM-tests\DEF-ROM-02.   PAGE       1
-  notes on bit size of registers:
-  ACCA 7-0
-  ACCB 7-0
-  IX (X) 15-0
-  PC 15-0
-  SP 15-0
+;  ADDR B1 B2 B3 B4 C:\Users\admin\Documents\ASM-tests\DEF-ROM-02.   PAGE       1
+;  notes on bit size of registers:
+;  ACCA 7-0
+;  ACCB 7-0
+;  IX (X) 15-0
+;  PC 15-0
+;  SP 15-0
   
 Addressing Modes: 
 Immediate
@@ -109,7 +109,7 @@ Relative
   F88E 97 1A               STAA <$1A       ;
   F890 C6 03               LDAB #$03       ;
   F892 20 0A               BRA $F89E       ;branch always
-  F894 86 FE               LDAA #$FE       ;W vector
+  F894 86 FE               LDAA #$FE       ;W vector SYNTH2
   F896 97 1A               STAA <$1a       ;
   F898 86 C0               LDAA #$C0       ;
   F89A C6 10               LDAB #$10       ;
@@ -139,7 +139,7 @@ Relative
   F8C8 97 19               STAA <$19       ;
   F8CA 26 DB               BNE $F8A7       ;
   F8CC 39                  RTS             ;return subroutine
-  F8CD 86 20               LDAA #$20       ;Synth3(?), W vector
+  F8CD 86 20               LDAA #$20       ;SYNTH3, W vector
   F8CF 97 15               STAA <$15       ;
   F8D1 97 18               STAA <$18       ;
   F8D3 86 01               LDAA #$01       ;
@@ -369,7 +369,7 @@ Relative
   FA84 86 03               LDAA #$03       ;$FA84,W vector
   FA86 97 08               STAA <$08       ;init count?
   FA88 39                  RTS             ;return subroutine
-  FA89 7A 00 08            DEC >$0008      ;$FA89
+  FA89 7A 00 08            DEC >$0008      ;$FA89, PARAM9
   FA8C 27 0C               BEQ $FA9A       ;
   FA8E D6 15               LDAB <$15       ;
   FA90 58                  ASLB            ;arithmetic shift left
@@ -380,7 +380,7 @@ Relative
   FA95 97 15               STAA <$15       ;
   FA97 4F                  CLRA            ;
   FA98 20 FE               BRA $FA98       ;$FA98
-  FA9A 4A                  DECA            ;
+  FA9A 4A                  DECA            ;SYNTH8
   FA9B 81 0B               CMPA #$0B       ;
   FA9D 23 01               BLS $FAA0       ;branch if lower or same
   FA9F 4F                  CLRA            ;

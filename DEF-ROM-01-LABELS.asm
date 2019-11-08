@@ -699,8 +699,8 @@ IRQ		  LDS #$007F	  ;FCB6, IRQ handler,select sound,load stack pointer, vector a
         BNE $FCE4	    ;
         JSR $EFFD	    ;jump sub ? jump to a label?
         TSTA		      ;
-        BEQ IRQ2	    ;branch below FD0E if = 0
-        DECA		      ;
+        BEQ IRQ2	    ;FCE3,branch below FD0E if = 0
+        DECA		      ;FCE5
         CMPA #$0C	    ;
         BHI $FCF4	    ;branch below if higher
         JSR $FB81	    ;jump sub above to PARAM13 TAB
