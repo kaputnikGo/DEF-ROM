@@ -176,22 +176,22 @@ Relative
   F90E 27 D0               BEQ $F8E0       ;branch if = 0
   F910 20 CC               BRA $F8DE       ;branch always
   F912 39                  RTS             ;return subroutine
-  F913 C6 01               LDAB #$01       ;Synth4(?),W vector
+  F913 C6 01               LDAB #$01       ;Synth4(?),W vector PARAM3
   F915 D7 04               STAB <$04       ;
   F917 4F                  CLRA            ;clear A
   F918 97 19               STAA <$19       ;
-  F91A 20 14               BRA $F930       ;branch always
-  F91C 4F                  CLRA            ;W vector
+  F91A 20 14               BRA $F930       ;branch always SYNTH4
+  F91C 4F                  CLRA            ;W vector PARAM4
   F91D 97 19               STAA <$19       ;
   F91F C6 03               LDAB #$03       ;
-  F921 20 0D               BRA $F930       ;branch always
-  F923 86 01               LDAA #$01       ;W vector
+  F921 20 0D               BRA $F930       ;branch always SYNTH4
+  F923 86 01               LDAA #$01       ;W vector PARAM5
   F925 97 19               STAA <$19       ;
   F927 CE 03 E8            LDX #$03E8      ;load index reg
   F92A 86 01               LDAA #$01       ;
   F92C C6 FF               LDAB #$FF       ;
-  F92E 20 00               BRA $F930       ;branch always
-  F930 97 18               STAA <$18       ;$F930
+  F92E 20 00               BRA $F930       ;branch always SYNTH4
+  F930 97 18               STAA <$18       ;$F930 SYNTH4
   F932 D7 13               STAB <$13       ;
   F934 DF 16               STX <$16        ;store index register
   F936 7F 00 15            CLR >$0015      ;clear
