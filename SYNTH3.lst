@@ -13,13 +13,13 @@
 0000 : 00                             ; not used
 ; ~       RESERVED
 0008 : 00                             ;
-0009 : xx                             ; changes
-000A : xx                             ; changes
+0009 : nn                             ; changes
+000A : nn                             ; changes
 0012 : 00                             ;
-0013 : 01                             ; A inner loop length and divisor
-0014 : xx                             ; B inner loop LFO-like, counts down FF to 00 fast to slow
+0013 : nn                             ; A inner loop length and divisor from PIA B
+0014 : 80                             ; B inner loop LFO-like, counts down FF to 00 fast to slow
 0015 : 20                             ; A loop speed
-0016 : 00 xx                          ; IX ,16 = 00 and 17 counts down from FF
+0016 : 00 FF                          ; IX ,16 = 00 and 17 counts down from FF
 0018 : 20                             ; A loop speed
 0019 : 00                             ; 
 001A : 00                             ; 
