@@ -424,7 +424,7 @@ SYNTH8  DECA		      ;FA9A, SYNTH8
 DAC17   STAA >$0400	  ;DAC output, SOUND
         DEX			      ;decr index
         BEQ $FB09	    ;branch below if = 0, ORGAN2
-        JMP $0016   	;jump where?, FB06: 7E 00 16; (jmp 22 places in instructions...?), RDELAY
+        JMP $0016   	;jump where?, FB06: 7E 00 16;
 EXIT8   RTS			      ;FB09,return, exit 8, ORGAN2
                       ;
 UTIL1   PSHA		      ;FB0A, SUBRTN, push accum A data onto stack, UTIL1, maybe servicing an interrupt

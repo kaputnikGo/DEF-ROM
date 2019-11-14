@@ -1,149 +1,186 @@
-; SYNTH8 SOUNDS CODE
+; SYNTH8 SOUNDS CODE - 14 Nov 2019
 ; hack for Heathkit ET-3400 Audio Setup
-; user RAM = 197 + 256 bytes = 453
+; user RAM = 196 + 255 bytes = 453
 ; addr 0000 - 00C4 and 0100 - 01FF
 ; using PIA addr 8000 (not 0400)
-; not using actual NMI, IRQ , SWI etc
 ; mpu clock speed is default/low (quoted as 0.5 MHz), expecting ~894750 cycles per second
-; also quoted as clocked at 100kHz 
-; 
-; Audacity playback approx. at 2.50x
-; using edited subroutines RESET, IRQ, SYNTH8, CALCOS
-; IRQ uses accum A 
-; (0000-00BD) + (0100-010E) = (190) + (15) = 205 
-; rewrites on ram to 00BF (CALCOS rts)
-; 
+; using edited subroutines IRQ, PARAM7, SYNTH8, CALCOS
+; arcade mpu has ram to 007F
+; PARAM7 normally plays SYNTH8 then IRQ2->SYNTH4
+; modified memory locations for larger SYNTH8
+; working, constant buzz saw with pitch change via PIA B (low frequencies)
+
 ;*************************************;
 ; Main loop scratch memory reserves
 ;*************************************;
-0000 : 00                             ; used by main loop
-; ~       RESERVED                    ;
-0007 : 00                             ;
-0008 : 03                             ; possible init value for B
-0009 : 00                             ;
-;~        RESERVED                    ; 0013, 0016 used by Index
-0019 : 00                             ; end main loop mem
-;*************************************;
-; Index mem reserve for writes
-;*************************************;
-001A : 00                             ;
-; ~                                   ;
-0024 : 00                             ;
-;*************************************;
-;RESET INIT (POWER-ON) org 0025 - CAUTION: Index writes over these addresses after init
-;*************************************;
-0025 : 8E 01 FF   lds #$01FF          ; load SP with 01FFh
-0028 : CE 80 00	  ldx #$8000          ; load X with 8000h, PIA (DAC) addr
-002B : 6F 01		  clr	$01,x           ; clear(00) addr X + 01h (8001, PIA DDR port A) 
-002D : 6F 03      clr $03,x           ; clear(00) addr X + 03h (8003, PIA DDR port B)
-002F : 6F 02      clr $02,x           ; clear(00) addr X + 02h (8002, port B input)
-0031 : 86 FF		  ldaa	#$FF          ; load A with FFh (1111 1111)
-0033 : A7 00		  staa	$00,x         ; store A in addr X + 00h (8000, port A output)
-0035 : 86 3C		  ldaa	#$3C          ; load A with 3Ch(0011 1100)
-0037 : A7 01		  staa	$01,x         ; store A in addr X + 01h (8001)
-0039 : 86 37      ldaa  #$37          ; load A with 37h(0011 0111)(28h 0010 1000)
-003B : A7 03      staa  $03,x         ; store A in addr X + 03h (8003) 
-;*************************************;
-;IRQ - modified - org 003D for possible loops, free of writes here onwards
-;*************************************;
-003D : B6 80 02		ldaa	#$8002        ; load A with value from PIA (emu uses 00)
-0040 : 43		      coma                ; complement A
-0041 : 84 1F      anda  #$1F		      ; and A with mask bits
-0043 : C6 03      ldab  #$03          ;$FA89, ldab immed #$03, may need to be zero
-;*************************************;
-;SYNTH8
-;*************************************;
-0045 : 4A         deca                ; decr A - 1
-0046 : 81 0B      cmpa #$0B           ; compare A to value 0x0B
-0048 : 23 01      bls L004B           ;branch if lower or same GOTO1
-004A : 4F         clra                ;
-;L004B: GOTO1
-004B : CE 01 00   ldx #$0100          ;load waveform, was ldx #$FE41
-004E : BD 00 B2   jsr L00B2           ;jump sub to CALCOS
-0051 : A6 00      ldaa $00,X          ;
-0053 : CE FF FF   ldx #$FFFF          ;
-0056 : DF 13      stx $13             ;store X into addr 13
-0058 : 8D 04      bsr L005E           ;branch to subroutine (+4) GOTO2
-;L005A: LOOP1
-005A : 8D 2A      bsr L0086           ;branch 0x2A (+42) GOTO6
-005C : 20 FC      bra L005A           ;branch above LOOP1
-;L005E: GOTO2
-005E : CE 00 16   ldx #$0016          ;$FAB3,subroutine, load addr 0016 into X
-;L0061: LOOP2
-0061 : 81 00      cmpa #$00           ;$FAB6
-0063 : 27 15      beq L007A           ;branch equal zero 0x15 (+21) GOTO4
-0065 : 81 03      cmpa #$03           ;
-0067 : 27 09      beq L0072           ;branch equal zero 0x09 (+9) GOTO3
-0069 : C6 01      ldab #$01           ;
-006B : E7 00      stab $00,X          ;
-006D : 08         inx                 ;
-006E : 80 02      suba #$02           ;
-0070 : 20 EF      bra L0061           ;branch always 0xEF (-17) LOOP2
-;L0072: GOTO3
-0072 : C6 91      ldab #$91           ;$FAC7
-0074 : E7 00      stab $00,X          ;
-0076 : 6F 01      clr $01,X           ;
-0078 : 08         inx                 ;
-0079 : 08         inx                 ;
-;L007A: GOTO4
-007A : C6 7E      ldab #$7E           ;$FACF
-007C : E7 00      stab $00,X          ;
-007E : C6 FA      ldab #$FA           ;
-0080 : E7 00      stab $00,X          ;
-0082 : C6 DD      ldab #$DD           ;
-0084 : E7 02      stab $02,X          ;
-;L0086: GOTO6
-0086 : DE 13      ldx $13             ;$FADB,subroutine, load addr 13 into X
-0088 : 4F         clra                ;
-0089 : F6 00 12   ldab $0012          ;
-008C : 5C         incb                ;
-008D : D7 12      stab  $12           ;
-008F : D4 15      andb  $15           ;
-0091 : 54         lsrb                ;logical shift right
-0092 : 89 00      adca #$00           ;add with Carry
-0094 : 54         lsrb                ;
-0095 : 89 00      adca #$00           ;
-0097 : 54         lsrb                ;
-0098 : 89 00      adca #$00           ;
-009A : 54         lsrb                ;
-009B : 89 00      adca #$00           ;
-009D : 54         lsrb                ;
-009E : 89 00      adca #$00           ;
-00A0 : 54         lsrb                ;
-00A1 : 89 00      adca #$00           ;
-00A3 : 54         lsrb                ;
-00A4 : 89 00      adca #$00           ;
-00A6 : 1B         aba                 ;add accums A + B into A
-00A7 : 48         asla                ;
-00A8 : 48         asla                ;
-00A9 : 48         asla                ;
-00AA : 48         asla                ;
-00AB : B7 80 00   staa $8000          ;DAC output (SOUND)
-00AE : 09         dex                 ;decr index reg
-00AF : 7E 00 16   jmp L0016           ; jump to mem location
-;*************************************;
-;CALCOS (calculate offset) - 00B2
-;*************************************;
-00B2 : DF 0D		  stx	X000D           ; store X in 000D
-00B4 : 9B 0E		  adda	X000E         ; add A with value in 000E
-00B6 : 97 0E		  staa	X000E         ; store A in 000E
-00B8 : 24 05		  bcc	L00BF           ; branch if Carry clear to PC + 05 (GOTO7)
-00BA : 7C 00 0D		inc	X000D           ; increment value in 000D
-00BD : DE 0D		  ldx	X000D           ; load X with value in 000D
-;L00BF: GOTO7
-00BF : 39		      rts                 ; return from subroutine
-;*************************************;
-; must end before 00C4, org 0100 for IC16,IC17
-;*************************************;
-;PARAM WAVEFORM FDB
-;*************************************;
-0100 : 47 3f 37 30 29 23 1d 17 12     ; load for SYNTH8 unknown num bytes, at least 16 bits
-0109 : 0d 08 04 08 7f d9              ;
-;*************************************; 
-; Stack Pointer RAM addrs reserve
-;*************************************;
-01E8 :                                ; last SP
-; ~                                   ; 23 bytes
-01FF :                                ; initial SP
-;*************************************;
+0000 : 00                             ;not used
+; ~ not used
+000D : 00                             ;not used
+000E : nn                             ; X changing A7,9A
+000F : 00                             ;not used
+0010 : 9B                             ; X
+0011 : nn                             ; A changing, PIA B pitch
+0012 : nn                             ; B count up 00-FF
+0013 : 0F FB                          ; X
+0015 : 7F                             ; A
 ;
+0016 : 01                             ; SYNTH8 jmp dest
+; write flood 01   ;
+0022 : 01                             ; end flood
+;
+0023 : 91 00                          ; B
+0025 : FA 00                          ; B
+0027 : DD                             ; B
+;*************************************;
+;INIT (POWER-ON) org 0028
+;*************************************;
+0028 : 8E 01 FF   lds #$01FF          ; load SP with 01FFh
+002B : CE 80 00	  ldx #$8000          ; load X with 8000h, PIA (DAC) addr
+002E : 6F 01		  clr	$01,x           ; clear(00) addr X + 01h (8001, PIA DDR port A) 
+0030 : 6F 03      clr $03,x           ; clear(00) addr X + 03h (8003, PIA DDR port B)
+0032 : 6F 02      clr $02,x           ; clear(00) addr X + 02h (8002, port B input)
+0034 : 86 FF		  ldaa	#$FF          ; load A with FFh (1111 1111)
+0036 : A7 00		  staa	$00,x         ; store A in addr X + 00h (8000, port A output)
+0038 : 86 3C		  ldaa	#$3C          ; load A with 3Ch(0011 1100)
+003A : A7 01		  staa	$01,x         ; store A in addr X + 01h (8001)
+003C : 86 37      ldaa  #$37          ; load A with 37h(0011 0111)(28h 0010 1000)
+003E : A7 03      staa  $03,x         ; store A in addr X + 03h (8003)
+;*************************************;
+;IRQ - reset, MAIN LOOP                
+;*************************************;
+0040 : B6 80 02		ldaa	#$8002        ;load A with value from PIA
+0043 : C6 03      ldab  #$03          ;load B with 03h
+;*************************************;
+;PARAM7 - modified: 
+; rem beq & jmp to IRQ2/SYNTH4
+;*************************************;
+0045 : 7F 00 08   clr $0008           ;clear addr 0008
+0048 : 97 11      staa  $11           ;store A in addr 11
+004A : CE 00 9A   ldx #$009A          ;load X with 009A (orig FDAA)
+;LOOP1
+004D : A6 00      ldaa  $00,x         ;load A with X + 00
+004F : 7A 00 11   dec $0011           ;decr addr 0011
+0052 : 27 06      beq $005A           ;branch =0 GOTO1
+0054 : 4C         inca                ;incr A
+0055 : BD 00 80   jsr $0080           ;jump sub CALCOS
+0058 : 20 F3      bra $004D           ;branch always LOOP1
+;GOTO1
+005A : 08         inx                 ;incr X
+005B : DF 0F      stx $0F             ;store X in addr 0F
+005D : BD 00 80   jsr $0080           ;jump sub CALCOS
+0060 : DF 0D      stx $0D             ;store X in addr 0D
+0062 : DE 0F      ldx $0F             ;load X with addr 0F
+;LOOP2
+0064 : A6 00      ldaa  $00,x         ;load A with addr X + 00h
+0066 : 97 15      staa  $15           ;store A in addr 15
+0068 : A6 01      ldaa  $01,x         ;load A with addr X + 01h
+006A : EE 02      ldx $02,x           ;load X with addr X + 02h
+006C : DF 13      stx $13             ;store X in addr 13
+006E : BD 01 19   jsr $0119           ;jump sub SYNTH8-GOTO3
+0071 : DE 0F      ldx $0F             ;load X with addr 0F
+0073 : 08         inx                 ;incr X
+0074 : 08         inx                 ;incr X
+0075 : 08         inx                 ;incr X
+0076 : 08         inx                 ;incr X
+0077 : DF 0F      stx $0F             ;store X in addr 0F
+0079 : 9C 0D      cpx $0D             ;compare X with addr 0D
+007B : 26 E7      bne $0064           ;branch !=0 LOOP2
+007D : 7E 00 40   jmp $0040           ;jump to IRQ (orig IRQ2/SYNTH4)
+;*************************************;
+;CALCOS (calculate offset) - 0080
+;*************************************;
+0080 : DF 0D		  stx $0D             ; store X in 0D
+0082 : 9B 0E		  adda	$0E           ; add A with value in 0E
+0084 : 97 0E		  staa	$0E           ; store A in 0E
+0086 : 24 05		  bcc	$00A2           ; branch Carry clear (+05) GOTO7
+0088 : 7C 00 0D		inc	$000D           ; increment value in 000D
+008B : DE 0D		  ldx	$0D             ; load X with addr 0D
+;GOTO7
+008D : 39		      rts                 ; return from subroutine
+;*************************************;
+;PARAM SYNTH FDB TABLE
+;*************************************;
+008E : 47 3f 37 30 29 23              ; load for SYNTH8
+0094 : 1d 17 12 0d 08 04              ; 
+009A : 0c 7f 1d 0f fb 7f 23 0f        ; load for PARAM7
+00A2 : 15 fe 08 50 8b 88 3e 3f        ; 
+;00AA :                               ;
+; ~ not used
+;00C4 :                               ;
+;*************************************;
+;SYNTH8 - modified org 0100
+;*************************************;
+0100 : 4A         deca                ; decr A
+0101 : 81 0B      cmpa  #$0B          ; compare A to value 0Bh (0000 1011)
+0103 : 23 01      bls $0106           ;branch if lower or same GOTO2
+0105 : 4F         clra                ;
+;GOTO2
+0106 : CE 00 8E   ldx #$008E          ;load X with 008Eh (orig FE41)
+0109 : BD 00 80   jsr $0080           ;jump sub to CALCOS
+010C : A6 00      ldaa $00,x          ;load A with addr X + 00h
+010E : CE FF FF   ldx #$FFFF          ;load X with FFFFh (1111 1111 1111 1111)
+0111 : DF 13      stx $13             ;store X in addr 13
+0113 : 8D 04      bsr $0119           ;branch to sub (+4) GOTO3
+;LOOP3
+0115 : 8D 2A      bsr $0141           ;branch to sub (+42) GOTO6
+0117 : 20 FC      bra $0115           ;branch always LOOP3
+;GOTO3 - entry point from PARAM7
+0119 : CE 00 16   ldx #$0016          ;load X with 0016h
+;LOOP4
+011C : 81 00      cmpa  #$00          ;compare A with value 00h (0000 0000)
+011E : 27 15      beq $0135           ;branch =0 (+21) GOTO5
+0120 : 81 03      cmpa  #$03          ;compare A with value 03h (0000 0011)
+0122 : 27 09      beq $012D           ;branch =0 (+9) GOTO4
+0124 : C6 01      ldab  #$01          ;load B with value 01h (0000 0001)
+0126 : E7 00      stab  $00,x         ;store B in addr X + 00h
+0128 : 08         inx                 ;incr X
+0129 : 80 02      suba  #$02          ;subtract A - 02h into A
+012B : 20 EF      bra $011C           ;branch always (-17) LOOP4
+;GOTO4
+012D : C6 91      ldab  #$91          ;load B with 91h (1001 0001)
+012F : E7 00      stab $00,x          ;store B in addr X + 00h
+0131 : 6F 01      clr $01,x           ;clear addr X + 01h
+0133 : 08         inx                 ;incr X
+0134 : 08         inx                 ;incr X
+;GOTO5
+0135 : C6 7E      ldab  #$7E          ;load B with 7Eh (0111 1110)
+0137 : E7 00      stab  $00,x         ;store B in addr X + 00h
+0139 : C6 FA      ldab  #$FA          ;load B with FAh (1111 1010)
+013B : E7 00      stab  $00,x         ;store B in addr X + 00h
+013D : C6 DD      ldab  #$DD          ;load B with DDh (1101 1101)
+013F : E7 02      stab  $02,x         ;store B in addr X + 02h
+;GOTO6
+0141 : DE 13      ldx $13             ;load X with addr 13
+0143 : 4F         clra                ;clear A
+0144 : F6 00 12   ldab  $0012         ;load B with addr 0012
+0147 : 5C         incb                ;incr B
+0148 : D7 12      stab  $12           ;store B in addr 12
+014A : D4 15      andb  $15           ;and B with addr 15 into B
+014C : 54         lsrb                ;logical shift right B (0 -> b7 - b0 -> C)
+014D : 89 00      adca #$00           ;add A + 00h + C into A
+014F : 54         lsrb                ;lsr B
+0150 : 89 00      adca #$00           ;adc A
+0152 : 54         lsrb                ;lsr B
+0153 : 89 00      adca #$00           ;adc A
+0155 : 54         lsrb                ;lsr B
+0156 : 89 00      adca #$00           ;adc A
+0158 : 54         lsrb                ;lsr B
+0159 : 89 00      adca #$00           ;adc A
+015B : 54         lsrb                ;lsr B
+015C : 89 00      adca #$00           ;adc A
+015E : 54         lsrb                ;lsr B (7th)
+015F : 89 00      adca #$00           ;adc A (7th)
+0161 : 1B         aba                 ;add A + B into A
+0162 : 48         asla                ;arithmetric shift left A(C <- b7 - b0 <- 0)
+0163 : 48         asla                ;asl A
+0164 : 48         asla                ;asl A
+0165 : 48         asla                ;asl A
+0166 : B7 80 00   staa $8000          ;SOUND store A in DAC output
+0169 : 09         dex                 ;decr X
+016A : 27 03      beq $016F           ;branch =0 GOTO7
+016C : 7E 00 16   jmp $0016           ;jump to addr 0016
+;GOTO7
+016F : 39         rts                 ;return from sub
+;*************************************;
+;0170 end
+;*************************************;

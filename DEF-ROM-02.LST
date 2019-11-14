@@ -336,7 +336,7 @@ Relative
   FA43 39                  RTS             ;return subroutine
   FA44 7A 00 08            DEC >$0008      ;$FA44,Support,W vector?
   FA47 39                  RTS             ;return subroutine
-  FA48 7F 00 08            CLR >$0008      ;$FA48,Support?
+  FA48 7F 00 08            CLR >$0008      ;$FA48,PARAM7
   FA4B 97 11               STAA <$11       ;store coutdown value
   FA4D CE FD AA            LDX #$FDAA      ;start point
   FA50 A6 00               LDAA $00,X      ;$FA50
@@ -366,7 +366,7 @@ Relative
   FA7D 9C 0D               CPX <$0D        ;compare index reg
   FA7F 26 E8               BNE $FA69       ;
   FA81 7E FD 0E            JMP $FD0E       ;jump from here
-  FA84 86 03               LDAA #$03       ;$FA84,W vector
+  FA84 86 03               LDAA #$03       ;$FA84, PARAM8
   FA86 97 08               STAA <$08       ;init count?
   FA88 39                  RTS             ;return subroutine
   FA89 7A 00 08            DEC >$0008      ;$FA89, PARAM9
