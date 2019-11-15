@@ -501,7 +501,7 @@ Relative
   FB6A D7 13               STAB <$13       ;
   FB6C BD F8 3F            JSR $F83F       ;$FB6C
   FB6F 20 FB               BRA $FB6C       ;
-  FB71 96 07               LDAA <$07       ;W vector
+  FB71 96 07               LDAA <$07       ;PARAM13
   FB73 26 09               BNE $FB7E       ;
   FB75 7C 00 07            INC >$0007      ;
   FB78 86 0D               LDAA #$0D       ;
@@ -563,7 +563,7 @@ Relative
   FBE1 BD FD 1F            JSR CALCOS      ;
   FBE4 DF 1D               STX     <$1D    ;
   FBE6 39                  RTS             ;return subroutine
-  FBE7 96 13               LDAA <$13       ;
+  FBE7 96 13               LDAA <$13       ;SYNTH9
   FBE9 97 22               STAA <$22       ;
   FBEB DE 1B               LDX <$1B        ;$FBEB
   FBED DF 0D               STX <$0D        ;
@@ -597,7 +597,7 @@ Relative
   FC1B 01                  NOP             ;no operation
   FC1C 01                  NOP             ;
   FC1D 20 E1               BRA $FC00       ;
-  FC1F 96 15               LDAA <$15       ;
+  FC1F 96 15               LDAA <$15       ;PARAM14
   FC21 8D 64               BSR $FC87       ;branch to subrtn
   FC23 7A 00 22            DEC >$0022      ;
   FC26 26 C3               BNE $FBEB       ;
@@ -633,7 +633,7 @@ Relative
   FC5F 5D                  TSTB            ;
   FC60 26 03               BNE $FC65       ;
   FC62 39                  RTS             ;return subroutine
-  FC63 DF 1D               STX <$1D        ;$FC65
+  FC63 DF 1D               STX <$1D        ;$FC65 PARAM17
   FC65 96 15               LDAA <$15       ;
   FC67 27 08               BEQ $FC71       ;
   FC69 8D 0A               BSR $FC75       ;
@@ -641,7 +641,7 @@ Relative
   FC6D 8D 18               BSR $FC87       ;
   FC6F 7E FB E7            JMP $FBE7       ;$FC71
   FC72 39                  RTS             ;return subroutine
-  FC73 CE 00 24            LDX #$0024      ;$FC75
+  FC73 CE 00 24            LDX #$0024      ;$FC75 PARAM18
   FC76 DF 0F               STX <$0F        ;
   FC78 DE 18               LDX <$18        ;
   FC7A E6 00               LDAB $00,X      ;
@@ -650,7 +650,7 @@ Relative
   FC80 DE 0F               LDX <$0F        ;
   FC82 DF 1F               STX <$1F        ;
   FC84 39                  RTS             ;return subroutine
-  FC85 4D                  TSTA            ;test A
+  FC85 4D                  TSTA            ;test A PARAM19
   FC86 27 2D               BEQ $FCB5       ;
   FC88 DE 18               LDX <$18        ;
   FC8A DF 0D               STX <$0D        ;
