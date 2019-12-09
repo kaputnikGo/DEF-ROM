@@ -5,6 +5,7 @@
 ; using PIA addr 8000 (not 0400)
 ; mpu clock speed is default/low (quoted as 0.5 MHz), expecting ~894750 cycles per second
 ; working, constant 2 tone buzz, phasing at start, pitch param
+; this could prob be simplified...
 
 ;*************************************;
 ; Main loop scratch memory reserves
