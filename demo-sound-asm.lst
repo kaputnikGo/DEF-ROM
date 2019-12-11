@@ -140,7 +140,7 @@
 00B6 : B7 01 0E   staa X010E          ; store A in 010E (param1 waveform)
 00B9 : B6 80 06   ldaa X8006          ; load A with PIA2 B
 00BC : 43         coma                ; complement A
-00BD : B7 01 0F   staa X010F          ; store A in 010F (param2 waveform)
+00BD : B7 01 10   staa X0110          ; store A in 0110 (p3) (00 - 0F, 0001 1111, rev on board)
 00C0 : 39         rts                 ; return from subroutine
 ;*************************************;
 ; must end before 00C4, org 0100 for IC16,IC17
