@@ -1,5 +1,5 @@
 ; SYNTH1/PARAM1 CODE - 09 Dec 2019
-; hack for Heathkit ET-3400 Audio Setup - 2x PIA input params - testing
+; hack for Heathkit ET-3400 Audio Setup - 2x PIA input params
 ; user RAM = 197 + 256 bytes = 453
 ; addr 0000 - 00C4 and 0100 - 01FF
 ; using PIA1 addr 8000-8003 (DAC, param1)
