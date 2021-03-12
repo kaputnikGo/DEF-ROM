@@ -23,11 +23,11 @@
 ;*************************************;
 0011 : 8E 01 FF   lds #$01FF          ; load SP with 01FFh
 0014 : CE 80 00	  ldx #$8000          ; load X with 8000h, PIA1 (DAC) addr
-0017 : 6F 01		  clr	$01,x           ; clear(00) addr X + 01h (8001 PIA1 DDR port A) 
+0017 : 6F 01      clr	$01,x           ; clear(00) addr X + 01h (8001 PIA1 DDR port A) 
 0019 : 6F 03      clr $03,x           ; clear(00) addr X + 03h (8003 PIA1 DDR port B)
 001B : 6F 02      clr $02,x           ; clear(00) addr X + 02h (8002 PIA1 port B in)
 001D : 86 FF		  ldaa	#$FF          ; load A with FFh (1111 1111)
-001F : A7 00		  staa	$00,x         ; store A in addr X + 00h (8000 PIA1 port A out)
+001F : A7 00      staa	$00,x         ; store A in addr X + 00h (8000 PIA1 port A out)
 0021 : 86 3C		  ldaa	#$3C          ; load A with 3Ch(0011 1100)
 0023 : A7 01		  staa	$01,x         ; store A in addr X + 01h (8001 PIA1 port A)
 0025 : 86 37      ldaa  #$37          ; load A with 37h(0011 0111)
