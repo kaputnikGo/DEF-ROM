@@ -365,7 +365,7 @@ FA1D : BD FA F9		jsr	LFAF9     ;jump sub CALCOS
 FA20 : DF 1E		  stx	X001E
 FA22 : 39		      rts           ;return subroutine
 ;*************************************;
-;SYNTH3
+;SYNTH3 LFA23
 ;*************************************;
 FA23 : 96 24		  ldaa	X0024
 FA25 : 26 55		  bne	LFA7C     ;branch !=0 PRM72
@@ -522,7 +522,7 @@ FB03 : 97 0E		  staa	X000E
 FB05 : DE 0E		  ldx	X000E
 FB07 : 39		      rts           ;return subroutine
 ;*************************************;
-;SYNTH3
+;SYNTH7
 ;*************************************;
 FB08 : CE 00 E0		ldx	#$00E0
 ;LOOP15
@@ -744,7 +744,7 @@ FC54 : 8E 85
 ;*************************************;
 ; VWTABs
 ;*************************************;
-FC56 : FB	08                    ;SYNTH3
+FC56 : FB	08                    ;SYNTH7
 FC58 : F8 01                    ;RESET
 FC5A : F9 66                    ;PARAM2
 FC5C : F9 74                    ;PARAM3
