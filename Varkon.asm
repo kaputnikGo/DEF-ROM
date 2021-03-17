@@ -5,30 +5,28 @@
 				;		Version 1.40 (Oct 18 2003)
 				;
 				;	File:		varkon.716
-				;
 				;	Size:		2048 bytes
 				;	Checksum:	A694
 				;	CRC-32:		D13DB2BB
-				;
 				;	Date:		Tue Mar 16 17:02:20 2021
 				;
 				;	CPU:		Motorola 6800 (6800/6802/6808 family)
 				;
-				;
+				; UPDATED:: 17 Mar 2021
 				;
 					org	$F800
 				;
-F800 : 4A		      deca
+F800 : 4A		      deca          ;hmmm
 ;*************************************;
 ;RESET
 ;*************************************;
 F801 : 0F		      sei           ;set interrupt mask
 F802 : 8E 00 7F		lds	#$007F    ;load stack pointer with 007Fh (0000 0000 0111 1111)
 F805 : CE 00 7F		ldx	#$007F    ;load X with 007Fh (0000 0000 0111 1111)
-;LF808:
+;LOOP1
 F808 : 6F 00		  clr	$00,x
 F80A : 09		      dex
-F80B : 26 FB		  bne	LF808
+F80B : 26 FB		  bne	LF808     ;branch !=0 LOOP1
 F80D : CE 04 00		ldx	#$0400
 F810 : 6F 01		  clr	$01,x
 F812 : 6F 03		  clr	$03,x
@@ -43,33 +41,33 @@ F822 : A7 01		  staa	$01,x
 F824 : 97 00		  staa	X0000
 F826 : E7 02		  stab	$02,x
 F828 : 0E		      cli           ;clear interrupt
-;LF829:
-F829 : 20 FE		  bra	LF829     ;branch always to here
-;LF82B:
+;STDBY1:
+F829 : 20 FE		  bra	LF829     ;branch always to STDBY1
+;STDBY2:
 F82B : 3E		      wai           ;wait for interrupt
 ;*************************************;
 ;NMI
 ;*************************************;
-;LF82C:
 F82C : 0F		      sei           ;set interrupt mask
 F82D : 8E 00 7F		lds	#$007F    ;load stack pointer with 007Fh (0000 0000 0111 1111)
 F830 : CE FF FF		ldx	#$FFFF
 F833 : 4F		      clra
-;LF834:
+;LOOP2
 F834 : AB 00		  adda	$00,x
 F836 : 09		      dex
 F837 : 8C F8 00		cpx	#$F800
-F83A : 26 F8		  bne	LF834
+F83A : 26 F8		  bne	LF834     ;LOOP2
 F83C : A1 00		  cmpa	$00,x
-F83E : 26 EB		  bne	LF82B
-F840 : 8D 07		  bsr	LF849
-F842 : 8D 05		  bsr	LF849
+F83E : 26 EB		  bne	LF82B     ;branch !=0 STDBY2
+F840 : 8D 07		  bsr	LF849     ;branch sub PARAM12 
+F842 : 8D 05		  bsr	LF849     ;branch sub PARAM12
 F844 : BD FB 23		jsr	LFB23     ;jump sub SYNTH4
 F847 : 20 E3		  bra	LF82C     ;branch always NMI
-;
-;LF849:
+;*************************************;
+;PARAM12
+;*************************************;
 F849 : 86 00		  ldaa	#$00
-F84B : 7E FC 08		jmp	LFC08
+F84B : 7E FC 08		jmp	LFC08     ;jump PRM91
 ;*************************************;
 ;IRQ
 ;*************************************;
@@ -85,23 +83,23 @@ F85F : 5F		      clrb
 F860 : 81 16		  cmpa	#$16
 F862 : 26 02		  bne	LF866     ;branch !=0 IRQ2
 F864 : D7 0A		  stab	X000A
-;LF866: IRQ2
+;IRQ2
 F866 : 81 05		  cmpa	#$05
 F868 : 27 06		  beq	LF870     ;branch =0 IRQ3
 F86A : D7 08		  stab	X0008
 F86C : D7 09		  stab	X0009
 F86E : 20 02		  bra	LF872     ;branch always IRQ4
-;LF870: IRQ3
+;IRQ3
 F870 : D7 0A		  stab	X000A
-;LF872: IRQ4
+;IRQ4
 F872 : 81 1B		  cmpa	#$1B
 F874 : 2D 02		  blt	LF878     ;branch if <0 IRQ5
 F876 : D7 07		  stab	X0007
-;LF878: IRQ5
+;IRQ5
 F878 : 81 0B		  cmpa	#$0B
 F87A : 2F 02		  ble	LF87E     ;branch if <=0 IRQ6
 F87C : D7 03		  stab	X0003
-;LF87E: IRQ6
+;IRQ6
 F87E : 9B 03		  adda	X0003
 F880 : 0E		      cli
 F881 : CE FC 2A		ldx	#$FC2A    ;wavetable
@@ -118,40 +116,40 @@ F895 : BD FA F9		jsr	LFAF9     ;jump sub CALCOS
 F898 : EE 00		  ldx	$00,x
 F89A : AD 00		  jsr	$00,x			;INFO: index jump
 F89C : 20 08		  bra	LF8A6     ;branch always IRQ1
-;LF89E: IRQ8
+;IRQ8
 F89E : BD F9 03		jsr	LF903     ;jump sub SYNTH1
 F8A1 : 20 03		  bra	LF8A6     ;branch always IRQ1
-;LF8A3: IRQ7
-F8A3 : BD FC 08		jsr	LFC08
-;LF8A6: IRQ1
+;IRQ7
+F8A3 : BD FC 08		jsr	LFC08     ;jump sub PRM91
+;IRQ1
 F8A6 : 0E		      cli
 F8A7 : 96 07		  ldaa	X0007
-;LF8A9:
-F8A9 : 27 FE		  beq	LF8A9     ;branch if =0 here
+;STDBY3:
+F8A9 : 27 FE		  beq	LF8A9     ;branch if =0 here STDBY3
 F8AB : 96 03		  ldaa	X0003
-F8AD : 26 38		  bne	LF8E7
-F8AF : 8D 20		  bsr	LF8D1
-F8B1 : 8D 1E		  bsr	LF8D1
-F8B3 : 8D 1C		  bsr	LF8D1
+F8AD : 26 38		  bne	LF8E7     ;branch !=0 IRQ12
+F8AF : 8D 20		  bsr	LF8D1     ;branch sub IRQ11
+F8B1 : 8D 1E		  bsr	LF8D1     ;branch sub IRQ11
+F8B3 : 8D 1C		  bsr	LF8D1     ;branch sub IRQ11
 F8B5 : 96 04		  ldaa	X0004
 F8B7 : 81 0E		  cmpa	#$0E
-F8B9 : 2E 0E		  bgt	LF8C9     ;branch if >0
+F8B9 : 2E 0E		  bgt	LF8C9     ;branch if >0 IRQ9
 F8BB : 96 02		  ldaa	X0002
 F8BD : 81 2B		  cmpa	#$2B
-F8BF : 2E 02		  bgt	LF8C3     ;branch if >0
+F8BF : 2E 02		  bgt	LF8C3     ;branch if >0 IRQ8
 F8C1 : 86 36		  ldaa	#$36
-;LF8C3:
+;IRQ8
 F8C3 : 4A		      deca
 F8C4 : 97 02		  staa	X0002
 F8C6 : 8B E3		  adda	#$E3
 F8C8 : 4C		      inca
-;LF8C9:
+;IRQ9
 F8C9 : 8B FF		  adda	#$FF
 F8CB : 97 04		  staa	X0004
-;LF8CD:
-F8CD : 8D 02		  bsr	LF8D1
-F8CF : 20 FC		  bra	LF8CD     ;branch always
-;LF8D1:
+;IRQ10
+F8CD : 8D 02		  bsr	LF8D1     ;branch sub IRQ11
+F8CF : 20 FC		  bra	LF8CD     ;branch always IRQ10
+;IRQ11
 F8D1 : 86 06		  ldaa	#$06
 F8D3 : BD F9 B9		jsr	LF9B9     ;jump sub PARAM6
 F8D6 : CE 00 02		ldx	#$0002
@@ -161,15 +159,14 @@ F8DC : DF 1E		  stx	X001E
 F8DE : 96 04		  ldaa	X0004
 F8E0 : 97 18		  staa	X0018
 F8E2 : 80 24		  suba	#$24
-F8E4 : 7E FA 7C		jmp	LFA7C     ;jump
-;LF8E7:
+F8E4 : 7E FA 7C		jmp	LFA7C     ;jump PRM72
+;IRQ12
 F8E7 : 86 07		  ldaa	#$07
-F8E9 : BD FC 08		jsr	LFC08
-F8EC : 20 F9		  bra	LF8E7     ;branch always
+F8E9 : BD FC 08		jsr	LFC08     ;jump sub PRM91
+F8EC : 20 F9		  bra	LF8E7     ;branch always IRQ12
 ;*************************************;
 ;PARAM1
 ;*************************************;
-;LF8EE:
 F8EE : 16		      tab
 F8EF : 48		      asla
 F8F0 : 48		      asla
@@ -177,48 +174,46 @@ F8F1 : 48		      asla
 F8F2 : 1B		      aba
 F8F3 : CE 00 14		ldx	#$0014
 F8F6 : DF 10		  stx	X0010
-F8F8 : CE FC 6C		ldx	#$FC6C    ;wavetable
+F8F8 : CE FC 6C		ldx	#$FC6C    ;SAW wavetable
 F8FB : BD FA F9		jsr	LFAF9     ;jump sub CALCOS
 F8FE : C6 09		  ldab	#$09
-F900 : 7E F9 52		jmp	LF952     ;jump
+F900 : 7E F9 52		jmp	LF952     ;jump UTIL1
 ;*************************************;
 ;SYNTH1
 ;*************************************;
-;LF903:
-F903 : 8D E9		  bsr	LF8EE
+F903 : 8D E9		  bsr	LF8EE     ;branch sub PARAM1
 F905 : 96 1C		  ldaa	X001C
 F907 : B7 04 00		staa	X0400   ;DAC output SOUND
-;LF90A:
+;SYN11
 F90A : 96 14		  ldaa	X0014
 F90C : 97 1D		  staa	X001D
 F90E : 96 15		  ldaa	X0015
 F910 : 97 1E		  staa	X001E
-;LF912:
+;SYN12
 F912 : DE 19		  ldx	X0019
-;LF914:
+;LOOP3
 F914 : 96 1D		  ldaa	X001D
 F916 : 73 04 00		com	X0400     ;complement 1s DAC SOUND
-;LF919:
+;LOOP4
 F919 : 09		      dex
 F91A : 27 10		  beq	LF92C     ;branch =0 SYNTH2
 F91C : 4A		      deca
-F91D : 26 FA		  bne	LF919
+F91D : 26 FA		  bne	LF919     ;branch !=0 LOOP4
 F91F : 73 04 00		com	X0400     ;complement 1s DAC SOUND
 F922 : 96 1E		  ldaa	X001E
-;LF924:
+;LOOP5
 F924 : 09		      dex
 F925 : 27 05		  beq	LF92C     ;branch =0 SYNTH2
 F927 : 4A		      deca
-F928 : 26 FA		  bne	LF924
-F92A : 20 E8		  bra	LF914     ;branch always
+F928 : 26 FA		  bne	LF924     ;branch !=0 LOOP5
+F92A : 20 E8		  bra	LF914     ;branch always LOOP3
 ;*************************************;
 ;SYNTH2
 ;*************************************;
-;LF92C:
 F92C : B6 04 00		ldaa	X0400   ;load A with DAC 0400
-F92F : 2B 01		  bmi	LF932     ;branch if Minus
+F92F : 2B 01		  bmi	LF932     ;branch if Minus SYN21
 F931 : 43		      coma
-;LF932:
+;SYN21
 F932 : 8B 00		  adda	#$00
 F934 : B7 04 00		staa	X0400   ;DAC output SOUND
 F937 : 96 1D		  ldaa	X001D
@@ -228,20 +223,19 @@ F93D : 96 1E		  ldaa	X001E
 F93F : 9B 17		  adda	X0017
 F941 : 97 1E		  staa	X001E
 F943 : 91 18		  cmpa	X0018
-F945 : 26 CB		  bne	LF912
+F945 : 26 CB		  bne	LF912     ;branch !=0 SYN12
 F947 : 96 1B		  ldaa	X001B
-F949 : 27 06		  beq	LF951
+F949 : 27 06		  beq	LF951     ;branch =0 SYN22
 F94B : 9B 14		  adda	X0014
 F94D : 97 14		  staa	X0014
-F94F : 26 B9		  bne	LF90A     ;branch !=0 SYNTH1
-;LF951:
+F94F : 26 B9		  bne	LF90A     ;branch !=0 SYN11
+;SYN22
 F951 : 39		      rts           ;return subroutine
 ;*************************************;
 ;UTIL1
 ;*************************************;
-;LF952:
 F952 : 36		      psha
-;LF953:
+;LOOP6
 F953 : A6 00		  ldaa	$00,x
 F955 : DF 0E		  stx	X000E
 F957 : DE 10		  ldx	X0010
@@ -251,54 +245,50 @@ F95C : DF 10		  stx	X0010
 F95E : DE 0E		  ldx	X000E
 F960 : 08		      inx
 F961 : 5A		      decb
-F962 : 26 EF		  bne	LF953
+F962 : 26 EF		  bne	LF953     ;branch !=0 LOOP6
 F964 : 32		      pula
 F965 : 39		      rts           ;return subroutine
 ;*************************************;
-;PARAM2
+;PARAM2 called from VWTAB
 ;*************************************;
-;LF966
 F966 : 86 01		  ldaa	#$01
 F968 : 97 07		  staa	X0007
 F96A : 86 23		  ldaa	#$23
 F96C : 97 04		  staa	X0004
 F96E : 86 40		  ldaa	#$40
 F970 : 97 02		  staa	X0002
-;LF972:
-F972 : 20 FE		  bra	LF972     ;branch always to here
+;STDBY4
+F972 : 20 FE		  bra	LF972     ;branch always to here STDBY4
 ;*************************************;
-;PARAM3
+;PARAM3 called from VWTAB
 ;*************************************;
-;LF974
 F974 : 7A 00 08		dec	X0008
 F977 : 86 15		  ldaa	#$15
 F979 : 8D 3E		  bsr	LF9B9     ;branch sub PARAM6
 F97B : 96 08		  ldaa	X0008
-F97D : BD FA 7C		jsr	LFA7C
-;LF980:
-F980 : 20 FE		  bra	LF980     ;branch always to here
+F97D : BD FA 7C		jsr	LFA7C     ;jump sub PRM72
+;STDBY5
+F980 : 20 FE		  bra	LF980     ;branch always to here STDBY5
 ;*************************************;
-;PARAM4
+;PARAM4 called from VWTAB
 ;*************************************;
-;LF982:
 F982 : 96 09		  ldaa	X0009
-F984 : 26 08		  bne	LF98E
+F984 : 26 08		  bne	LF98E     ;branch !=0 PRM41
 F986 : 7C 00 09		inc	X0009
 F989 : 86 14		  ldaa	#$14
-F98B : 7E FC 08		jmp	LFC08     ;jump
-;LF98E:
+F98B : 7E FC 08		jmp	LFC08     ;jump PRM91
+;PRM41
 F98E : 4A		      deca
-F98F : 26 07		  bne	LF998
+F98F : 26 07		  bne	LF998     ;branch !=0 PRM42
 F991 : 86 02		  ldaa	#$02
 F993 : 97 09		  staa	X0009
-F995 : 7E FA 71		jmp	LFA71     ;jump
-;LF998:
+F995 : 7E FA 71		jmp	LFA71     ;jump PARAM7
+;PRM42
 F998 : 97 09		  staa	X0009
-F99A : 7E FA 23		jmp	LFA23     ;jump
+F99A : 7E FA 23		jmp	LFA23     ;jump SYNTH3
 ;*************************************;
 ;PARAM5
 ;*************************************;
-;LF99D:
 F99D : 7F 00 09		clr	X0009
 F9A0 : 86 FC		  ldaa	#$FC
 F9A2 : 9B 24		  adda	X0024
@@ -311,7 +301,7 @@ F9AE : 86 02		  ldaa	#$02
 F9B0 : 97 15		  staa	X0015
 F9B2 : 86 01		  ldaa	#$01
 F9B4 : 97 16		  staa	X0016
-F9B6 : 7E FA 7E		jmp	LFA7E     ;jump
+F9B6 : 7E FA 7E		jmp	LFA7E     ;jump PRM73
 ;*************************************;
 ;PARAM6
 ;*************************************;
@@ -319,9 +309,9 @@ F9B9 : CE FD D4		ldx	#$FDD4    ;wavetable
 F9BC : 48		      asla
 F9BD : 48		      asla
 F9BE : 48		      asla
-F9BF : 24 03		  bcc	LF9C4     ;branch if Carry clear
+F9BF : 24 03		  bcc	LF9C4     ;branch if Carry clear PRM61
 F9C1 : CE FE D4		ldx	#$FED4    ;wavetable
-;LF9C4:
+;PRM61
 F9C4 : BD FA F9		jsr	LFAF9     ;jump sub CALCOS
 F9C7 : A6 00		  ldaa	$00,x
 F9C9 : 16		      tab
@@ -343,21 +333,20 @@ F9DD : 84 0F		  anda	#$0F
 F9DF : 97 12		  staa	X0012
 F9E1 : DF 0C		  stx	X000C
 F9E3 : CE FC 90		ldx	#$FC90    ;wavetable
-;LF9E6:
+;LOOP7
 F9E6 : 7A 00 12		dec	X0012
-F9E9 : 2B 08		  bmi	LF9F3
+F9E9 : 2B 08		  bmi	LF9F3     ;branch if Minus PRM62
 F9EB : A6 00		  ldaa	$00,x
 F9ED : 4C		      inca
 F9EE : BD FA F9		jsr	LFAF9     ;jump sub CALCOS
-F9F1 : 20 F3		  bra	LF9E6     ;branch always
-;
-;LF9F3:
+F9F1 : 20 F3		  bra	LF9E6     ;branch always LOOP7
+;PRM62
 F9F3 : DF 19		  stx	X0019
-F9F5 : BD FA B8		jsr	LFAB8
+F9F5 : BD FA B8		jsr	LFAB8     ;jump sub PRM7B
 F9F8 : DE 0C		  ldx	X000C
 F9FA : A6 02		  ldaa	$02,x
 F9FC : 97 1B		  staa	X001B
-F9FE : BD FA CA		jsr	LFACA
+F9FE : BD FA CA		jsr	LFACA     ;jump sub PRM7C
 FA01 : DE 0C		  ldx	X000C
 FA03 : A6 03		  ldaa	$03,x
 FA05 : 97 17		  staa	X0017
@@ -378,39 +367,38 @@ FA22 : 39		      rts           ;return subroutine
 ;*************************************;
 ;SYNTH3
 ;*************************************;
-;LFA23:
 FA23 : 96 24		  ldaa	X0024
-FA25 : 26 55		  bne	LFA7C
-;LFA27:
+FA25 : 26 55		  bne	LFA7C     ;branch !=0 PRM72
+;SYN31
 FA27 : 96 14		  ldaa	X0014
 FA29 : 97 23		  staa	X0023
-'LFA2B:
+;SYN32
 FA2B : DE 1C		  ldx	X001C
 FA2D : DF 0E		  stx	X000E
-;LFA2F:
+;LOOP8
 FA2F : DE 0E		  ldx	X000E
 FA31 : A6 00		  ldaa	$00,x
 FA33 : 9B 24		  adda	X0024
 FA35 : 97 22		  staa	X0022
 FA37 : 9C 1E		  cpx	X001E
-FA39 : 27 26		  beq	LFA61
+FA39 : 27 26		  beq	LFA61     ;branch =0 PARAM7
 FA3B : D6 15		  ldab	X0015
 FA3D : 08		      inx
 FA3E : DF 0E		  stx	X000E
-;LFA40:
+;LOOP9
 FA40 : CE 00 25		ldx	#$0025
-;LFA43:
+;LOOP10
 FA43 : 96 22		  ldaa	X0022
-;LFA45:
+;LOOP11
 FA45 : 4A		      deca
-FA46 : 26 FD		  bne	LFA45
+FA46 : 26 FD		  bne	LFA45     ;branch !=0 LOOP11
 FA48 : A6 00		  ldaa	$00,x
 FA4A : B7 04 00		staa	X0400   ;DAC output SOUND
 FA4D : 08		      inx
 FA4E : 9C 20		  cpx	X0020
-FA50 : 26 F1		  bne	LFA43
+FA50 : 26 F1		  bne	LFA43     ;branch !=0 LOOP10
 FA52 : 5A		      decb
-FA53 : 27 DA		  beq	LFA2F
+FA53 : 27 DA		  beq	LFA2F     ;branch =0 LOOP8
 FA55 : 08		      inx
 FA56 : 09		      dex
 FA57 : 08		      inx
@@ -421,90 +409,84 @@ FA5B : 08		      inx
 FA5C : 09		      dex
 FA5D : 01		      nop
 FA5E : 01		      nop
-FA5F : 20 DF		  bra	LFA40     ;branch always
+FA5F : 20 DF		  bra	LFA40     ;branch always LOOP9
 ;*************************************;
-;
+;PARAM7
 ;*************************************;
-;LFA61:
 FA61 : 96 16		  ldaa	X0016
-FA63 : 8D 65		  bsr	LFACA
+FA63 : 8D 65		  bsr	LFACA     ;branch sub PRM7C
 FA65 : 7A 00 23		dec	X0023
-FA68 : 26 C1		  bne	LFA2B
+FA68 : 26 C1		  bne	LFA2B     ;branch !=0 SYN32
 FA6A : 96 09		  ldaa	X0009
-FA6C : 27 03		  beq	LFA71
-FA6E : 7E F9 9D		jmp	LF99D     ;jump
-;LFA71:
+FA6C : 27 03		  beq	LFA71     ;branch =0 PRM71
+FA6E : 7E F9 9D		jmp	LF99D     ;jump PARAM5
+;PRM71
 FA71 : 96 17		  ldaa	X0017
-FA73 : 27 42		  beq	LFAB7
+FA73 : 27 42		  beq	LFAB7     ;branch =0 PRM7A
 FA75 : 7A 00 18		dec	X0018
-FA78 : 27 3D		  beq	LFAB7
+FA78 : 27 3D		  beq	LFAB7     ;branch =0 PRM7A
 FA7A : 9B 24		  adda	X0024
-;LFA7C:
+;PRM72
 FA7C : 97 24		  staa	X0024
-;LFA7E:
+;PRM73
 FA7E : DE 1C		  ldx	X001C
 FA80 : 5F		      clrb
-;LFA81:
+;LOOP12
 FA81 : 96 24		  ldaa	X0024
 FA83 : 7D 00 17		tst	X0017
-FA86 : 2B 06		  bmi	LFA8E
+FA86 : 2B 06		  bmi	LFA8E     ;branch if Minus PRM74
 FA88 : AB 00		  adda	$00,x
-FA8A : 25 08		  bcs	LFA94
-FA8C : 20 0B		  bra	LFA99     ;jump
-;
-;LFA8E:
+FA8A : 25 08		  bcs	LFA94     ;branch if Carry set PRM75
+FA8C : 20 0B		  bra	LFA99     ;branch always PRM76
+;PRM74
 FA8E : AB 00		  adda	$00,x
-FA90 : 27 02		  beq	LFA94
-FA92 : 25 05		  bcs	LFA99
-;LFA94:
+FA90 : 27 02		  beq	LFA94     ;branch =0 PRM75
+FA92 : 25 05		  bcs	LFA99     ;branch if Carry set PRM76
+;PRM75
 FA94 : 5D		      tstb
-FA95 : 27 08		  beq	LFA9F
-FA97 : 20 0F		  bra	LFAA8     ;jump
-;
-;LFA99:
+FA95 : 27 08		  beq	LFA9F     ;branch =0 PRM77
+FA97 : 20 0F		  bra	LFAA8     ;branch always PRM78
+;PRM76
 FA99 : 5D		      tstb
-FA9A : 26 03		  bne	LFA9F
+FA9A : 26 03		  bne	LFA9F     ;branch !=0 PRM77
 FA9C : DF 1C		  stx	X001C
 FA9E : 5C		      incb
-;LFA9F:
+;PRM77
 FA9F : 08		      inx
 FAA0 : 9C 1E		  cpx	X001E
-FAA2 : 26 DD		  bne	LFA81
+FAA2 : 26 DD		  bne	LFA81     ;branch !=0 LOOP12
 FAA4 : 5D		      tstb
-FAA5 : 26 01		  bne	LFAA8
+FAA5 : 26 01		  bne	LFAA8     ;branch !=0 PRM78
 FAA7 : 39		      rts           ;return subroutine
-;
-;LFAA8:
+;PRM78
 FAA8 : DF 1E		  stx	X001E
 FAAA : 96 16		  ldaa	X0016
-FAAC : 27 06		  beq	LFAB4
-FAAE : 8D 08		  bsr	LFAB8
+FAAC : 27 06		  beq	LFAB4     ;branch =0 PRM79
+FAAE : 8D 08		  bsr	LFAB8     ;branch sub PRM7B
 FAB0 : 96 1B		  ldaa	X001B
-FAB2 : 8D 16		  bsr	LFACA
-;LFAB4:
-FAB4 : 7E FA 27		jmp	LFA27     ;jump
-;LFAB7:
+FAB2 : 8D 16		  bsr	LFACA     ;branch sub PRM7C
+;PRM79
+FAB4 : 7E FA 27		jmp	LFA27     ;jump SYN31
+;PRM7A
 FAB7 : 39		      rts           ;return subroutine
-;
-;LFAB8:
+;PRM7B
 FAB8 : CE 00 25		ldx	#$0025
 FABB : DF 10		  stx	X0010
 FABD : DE 19		  ldx	X0019
 FABF : E6 00		  ldab	$00,x
 FAC1 : 08		      inx
-FAC2 : BD F9 52		jsr	LF952
+FAC2 : BD F9 52		jsr	LF952     ;jump sub UTIL1
 FAC5 : DE 10		  ldx	X0010
 FAC7 : DF 20		  stx	X0020
 FAC9 : 39		      rts           ;return subroutine
-;
-;LFACA:
+;PRM7C
 FACA : 4D		      tsta
-FACB : 27 2B		  beq	LFAF8
+FACB : 27 2B		  beq	LFAF8     ;branch =0 PRM7D
 FACD : DE 19		  ldx	X0019
 FACF : DF 0E		  stx	X000E
 FAD1 : CE 00 25		ldx	#$0025
 FAD4 : 97 13		  staa	X0013
-;LFAD6:
+;LOOP13
 FAD6 : DF 10		  stx	X0010
 FAD8 : DE 0E		  ldx	X000E
 FADA : D6 13		  ldab	X0013
@@ -518,20 +500,19 @@ FAE4 : 08		      inx
 FAE5 : DF 0E		  stx	X000E
 FAE7 : DE 10		  ldx	X0010
 FAE9 : A6 00		  ldaa	$00,x
-;LFAEB:
+;LOOP14
 FAEB : 10		      sba
 FAEC : 7A 00 12		dec	X0012
-FAEF : 26 FA		  bne	LFAEB
+FAEF : 26 FA		  bne	LFAEB     ;branch !=0 LOOP14
 FAF1 : A7 00		  staa	$00,x
 FAF3 : 08		      inx
 FAF4 : 9C 20		  cpx	X0020
-FAF6 : 26 DE		  bne	LFAD6
-;LFAF8:
+FAF6 : 26 DE		  bne	LFAD6     ;branch !=0 LOOP13
+;PRM7D
 FAF8 : 39		      rts           ;return subroutine
 ;*************************************;
 ; CALCOS
 ;*************************************;
-;LFAF9:
 FAF9 : DF 0E		  stx	X000E
 FAFB : 9B 0F		  adda	X000F
 FAFD : 97 0F		  staa	X000F
@@ -544,25 +525,24 @@ FB07 : 39		      rts           ;return subroutine
 ;SYNTH3
 ;*************************************;
 FB08 : CE 00 E0		ldx	#$00E0
-;LFB0B:
+;LOOP15
 FB0B : 86 20		  ldaa	#$20
-FB0D : 8D EA		  bsr	LFAF9
-;LFB0F:
+FB0D : 8D EA		  bsr	LFAF9     ;branch sub CALCOS
+;LOOP16
 FB0F : 09		      dex
-FB10 : 26 FD		  bne	LFB0F
+FB10 : 26 FD		  bne	LFB0F     ;branch !=0 LOOP16
 FB12 : 7F 04 00		clr	X0400     ;clr (00) DAC output SOUND
-;LFB15:
+;LOOP17
 FB15 : 5A		      decb
-FB16 : 26 FD		  bne	LFB15
+FB16 : 26 FD		  bne	LFB15     ;branch !=0 LOOP17
 FB18 : 73 04 00		com	X0400     ;complements 1s DAC output SOUND
 FB1B : DE 0E		  ldx	X000E
 FB1D : 8C 10 00		cpx	#$1000
-FB20 : 26 E9		  bne	LFB0B
+FB20 : 26 E9		  bne	LFB0B     ;branch !=0 LOOP15
 FB22 : 39		      rts           ;return subroutine
 ;*************************************;
 ;SYNTH4
 ;*************************************;
-;LFB23:
 FB23 : 86 01		  ldaa	#$01
 FB25 : 97 16		  staa	X0016
 FB27 : C6 03		  ldab	#$03
@@ -570,9 +550,9 @@ FB29 : 97 15		  staa	X0015
 FB2B : 86 FF		  ldaa	#$FF
 FB2D : B7 04 00		staa	X0400   ;DAC output SOUND
 FB30 : D7 14		  stab	X0014
-;LFB32:
+;LOOP18
 FB32 : D6 14		  ldab	X0014
-;LFB34:
+;LOOP19
 FB34 : 96 01		  ldaa	X0001
 FB36 : 44		      lsra
 FB37 : 44		      lsra
@@ -581,27 +561,31 @@ FB39 : 98 01		  eora	X0001   ;exclusive OR A
 FB3B : 44		      lsra
 FB3C : 76 00 00		ror	X0000
 FB3F : 76 00 01		ror	X0001
-FB42 : 24 03		  bcc	LFB47
+FB42 : 24 03		  bcc	LFB47     ;branch Carry clear SYN41
 FB44 : 73 04 00		com	X0400     ;complements 1s DAC output SOUND
-;LFB47:
+;SYN41
 FB47 : 96 15		  ldaa	X0015
-;LFB49:
+;LOOP20
 FB49 : 4A		      deca
-FB4A : 26 FD		  bne	LFB49
+FB4A : 26 FD		  bne	LFB49     ;branch !=0 LOOP20
 FB4C : 5A		      decb
-FB4D : 26 E5		  bne	LFB34
+FB4D : 26 E5		  bne	LFB34     ;branch !=0 LOOP19
 FB4F : 96 15		  ldaa	X0015
 FB51 : 9B 16		  adda	X0016
 FB53 : 97 15		  staa	X0015
-FB55 : 26 DB		  bne	LFB32
+FB55 : 26 DB		  bne	LFB32     ;branch !=0 LOOP18
+;synth4 can PC down to synth6 from here at FB55=0 ...
+;SYN42
 FB57 : 01		      nop
 FB58 : 01		      nop
 FB59 : 01		      nop
 FB5A : 40		      nega          ;negate A
 FB5B : 10		      sba           ;A=A-B
 FB5C : 00		                    ;db 00 (illegal)
-;LFB5D: called from VWTAB and a jump
-FB5D : CE FB 57		ldx	#$FB57
+;*************************************;
+;SYNTH6 called from VWTAB, PARAM11
+;*************************************;
+FB5D : CE FB 57		ldx	#$FB57    ;load IX with SYN42 (01 01)
 FB60 : A6 00		  ldaa	$00,x
 FB62 : 97 1B		  staa	X001B
 FB64 : A6 01		  ldaa	$01,x
@@ -613,10 +597,10 @@ FB6E : 97 1A		  staa	X001A
 FB70 : D7 14		  stab	X0014
 FB72 : DF 18		  stx	X0018
 FB74 : 7F 00 16		clr	X0016
-;LFB77:
+;SYN61
 FB77 : DE 18		  ldx	X0018
 FB79 : B6 04 00		ldaa	X0400   ;load A with DAC 0400
-;LFB7C:
+;SYN62
 FB7C : 16		      tab
 FB7D : 54		      lsrb
 FB7E : 54		      lsrb
@@ -627,43 +611,42 @@ FB83 : 76 00 00		ror	X0000
 FB86 : 76 00 01		ror	X0001
 FB89 : D6 14		  ldab	X0014
 FB8B : 7D 00 1B		tst	X001B
-FB8E : 27 04		  beq	LFB94
+FB8E : 27 04		  beq	LFB94     ;branch =0 SYN63
 FB90 : D4 00		  andb	X0000
 FB92 : DB 17		  addb	X0017
-;LFB94:
+;SYN63
 FB94 : D7 15		  stab	X0015
 FB96 : D6 16		  ldab	X0016
 FB98 : 91 01		  cmpa	X0001
-FB9A : 22 12		  bhi	LFBAE
-;LFB9C:
+FB9A : 22 12		  bhi	LFBAE     ;branch higher SYNTH5
+;LOOP21
 FB9C : 09		      dex
-FB9D : 27 26		  beq	LFBC5
+FB9D : 27 26		  beq	LFBC5     ;branch =0 SYN52
 FB9F : B7 04 00		staa	X0400   ;DAC output SOUND
 FBA2 : DB 16		  addb	X0016
 FBA4 : 99 15		  adca	X0015
-FBA6 : 25 16		  bcs	LFBBE
+FBA6 : 25 16		  bcs	LFBBE     ;branch Carry set SYN51
 FBA8 : 91 01		  cmpa	X0001
-FBAA : 23 F0		  bls	LFB9C
-FBAC : 20 10		  bra	LFBBE     ;branch always
+FBAA : 23 F0		  bls	LFB9C     ;branch <= LOOP21
+FBAC : 20 10		  bra	LFBBE     ;branch always SYN51
 ;*************************************;
-;SYNTH5
+;SYNTH5 (prob continuation of SYNTH6, an extention of SYNTH4)
 ;*************************************;
-;LFBAE:
 FBAE : 09		      dex
-FBAF : 27 14		  beq	LFBC5
+FBAF : 27 14		  beq	LFBC5     ;branch =0 SYN52
 FBB1 : B7 04 00		staa	X0400   ;DAC output SOUND
 FBB4 : D0 16		  subb	X0016
 FBB6 : 92 15		  sbca	X0015
-FBB8 : 25 04		  bcs	LFBBE
+FBB8 : 25 04		  bcs	LFBBE     ;branch Carry set SYN51
 FBBA : 91 01		  cmpa	X0001
-FBBC : 22 F0		  bhi	LFBAE
-;LFBBE:
+FBBC : 22 F0		  bhi	LFBAE     ;branch higher SYNTH5
+;SYN51
 FBBE : 96 01		  ldaa	X0001
 FBC0 : B7 04 00		staa	X0400   ;DAC output SOUND
-FBC3 : 20 B7		  bra	LFB7C     ;branch always SYNTH4
-;LFBC5:
+FBC3 : 20 B7		  bra	LFB7C     ;branch always SYN62
+;SYN52
 FBC5 : D6 1A		  ldab	X001A
-FBC7 : 27 B3		  beq	LFB7C
+FBC7 : 27 B3		  beq	LFB7C     ;branch =0 SYN62
 FBC9 : 96 14		  ldaa	X0014
 FBCB : D6 16		  ldab	X0016
 FBCD : 44		      lsra
@@ -679,118 +662,112 @@ FBD7 : DB 16		  addb	X0016
 FBD9 : 99 14		  adca	X0014
 FBDB : D7 16		  stab	X0016
 FBDD : 97 14		  staa	X0014
-FBDF : 26 96		  bne	LFB77
+FBDF : 26 96		  bne	LFB77     ;branch !=0 SYN61
 FBE1 : C1 07		  cmpb	#$07
-FBE3 : 26 92		  bne	LFB77
+FBE3 : 26 92		  bne	LFB77     ;branch !=0 SYN61
 FBE5 : 39		      rts           ;return subroutine
 ;*************************************;
-;called from VWTAB
+;PARAM8 called from VWTAB
 ;*************************************;
-;LFBE6
 FBE6 : CE 3D 09		ldx	#$3D09
-;LFBE9:
+;LOOP22
 FBE9 : 09		      dex
-FBEA : 26 FD		  bne	LFBE9
+FBEA : 26 FD		  bne	LFBE9     ;branch !=0 LOOP22
 FBEC : 86 16		  ldaa	#$16
-FBEE : 8D 18		  bsr	LFC08
+FBEE : 8D 18		  bsr	LFC08     ;branch sub PRM91
 FBF0 : 86 0D		  ldaa	#$0D
 FBF2 : 97 14		  staa	X0014
 FBF4 : 86 01		  ldaa	#$01
 FBF6 : 97 16		  staa	X0016
 FBF8 : 7F 00 17		clr	X0017
-FBFB : 7E FA 27		jmp	LFA27     ;jump SYNTH3
-;LFBFE called from VWTAB
+FBFB : 7E FA 27		jmp	LFA27     ;jump SYN31
+;*************************************;
+;PARAM9 called from VWTAB
+;*************************************;
 FBFE : 86 11		  ldaa	#$11
-FC00 : 8D 06		  bsr	LFC08
+FC00 : 8D 06		  bsr	LFC08     ;branch sub PRM91
 FC02 : 86 11		  ldaa	#$11
-FC04 : 8D 02		  bsr	LFC08
+FC04 : 8D 02		  bsr	LFC08     ;branch sub PRM91
 FC06 : 86 12		  ldaa	#$12
-;LFC08:
+;PRM91
 FC08 : BD F9 B9		jsr	LF9B9     ;jump sub PARAM6
 FC0B : 7E FA 23		jmp	LFA23     ;jump SYNTH3
 ;*************************************;
-;called from VWTAB
+;PARAM10 called from VWTAB
 ;*************************************;
-;LFC0E:
 FC0E : 86 03		  ldaa	#$03
 FC10 : BD F9 B9		jsr	LF9B9     ;jump sub PARAM6
 FC13 : 96 0A		  ldaa	X000A
 FC15 : 8B 02		  adda	#$02
-FC17 : 2A 02		  bpl	LFC1B
+FC17 : 2A 02		  bpl	LFC1B     ;branch if plus PRM101
 FC19 : 86 40		  ldaa	#$40
-;LFC1B:
+;PRM101:
 FC1B : 97 0A		  staa	X000A
 FC1D : 40		      nega
 FC1E : 80 10		  suba	#$10
-FC20 : 7E FA 7C		jmp	LFA7C     ;jump
+FC20 : 7E FA 7C		jmp	LFA7C     ;jump PRM72
 ;*************************************;
-;called from VWTAB
+;PARAM11 called from VWTAB
 ;*************************************;
-;LFC23
 FC23 : 86 1F		  ldaa	#$1F
 FC25 : 97 03		  staa	X0003
-FC27 : 7E FB 5D		jmp	LFB5D     ;jump
+FC27 : 7E FB 5D		jmp	LFB5D     ;jump SYNTH6
 ;*************************************;
-; wavetables
+; wavetables (x44)
 ;*************************************;
 ;LFC6C IX called from F881 IRQ6
 FC2A : 00	07
-;
-FC2C : 8A 88		  oraa	#$88
-FC2E : 84 03		  anda	#$03
-FC30 : 8D 80		  bsr	LFBB2
-FC32 : 9D		                    ;db	$9D (illegal)
-FC33 : 9E 08		  lds	X0008
-FC35 : 8E 85 81		lds	#$8581
-FC38 : 82 06		  sbca	#$06
-FC3A : 80 90		  suba	#$90
-FC3C : 98 9B		  eora	X009B
-FC3E : 0A		      clv           ;clear oVerflow
-FC3F : 40		      nega
-FC40 : 43		      coma
-FC41 : 09		      dex
-FC42 : 01		      nop
-FC43 : 02 8F 41 42              ;db	$02, $8F, $41, $42 (illegal)
-FC47 : 05		                    ;db	$05 (illegal)
-FC48 : 97 00		  staa	X0000
-FC4A : 80 8C		  suba	#$8C
-FC4C : 9A 89		  oraa	X0089
-FC4E : 04		                    ;db	$04 (illegal)
-FC4F : 8D 9C		  bsr	LFBED
-FC51 : 8B 99		  adda	#$99
-FC53 : 08		      inx
+FC2C : 8A 88
+FC2E : 84 03
+FC30 : 8D 80
+FC32 : 9D	
+FC33 : 9E 08
+FC35 : 8E 85 81	
+FC38 : 82 06	
+FC3A : 80 90
+FC3C : 98 9B
+FC3E : 0A	
+FC3F : 40
+FC40 : 43
+FC41 : 09
+FC42 : 01
+FC43 : 02 8F 41 42
+FC47 : 05	
+FC48 : 97 00
+FC4A : 80 8C
+FC4C : 9A 89
+FC4E : 04	
+FC4F : 8D 9C
+FC51 : 8B 99
+FC53 : 08
 FC54 : 8E 85 
 ;*************************************;
-; VWTABs ?
+; VWTABs
 ;*************************************;
 FC56 : FB	08                    ;SYNTH3
 FC58 : F8 01                    ;RESET
 FC5A : F9 66                    ;PARAM2
 FC5C : F9 74                    ;PARAM3
 FC5E : F9 82                    ;PARAM4
-FC60 : FB E6                    ;LFBE6
-FC62 : FB FE                    ;LFBFE
-FC64 : FC 0E                    ;LFC0E
+FC60 : FB E6                    ;PARAM8
+FC62 : FB FE                    ;PARAM9
+FC64 : FC 0E                    ;PARAM10
 FC66 : FB 23                    ;SYNTH4
-FC68 : FB 5D                    ;LFB5D
-FC6A : FC	23                    ;LFC23
+FC68 : FB 5D                    ;SYNTH6
+FC6A : FC	23                    ;PARAM11
 ;*************************************;
 ; VARI VECTORS square wave pulse width modulator
 ; form constant byte, pseudo-op, single byte or word into object
 ;*************************************;
-;LFC6C IX called from F8F8
+;LFC6C IX called from PARAM1
 FC6C : 40 01 00	10 E1 00 80 FF FF     ;SAW
 FC75 : 00 FF 08 FF 68 04 80 00 FF     ;CSCALE
 FC7E : 28 81 00 FC 01 02 00 FC FF     ;QUASAR
 FC87 : 05 FF C0 FF 00 06 B0 00 FF     ; 
-;wavetable IX called from F9E3, poss PARAM
-FC90 : 08 7F D9 FF D9 7F 24 00 24 0A  ;
-FC9A : D9 D9
-FC9C : D9 25
-FC9E : 25 FF
-FCA0 : FF FF 00	
-FCA3 : 00
-
+;LFC90 IX called from PARAM6
+FC90 : 08 7F D9 FF D9 7F 24 00 24     ;
+FC99 : 0A D9 D9 D9 25 25 FF FF FF     ;
+FCA2 : 00 00
 FCA4 : 08
 FCA5 : 00
 FCA6 : 40
@@ -805,234 +782,171 @@ FCB6 : 7F 4E 24
 FCB9 : 09
 FCBA : 00
 FCBB : 09
-FCBC : 24 4E		"$N"		bcc	LFD0C
-				;
-FCBE : 3C CC		"< "		db	$3C, $CC
-				;
-FCC0 : E8 F9		"  "		eorb	$F9,x
-FCC2 : FF F9 E8		"   "		stx	XF9E8
-				;
-FCC5 : CF		" "		db	$CF
-				;
-FCC6 : B4 9A 84		"   "		anda	X9A84
-FCC9 : 77 73 77		"wsw"		asr	X7377
-				;
-FCCC : 83 93 A3		"   "		db	$83, $93, $A3
-				;
-FCCF : AF B5		"  "		sts	$B5,x
-				;
-FCD1 : B3		" "		db	$B3
-				;
-FCD2 : AA 9B		"  "		oraa	$9B,x
-FCD4 : 88 76		" v"		eora	#$76
-FCD6 : 67 61		"ga"		asr	$61,x
-FCD8 : 63 6E		"cn"		com	$6E,x
-FCDA : 81 9A		"  "		cmpa	#$9A
-FCDC : B4 CC DC		"   "		anda	XCCDC
-FCDF : E2 DC		"  "		sbcb	$DC,x
-FCE1 : CB AF		"  "		addb	#$AF
-FCE3 : 8D 69		" i"		bsr	LFD4E
-FCE5 : 46		"F"		rora
-FCE6				XFCE6:
-FCE6 : 29 15		") "		bvs	LFCFD
-FCE8 : 0C		" "		clc
-FCE9 : 0C		" "		clc
-				;
-FCEA : 15		" "		db	$15
-				;
-FCEB : 23 32		"#2"		bls	LFD1F
-FCED : 3F		"?"		swi
-FCEE : 47		"G"		asra
-FCEF : 48		"H"		asla
-FCF0 : 43		"C"		coma
-FCF1 : 39		"9"		rts
-				;
-FCF2 : 2D 22		"-""		blt	LFD16
-				;
-FCF4 : 1C 1E		"  "		db	$1C, $1E
-				;
-FCF6 : 2A 3F		"*?"		bpl	LFD37
-FCF8 : 5F		"_"		clrb
-				;
-FCF9 : 83		" "		db	$83
-				;
-FCFA : A8 24		" $"		eora	$24,x
-FCFC : 7F BA E6		"   "		clr	XBAE6
-				;
-FCFF : FC		" "		db	$FC
-				;
-FD00 : F6 D7 AA		"   "		ldab	XD7AA
-				;
-FD03 : 7B		"{"		db	$7B
-				;
-FD04 : 59		"Y"		rolb
-FD05 : 4C		"L"		inca
-FD06 : 59		"Y"		rolb
-				;
-FD07 : 7B		"{"		db	$7B
-				;
-FD08 : AA D7		"  "		oraa	$D7,x
-FD0A : F6 FC E6		"   "		ldab	XFCE6
-FD0D : BA 7F 43		"  C"		oraa	X7F43
-FD10 : 17		" "		tba
-FD11 : 01		" "		nop
-FD12 : 07		" "		tpa
-FD13 : 26 53		"&S"		bne	LFD68
-FD15 : 82 A4		"  "		sbca	#$A4
-FD17 : B1 A4 82		"   "		cmpa	XA482
-FD1A : 53		"S"		comb
-FD1B : 26 07		"& "		bne	LFD24
-FD1D : 01		" "		nop
-FD1E : 17		" "		tba
-FD1F				LFD1F:
-FD1F : 43		"C"		coma
-FD20 : 06		" "		tap
-FD21 : 7F FF FF		"   "		clr	XFFFF
-FD24				LFD24:
-FD24 : AA 55		" U"		oraa	$55,x
-				;
-FD26 : 00		" "		db	$00
-				;
-FD27 : 10		" "		sba
-FD28 : FF FF FF		"   "		stx	XFFFF
-FD2B : FF 00 00		"   "		stx	X0000
-				;
-FD2E : 00 00		"  "		db	$00, $00
-				;
-FD30 : FF FF FF		"   "		stx	XFFFF
-FD33 : FF 00 00		"   "		stx	X0000
-				;
-FD36 : 00 00		"  "		db	$00, $00
-				;
-FD38 : 10		" "		sba
-				;
-FD39 : 00		" "		db	$00
-				;
-FD3A : F4 00 E8		"   "		andb	X00E8
-				;
-FD3D : 00 DC 00		"   "		db	$00, $DC, $00
-				;
-FD40 : E2 00		"  "		sbcb	$00,x
-				;
-FD42 : DC 00		"  "		db	$DC, $00
-				;
-FD44 : E8 00		"  "		eorb	$00,x
-FD46 : F4 00 00		"   "		andb	X0000
-FD49 : 48		"H"		asla
-FD4A : 8A 95		"  "		oraa	#$95
-FD4C : A0 AB		"  "		suba	$AB,x
-FD4E				LFD4E:
-FD4E : B5 BF C8		"   "		bita	XBFC8
-FD51 : D1 DA		"  "		cmpb	X00DA
-FD53 : E1 E8		"  "		cmpb	$E8,x
-FD55 : EE F3		"  "		ldx	$F3,x
-FD57 : F7 FB FD		"   "		stab	XFBFD
-FD5A : FE FF FE		"   "		ldx	XFFFE
-				;
-FD5D : FD		" "		db	$FD
-				;
-FD5E : FB F7 F3		"   "		addb	XF7F3
-FD61 : EE E8		"  "		ldx	$E8,x
-FD63 : E1 DA		"  "		cmpb	$DA,x
-FD65 : D1 C8		"  "		cmpb	X00C8
-FD67 : BF B5 AB		"   "		sts	XB5AB
-FD6A : A0 95		"  "		suba	$95,x
-FD6C : 8A 7F		"  "		oraa	#$7F
-				;
-FD6E : 75		"u"		db	$75
-				;
-FD6F : 6A 5F		"j_"		dec	$5F,x
-FD71 : 54		"T"		lsrb
-FD72 : 4A		"J"		deca
-FD73 : 40		"@"		nega
-FD74 : 37		"7"		pshb
-FD75 : 2E 25		".%"		bgt	LFD9C
-				;
-FD77 : 1E		" "		db	$1E
-				;
-FD78 : 17		" "		tba
-FD79 : 11		" "		cba
-FD7A : 0C		" "		clc
-FD7B : 08		" "		inx
-				;
-FD7C : 04 02		"  "		db	$04, $02
-				;
-FD7E : 01		" "		nop
-				;
-FD7F : 00		" "		db	$00
-				;
-FD80 : 01		" "		nop
-				;
-FD81 : 02 04		"  "		db	$02, $04
-				;
-FD83 : 08		" "		inx
-FD84 : 0C		" "		clc
-FD85 : 11		" "		cba
-FD86 : 17		" "		tba
-				;
-FD87 : 1E		" "		db	$1E
-				;
-FD88 : 25 2E		"%."		bcs	LFDB8
-FD8A : 37		"7"		pshb
-FD8B : 40		"@"		nega
-FD8C : 4A		"J"		deca
-FD8D : 54		"T"		lsrb
-FD8E : 5F		"_"		clrb
-FD8F : 6A 75		"ju"		dec	$75,x
-FD91 : 7F 13 8A		"   "		clr	X138A
-FD94 : AB D1		"  "		adda	$D1,x
-FD96 : EE FD		"  "		ldx	$FD,x
-				;
-FD98 : FD		" "		db	$FD
-				;
-FD99 : EE D1		"  "		ldx	$D1,x
-FD9B : AB 7F		"  "		adda	$7F,x
-FD9D : 54		"T"		lsrb
-FD9E : 2E 11		". "		bgt	LFDB1
-				;
-FDA0 : 02 02		"  "		db	$02, $02
-				;
-FDA2 : 11		" "		cba
-FDA3 : 2E 54		".T"		bgt	LFDF9
-FDA5 : 7F 0B 00		"   "		clr	X0B00
-FDA8 : FF 00 FF		"   "		stx	X00FF
-				;
-FDAB : 00		" "		db	$00
-				;
-FDAC : 2B 55		"+U"		bmi	LFE03
-FDAE : 80 AA		"  "		suba	#$AA
-FDB0 : D5 FF		"  "		bitb	X00FF
-FDB2 : 0A		" "		clv
-				;
-FDB3 : 00		" "		db	$00
-				;
-FDB4 : 64 96		"d "		lsr	$96,x
-FDB6 : C8 00		"  "		eorb	#$00
-FDB8				LFDB8:
-FDB8 : 32		"2"		pula
-FDB9 : 64 C8		"d "		lsr	$C8,x
-FDBB : FA 00 00		"   "		orab	X0000
-				;
-FDBE : 05		" "		db	$05
-				;
-FDBF : 7F FF CE		"   "		clr	XFFCE
-FDC2 : 30		"0"		tsx
-FDC3 : 01		" "		nop
-FDC4 : 0F		" "		sei
-FDC5 : 7F FF EA		"   "		clr	XFFEA
-FDC8 : D5 C0		"  "		bitb	X00C0
-FDCA : AB 96		"  "		adda	$96,x
-FDCC : 81 6C		" l"		cmpa	#$6C
-FDCE : 57		"W"		asrb
-				;
-FDCF : 42		"B"		db	$42
-				;
-FDD0 : 2D 18		"- "		blt	LFDEA
-				;
-FDD2 : 03		" "		db	$03
-				;
+FCBC : 24 4E
+FCBE : 3C CC
+FCC0 : E8 F9
+FCC2 : FF F9 E8
+FCC5 : CF
+FCC6 : B4 9A 84
+FCC9 : 77 73 77
+FCCC : 83 93 A3
+FCCF : AF B5
+FCD1 : B3
+FCD2 : AA 9B
+FCD4 : 88 76
+FCD6 : 67 61
+FCD8 : 63 6E
+FCDA : 81 9A
+FCDC : B4 CC DC
+FCDF : E2 DC
+FCE1 : CB AF
+FCE3 : 8D 69
+FCE5 : 46	
+
+FCE6 : 29 15
+FCE8 : 0C
+FCE9 : 0C
+FCEA : 15
+FCEB : 23 32
+FCED : 3F	
+FCEE : 47
+FCEF : 48
+FCF0 : 43	
+FCF1 : 39
+FCF2 : 2D 22
+FCF4 : 1C 1E
+FCF6 : 2A 3F
+FCF8 : 5F
+FCF9 : 83
+FCFA : A8 24
+FCFC : 7F BA E6
+FCFF : FC
+FD00 : F6 D7 AA
+FD03 : 7B
+FD04 : 59
+FD05 : 4C	
+FD06 : 59
+FD07 : 7B
+FD08 : AA D7
+FD0A : F6 FC E6	
+FD0D : BA 7F 43
+FD10 : 17
+FD11 : 01
+FD12 : 07
+FD13 : 26 53
+FD15 : 82 A4
+FD17 : B1 A4 82
+FD1A : 53	
+FD1B : 26 07
+FD1D : 01
+FD1E : 17
+FD1F : 43
+FD20 : 06
+FD21 : 7F FF FF
+FD24 : AA 55
+FD26 : 00
+FD27 : 10
+;
+FD28 : FF FF FF	
+FD2B : FF 00 00
+FD2E : 00 00
+FD30 : FF FF FF
+FD33 : FF 00 00	
+FD36 : 00 00
+;
+FD38 : 10
+FD39 : 00
+FD3A : F4 00 E8
+FD3D : 00 DC 00
+FD40 : E2 00
+FD42 : DC 00
+FD44 : E8 00	
+FD46 : F4 00 00
+FD49 : 48
+FD4A : 8A 95
+FD4C : A0 AB
+FD4E : B5 BF C8
+FD51 : D1 DA
+FD53 : E1 E8
+FD55 : EE F3
+FD57 : F7 FB FD
+FD5A : FE FF FE
+FD5D : FD	
+FD5E : FB F7 F3
+FD61 : EE E8
+FD63 : E1 DA
+FD65 : D1 C8
+FD67 : BF B5 AB	
+FD6A : A0 95
+FD6C : 8A 7F
+FD6E : 75
+FD6F : 6A 5F
+FD71 : 54
+FD72 : 4A	
+FD73 : 40
+FD74 : 37
+FD75 : 2E 25
+FD77 : 1E
+FD78 : 17
+FD79 : 11	
+FD7A : 0C
+FD7B : 08	
+FD7C : 04 02
+FD7E : 01
+FD7F : 00	
+FD80 : 01
+FD81 : 02 04
+FD83 : 08
+FD84 : 0C	
+FD85 : 11
+FD86 : 17	
+FD87 : 1E
+FD88 : 25 2E
+FD8A : 37
+FD8B : 40
+FD8C : 4A
+FD8D : 54
+FD8E : 5F
+FD8F : 6A 75
+FD91 : 7F 13 8A
+FD94 : AB D1
+FD96 : EE FD
+FD98 : FD	
+FD99 : EE D1
+FD9B : AB 7F
+FD9D : 54
+FD9E : 2E 11
+FDA0 : 02 02
+FDA2 : 11	
+FDA3 : 2E 54
+FDA5 : 7F 0B 00
+FDA8 : FF 00 FF	
+FDAB : 00	
+FDAC : 2B 55
+FDAE : 80 AA
+FDB0 : D5 FF
+FDB2 : 0A	
+FDB3 : 00
+FDB4 : 64 96
+FDB6 : C8 00
+FDB8 : 32
+FDB9 : 64 C8
+FDBB : FA 00 00
+FDBE : 05	
+FDBF : 7F FF CE	
+FDC2 : 30
+FDC3 : 01	
+FDC4 : 0F
+FDC5 : 7F FF EA
+FDC8 : D5 C0
+FDCA : AB 96
+FDCC : 81 6C
+FDCE : 57	
+FDCF : 42
+FDD0 : 2D 18
+FDD2 : 03	
 FDD3 : 7F 
-;LFDD4 called for IX from F9B9
+;LFDD4 called for IX from PARAM6
 FDD4 : 81 27 00 00 
 FDD8 : 00 00 16 3C 
 ;
@@ -1286,70 +1200,58 @@ FEC6 : 00 00 00 00	"    "		db	$00, $00, $00, $00
 FECA : 0A		" "		clv
 				;
 FECB : 00		" "		db	$00
-;wavetable IX called from FA14
+;wavetable IX called from PARAM6
 FECC : 40 08 40	08
 FED0 : 40 01 02 04
-;wavetable IX called from F9C1
+;wavetable IX called from PARAM6
 FED4 : 08 09 80 7C
 FED8 : 78 74 70 74 
 ;
-FEDC : 78 7C		"tx|"		lsr	X787C
-FEDE : 80 01		"  "		suba	#$01
-FEE0 : 01		" "		nop
-				;
-FEE1 : 02 02 04 04	"    "		db	$02, $02, $04, $04
-				;
-FEE5 : 08		" "		inx
-FEE6 : 08		" "		inx
-FEE7 : 10		" "		sba
-FEE8 : 10		" "		sba
-FEE9 : 30		"0"		tsx
-FEEA : 60 C0		"` "		neg	$C0,x
-FEEC : E0 01		"  "		subb	$01,x
-FEEE : 01		" "		nop
-				;
-FEEF : 02 02 03 04	"    "		db	$02, $02, $03, $04
-FEF3 : 05		" "		db	$05
-				;
-FEF4 : 06		" "		tap
-FEF5 : 07		" "		tpa
-FEF6 : 08		" "		inx
-FEF7 : 09		" "		dex
-FEF8 : 0A		" "		clv
-FEF9 : 0C		" "		clc
-FEFA : 08		" "		inx
-FEFB : 80 10		"  "		suba	#$10
-FEFD : 78 18 70		"x p"		asl	X1870
-FF00				XFF00:
-FF00 : 20 60		" `"		bra	LFF62
-				;
-FF02 : 28 58		"(X"		bvc	LFF5C
-FF04 : 30		"0"		tsx
-FF05 : 50		"P"		negb
-FF06 : 40		"@"		nega
-FF07 : 48		"H"		asla
-FF08 : 01		" "		nop
-FF09 : 01		" "		nop
-				;
-FF0A : 02 02 04 04	"    "		db	$02, $02, $04, $04
-				;
-FF0E : 08		" "		inx
-FF0F : 08		" "		inx
-FF10 : 10		" "		sba
-FF11 : 20 28		" ("		bra	LFF3B
-				;
-FF13 : 30		"0"		tsx
-				;
-FF14 : 38		"8"		db	$38
-				;
-FF15 : 40		"@"		nega
-FF16 : 48		"H"		asla
-FF17 : 50		"P"		negb
-FF18 : 60 70		"`p"		neg	$70,x
-FF1A : 80 A0		"  "		suba	#$A0
-FF1C : B0 C0 01		"   "		suba	XC001
-				;
-FF1F : 02 04		"  "		db	$02, $04
+FEDC : 78 7C
+FEDE : 80 01
+FEE0 : 01
+
+FEE1 : 02 02 04 04
+FEE5 : 08
+FEE6 : 08	
+FEE7 : 10	
+FEE8 : 10
+FEE9 : 30
+FEEA : 60 C0
+FEEC : E0 01
+FEEE : 01
+FEEF : 02 02 03 04
+FEF3 : 05
+FEF4 : 06
+FEF5 : 07
+FEF6 : 08
+FEF7 : 09
+FEF8 : 0A
+FEF9 : 0C
+FEFA : 08
+FEFB : 80 10
+FEFD : 78 18 70
+FF00 : 20 60
+FF02 : 28 58
+FF04 : 30
+FF05 : 50
+FF06 : 40	
+FF07 : 48
+FF08 : 01
+FF09 : 01
+FF0A : 02 02 04 04
+FF0E : 08
+FF0F : 08	
+FF10 : 10
+
+FF11 : 20 28
+FF13 : 30 38
+FF15 : 40	48
+FF17 : 50 60 
+FF19 : 70 80 
+FF1B : A0 B0 
+FF1D : C0 01
+FF1F : 02 04
 				;
 FF21 : 08		" "		inx
 FF22 : 09		" "		dex
