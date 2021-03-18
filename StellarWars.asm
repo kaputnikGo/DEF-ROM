@@ -19,10 +19,10 @@
         ; for System [4]-[6] sound boards (rectangular)
         ; for pinball games Flash[4][1979], Time Warp[6][1979], Stellar Wars[4][1979], Scorpion[6][1980], Tri Zone[6][1979] 
         ;
-        ; L7BB4 is bad read?, '7' should be 'F' as in LFBB4
+        ; L7BB4 is bad org, '7' should be 'F' as in LFBB4
         ; bytes that use '7BB4' et al are annotated with replacement 'F'
-        ; and logic checked. Mostly occurs with ldx bytes, mostly.
-        ; org 7800 instead of F800? so wrong org not bad rom read! due to smaller rom...
+        ; and logic checked. Mostly occurs with ldx bytes(3 byte), mostly (ie CE 7B B4).
+        ; so wrong org, should be 7800 (FCF6 is 7CF6 for VWTAB etc)
         ;
         ; updated 18 Mar 2021
 				;
@@ -52,7 +52,7 @@ F81E : 20 FE      bra	LF81E     ;branch always here STDBY1
 ;PARAM1
 ;*************************************;
 F820 : DF 24      stx	X0024     ;store X in addr 24
-F822 : CE 78 C5   ldx	#$78C5    ;load X with 78C5h (LF8C5 is valid)
+F822 : CE 78 C5   ldx	#$78C5    ;load X with 78C5h (LF8C5 SYNTH1 output)
 F825 : DF 26      stx	X0026     ;store X in addr 26
 F827 : 86 80      ldaa	#$80    ;load A with 80h (1000 0000)
 ;LOOP1
@@ -90,7 +90,7 @@ F860 : D6 0F      ldab	X000F   ;load B with addr 0F
 F862 : D7 1B      stab	X001B   ;store B in addr 1B
 F864 : DE 26      ldx	X0026     ;load X with addr 26
 F866 : 09         dex           ;decr X
-F867 : 8C 78 BE   cpx	#$78BE    ;comp X with 78BEh
+F867 : 8C 78 BE   cpx	#$78BE    ;comp X with 78BEh (F8BE SYNTH1 lsrb)
 F86A : 27 4E      beq	LF8BA     ;branch =0 GOTO10
 F86C : DF 26      stx	X0026     ;store X in addr 26
 ;GOTO2
@@ -139,7 +139,7 @@ F8B0 : 60 04      neg	$04,x     ;negate addr X + 04h
 F8B2 : 16         tab           ;trans A to B
 F8B3 : DE 26      ldx	X0026     ;load X with addr 26
 F8B5 : AD 00      jsr	$00,x     ;jump sub to addr X + 00h
-F8B7 : 7E 78 29   jmp	L7829     ;jump L7829 (LF829 is valid LOOP1)
+F8B7 : 7E 78 29   jmp	L7829     ;jump L7829 (LF829 LOOP1)
 ;GOTO10
 F8BA : DE 24      ldx	X0024     ;load X with addr 24
 F8BC : 39         rts           ;return subroutine
@@ -159,27 +159,27 @@ F8C8 : 39         rts           ;return subroutine
 ;*************************************;
 ;PARAM2
 ;*************************************;
-F8C9 : CE 7C 12   ldx	#$7C12    ;load X with 7C12h (FC12 is data)
+F8C9 : CE 7C 12   ldx	#$7C12    ;load X with 7C12h (FC12 waveform data)
 ;LOOP3
 F8CC : C6 1C      ldab	#$1C    ;load B with 1Ch (0001 1100)
-F8CE : BD 7A 13   jsr	L7A13     ;jump sub L7A13 (FA13 is valid UTIL1)
-F8D1 : BD 78 20   jsr	L7820     ;jump sub L7820 (F820 is valid PARAM1)
+F8CE : BD 7A 13   jsr	L7A13     ;jump sub L7A13 (FA13 UTIL1)
+F8D1 : BD 78 20   jsr	L7820     ;jump sub L7820 (F820 PARAM1)
 F8D4 : 39         rts           ;return subroutine
 ;*************************************; 1C (28 bits)
 ;PRM21
-F8D5 : CE 7C 2E   ldx	#$7C2E    ;load X with 7C2Eh (FC2E is data)
+F8D5 : CE 7C 2E   ldx	#$7C2E    ;load X with 7C2Eh (FC2E waveformdata)
 F8D8 : 20 F2      bra	LF8CC     ;branch always LOOP3
 ;*************************************; 1C (28 bits)
 ;PRM22
-F8DA : CE 7C 4A   ldx	#$7C4A    ;load X with 7C4Ah (FC4A is data)  
+F8DA : CE 7C 4A   ldx	#$7C4A    ;load X with 7C4Ah (FC4A waveformdata)  
 F8DD : 20 ED      bra	LF8CC     ;branch always LOOP3
 ;*************************************; 1C (28 bits)
 ;PRM23
-F8DF : CE 7C 66   ldx	#$7C66    ;load X with 7C66h (FC66 is data)
+F8DF : CE 7C 66   ldx	#$7C66    ;load X with 7C66h (FC66 waveform data)
 F8E2 : 20 E8      bra	LF8CC     ;branch always LOOP3
 ;*************************************; 1C (28 bits)
 ;PRM24
-F8E4 : CE 7C 82   ldx	#$7C82    ;load X with 7C82h (FC82 is data)
+F8E4 : CE 7C 82   ldx	#$7C82    ;load X with 7C82h (FC82 waveform data)
 F8E7 : 20 E3      bra	LF8CC     ;branch always LOOP3
 ;*************************************; 1C (28 bits)
 ;PRM25
@@ -187,12 +187,12 @@ F8E9 : 7C 00 20   inc	X0020     ;incr addr 20
 F8EC : 7C 00 1F   inc	X001F     ;incr addr 1F
 F8EF : CE 00 30   ldx	#$0030    ;load X with 0030h (0011 0000)
 F8F2 : DF 22      stx	X0022     ;store X in addr 22
-F8F4 : CE 7C 9E   ldx	#$7C9E    ;load X with 7C9Eh (FC9E is data) 
-F8F7 : C6 1C      ldab	#$1C    ;load B with 1C (0001 1100) (is data bits gap)
-F8F9 : BD 7A 13   jsr	L7A13     ;jump sub L7A13 (FA13 is valid UTIL1)
+F8F4 : CE 7C 9E   ldx	#$7C9E    ;load X with 7C9Eh (FC9E waveform data) 
+F8F7 : C6 1C      ldab	#$1C    ;load B with 1C (0001 1100) (waveform data length)
+F8F9 : BD 7A 13   jsr	L7A13     ;jump sub L7A13 (FA13 UTIL1)
 F8FC : CE 00 00   ldx	#$0000    ;load X with 0000h
 F8FF : DF 22      stx	X0022     ;store X in addr 22
-F901 : CE 7C 9E   ldx	#$7C9E    ;load X with 7C9Eh (FC9E is data) 
+F901 : CE 7C 9E   ldx	#$7C9E    ;load X with 7C9Eh (FC9E waveform data) 
 F904 : 20 C6      bra	LF8CC     ;branch always LOOP3
 ;*************************************;
 ;PARAM3
@@ -202,9 +202,9 @@ F909 : C6 88      ldab	#$88    ;load B with 88h (1000 1000)
 F90B : D7 21      stab	X0021   ;store B in addr 21
 F90D : CE 00 60   ldx	#$0060    ;load X with 00060h
 F910 : DF 22      stx	X0022     ;store X in addr 22
-F912 : CE 7C F0   ldx	#$7CF0    ;load X with 7CF0h (FCF0 is data)
+F912 : CE 7C F0   ldx	#$7CF0    ;load X with 7CF0h (FCF0 VVECT data)
 F915 : C6 06      ldab	#$06    ;load B with 06h (0000 0110)
-F917 : BD 7A 13   jsr	L7A13     ;jump sub L7A13 (FA13 is valid UTIL1)
+F917 : BD 7A 13   jsr	L7A13     ;jump sub L7A13 (FA13 UTIL1)
 F91A : 39         rts           ;return subroutine
 ;*************************************;
 ;PARAM4
@@ -230,7 +230,7 @@ F93B : A7 01      staa	$01,x   ;store A in addr X + 01h
 ;GOTO12
 F93D : 32         pula          ;SP + 1 pull stack into A
 F93E : 32         pula          ;SP + 1 pull stack into A
-F93F : 7E 7B 9E   jmp	L7B9E     ;jump L7B9E (FB9E is valid IRQ3)
+F93F : 7E 7B 9E   jmp	L7B9E     ;jump L7B9E (FB9E IRQ3)
 ;*************************************;
 ;PARAM5
 ;*************************************;
@@ -395,26 +395,26 @@ FA26 : 39         rts           ;return subroutine
 ;*************************************;
 ;PARAM9
 ;*************************************;
-FA27 : CE 7C BA   ldx	#$7CBA    ;load X with 7CBAh (FCBA is data)
+FA27 : CE 7C BA   ldx	#$7CBA    ;load X with 7CBAh (FCBA VVECT data)
 FA2A : 20 26      bra	LFA52     ;branch always below
 ;*************************************;
 ;PARAM10
 ;*************************************;
-FA2C : BD 7A 92   jsr	L7A92     ;jump sub L7A92 (FA92 is valid)
-FA2F : BD 7A AB   jsr	L7AAB     ;jump sub L7AAB (FAAB is valid SYNTH6)
+FA2C : BD 7A 92   jsr	L7A92     ;jump sub L7A92 (FA92 PARAM16)
+FA2F : BD 7A AB   jsr	L7AAB     ;jump sub L7AAB (FAAB SYNTH6)
 FA32 : 39         rts           ;return subroutine
 ;*************************************;
 ;PRM101
-FA33 : CE 7C C0   ldx	#$7CC0    ;load X with 7CC0h (FCC0 is data)
+FA33 : CE 7C C0   ldx	#$7CC0    ;load X with 7CC0h (FCC0 VVECT data)
 FA36 : 20 F4      bra	LFA2C     ;branch always PARAM10
 ;*************************************;
 ;PRM102
 FA38 : C6 FF      ldab	#$FF    ;load B with FFh (1111 1111)
 FA3A : D7 1E      stab	X001E   ;store B inaddr 1E
 ;LOOP19
-FA3C : CE 7C C6   ldx	#$7CC6    ;load X with 7CC6h (FCC6 is data)
+FA3C : CE 7C C6   ldx	#$7CC6    ;load X with 7CC6h (FCC6 VVECT data)
 FA3F : 8D EB      bsr	LFA2C     ;branch sub PARAM10
-FA41 : CE 7C CC   ldx	#$7CCC    ;load X with 7CCCh (FCCC is data)
+FA41 : CE 7C CC   ldx	#$7CCC    ;load X with 7CCCh (FCCC VVECT data)
 FA44 : 8D E6      bsr	LFA2C     ;branch sub PARAM10
 FA46 : 5A         decb          ;decr B
 FA47 : 26 F3      bne	LFA3C     ;branch !=0 LOOP19
@@ -422,11 +422,11 @@ FA49 : 39         rts           ;return subroutine
 ;*************************************;
 ;PARAM11
 ;*************************************;
-FA4A : CE 7C D2   ldx	#$7CD2    ;load X with 7CD2h (FCD2 is data)
+FA4A : CE 7C D2   ldx	#$7CD2    ;load X with 7CD2h (FCD2 VVECT data)
 FA4D : 20 DD      bra	LFA2C     ;branch always PARAM10
 ;*************************************;
 ;PRM111
-FA4F : CE 7C DE   ldx	#$7CDE    ;load X with 7CDEh (FCDE is data)
+FA4F : CE 7C DE   ldx	#$7CDE    ;load X with 7CDEh (FCDE VVECT data)
 ;LOOP20
 FA52 : 8D D8      bsr	LFA2C     ;branch sub PARAM10
 FA54 : 8D 30      bsr	LFA86     ;branch sub PARAM15
@@ -436,20 +436,20 @@ FA56 : 20 FA      bra	LFA52     ;branch always LOOP20
 ;*************************************;
 FA58 : 86 FF      ldaa	#$FF    ;load A with FFh (1111 1111)
 FA5A : 97 1E      staa	X001E   ;store A in addr 1E
-FA5C : CE 7C E4   ldx	#$7CE4    ;load X with 7CE4h (FCE4 is data)
+FA5C : CE 7C E4   ldx	#$7CE4    ;load X with 7CE4h (FCE4 VVECT data)
 FA5F : 20 F1      bra	LFA52     ;branch always LOOP20
 ;*************************************;
 ;PARAM13
 ;*************************************;
 FA61 : 86 FF      ldaa	#$FF    ;load A with FFh (1111 1111)
 FA63 : 97 1E      staa	X001E   ;store A in addr 1E
-FA65 : CE 7C D8   ldx	#$7CD8    ;load X with 7CD8h (FCD8 is data) 
+FA65 : CE 7C D8   ldx	#$7CD8    ;load X with 7CD8h (FCD8 VVECT data) 
 FA68 : 20 E8      bra	LFA52     ;branch always LOOP20
 ;*************************************;
 ;PARAM14
 ;*************************************;
 FA6A : C6 30      ldab	#$30    ;load B with 30h (0011 0000)
-FA6C : CE 7C EA   ldx	#$7CEA    ;load X with 7CEAh (FCEA is data)
+FA6C : CE 7C EA   ldx	#$7CEA    ;load X with 7CEAh (FCEA VVECT data)
 FA6F : 8D 21      bsr	LFA92     ;branch sub PARAM16
 ;LOOP21
 FA71 : 96 1D      ldaa	X001D   ;load A with addr 1D
@@ -563,14 +563,14 @@ FB0C : 27 FE      beq	LFB0C     ;branch =0 to here
 FB0E : 81 12      cmpa	#$12    ;comp A with 12h (0001 0010)
 FB10 : 27 FE      beq	LFB10     ;branch =0 to here
 FB12 : 84 0F      anda	#$0F    ;and A with 0Fh (0000 1111)
-FB14 : CE 7B F4 	ldx	#$7BF4    ;load X with 7BF4h (FBF4 is data)
-FB17 : BD 7B B4   jsr	L7BB4     ;jump sub L7BB4 (FBB4 is valid IRQ4)
+FB14 : CE 7B F4 	ldx	#$7BF4    ;load X with 7BF4h (FBF4 VSYN7 data)
+FB17 : BD 7B B4   jsr	L7BB4     ;jump sub L7BB4 (FBB4 IRQ4)
 FB1A : A6 00      ldaa	$00,x   ;load A with addr X + 00h
 FB1C : 97 18      staa	X0018   ;store A in addr 18
-FB1E : CE 7B E4	  ldx	#$7BE4    ;load X with 7BE4h (FBE4 is data)
+FB1E : CE 7B E4	  ldx	#$7BE4    ;load X with 7BE4h (FBE4 VSYN7 data)
 FB21 : C6 10      ldab	#$10    ;load B with 10h (0001 0000)
 FB23 : BD 7A 13   jsr	L7A13     ;jump sub UTIL1
-FB26 : CE 7C 04   ldx	#$7C04    ;load X with 7C04h (FC04 is data)
+FB26 : CE 7C 04   ldx	#$7C04    ;load X with 7C04h (FC04 VSYN7 data)
 FB29 : E6 00      ldab	$00,x   ;load B with addr X + 00h
 ;LOOP24
 FB2B : D7 1A      stab	X001A   ;store B in addr 1A
@@ -610,7 +610,7 @@ FB63 : 20 A1      bra	LFB06     ;branch always SYNTH7
 ;IRQ
 ;*************************************; 
 FB65 : 8E 00 7F   lds	#$007F    ;load stack pointer with 007Fh (0000 0000 0111 1111)
-FB68 : CE 78 C5   ldx	#$78C5    ;load X with 78C5h (LF8C5 is valid)
+FB68 : CE 78 C5   ldx	#$78C5    ;load X with 78C5h (LF8C5 SYNTH1 output)
 FB6B : DF 26      stx	X0026     ;store X in addr 26
 FB6D : B6 84 02   ldaa	X8402   ;load A with 8402 PIA sound select
 FB70 : CE 00 00   ldx	#$0000    ;load X with 0000h
@@ -622,7 +622,7 @@ FB7A : 43         coma          ;complements 1s in A (sound select value)
 FB7B : 81 46      cmpa	#$46    ;comp A to 46h (0100 0110)
 FB7D : 27 04      beq	LFB83     ;branch =0 IRQ2 
 FB7F : 85 40      bita	#$40    ;bit test A with 40h (0100 0000)
-FB81 : 26 83      bne	LFB06     ;branch !=0 above SYNTH7
+FB81 : 26 83      bne	LFB06     ;branch !=0 SYNTH7
 ;IRQ2
 FB83 : 84 1F      anda	#$1F    ;and A with 1Fh (0001 1111)
 FB85 : 27 17      beq	LFB9E     ;branch =0 IRQ3 
@@ -630,7 +630,7 @@ FB87 : 81 18      cmpa	#$18    ;comp A with 18h (0001 1000)
 FB89 : 22 D8      bhi	LFB63     ;branch if higher SYN81
 FB8B : 4A         deca          ;decr A
 FB8C : 48         asla          ;arith shift left A (bit0=0)
-FB8D : CE 7C F6   ldx	#$7CF6    ;load X with 7CF6h
+FB8D : CE 7C F6   ldx	#$7CF6    ;load X with 7CF6h (FCF6 VWTAB SYNTH1)
 FB90 : 8D 22      bsr	LFBB4     ;branch sub IRQ4 
 FB92 : EE 00      ldx	$00,x     ;load X with addr X + 00h
 FB94 : AD 00      jsr	$00,x     ;jump sub addr X + 00h
@@ -645,8 +645,8 @@ FBA2 : CE 00 00   ldx	#$0000    ;load X with 0000h
 FBA5 : DF 22      stx	X0022     ;store X in addr 22
 FBA7 : CE 00 30   ldx	#$0030    ;load X with 0030h
 FBAA : C6 1C      ldab	#$1C    ;load B with 1Ch (0001 1100)
-FBAC : BD 7A 13   jsr	L7A13     ;jump sub L7A13 ? (LFA13 is valid)
-FBAF : BD 78 20   jsr	L7820     ;jump sub L7820 ? (LF820 is valid PARAM1)
+FBAC : BD 7A 13   jsr	L7A13     ;jump sub L7A13 (LFA13 UTIL1)
+FBAF : BD 78 20   jsr	L7820     ;jump sub L7820 ? (LF820 PARAM1)
 ;STDBY3
 FBB2 : 20 FE      bra	LFBB2     ;branch always here STDBY3
 ;IRQ4
@@ -664,42 +664,41 @@ FBC2 : 39         rts           ;return subroutine
 FBC3 : 0F	        sei           ;set interrupt mask
 FBC4 : CE 7F FF   ldx	#$7FFF    ;load X with 7FFFh (0111 1111 1111 1111)
 FBC7 : 5F         clrb          ;clear (00) B
-;LFBC8:
+;LOOP28
 FBC8 : E9 00      adcb	$00,x   ;B = Carry + B + 00h 
 FBCA : 09         dex           ;decr X
 FBCB : 8C 78 00   cpx	#$7800    ;comp X with 7800h (PIA addr)
-FBCE : 26 F8      bne	LFBC8     ;branch !=0 above
+FBCE : 26 F8      bne	LFBC8     ;branch !=0 LOOP28
 FBD0 : E1 00      cmpb	$00,x   ;comp B with addr X + 00h
-FBD2 : 27 01      beq	LFBD5     ;branch =0 below
+FBD2 : 27 01      beq	LFBD5     ;branch =0 LOOP29
 FBD4 : 3E         wai           ;wait for interrupt
-;LFBD5:
-FBD5 : CE 78 C5   ldx	#$78C5    ;load X with 78C5h (LF8C5 is valid)
+;LOOP29
+FBD5 : CE 78 C5   ldx	#$78C5    ;load X with 78C5h (LF8C5 SYNTH1 output)
 FBD8 : DF 26      stx	X0026     ;store X in addr 26
 FBDA : CE 00 00   ldx	#$0000    ;load X with 0000h
 FBDD : DF 22      stx	X0022     ;store X in addr 22
-FBDF : BD 79 D0   jsr	L79D0     ;jump sub L79D0 (LF9D0 is valid) 
-FBE2 : 20 F1      bra	LFBD5     ;branch always above
+FBDF : BD 79 D0   jsr	L79D0     ;jump sub L79D0 (LF9D0 SYNTH5) 
+FBE2 : 20 F1      bra	LFBD5     ;branch always LOOP29
 ;*************************************;
-; data below (16 bytes?)
+; VSYN7 data below
 ;*************************************; 
-; called by X
+; called by SYNTH7
 FBE4 : DA FF DA 80
 FBE8 : 26 01 26 80
 FBEC : 07 0A 07 00
 FBF0 : F9 F6 F9	00
-; called by X 
+; called by SYNTH7 
 FBF4 : 3A	3E 50 46
 FBF8 : 33	2C 27	20 
 FBFC : 25	1C 1A	17
 FC00 : 14	11 10	33
-; called by X (shorter?)
+; called by SYNTH7 (shorter?)
 FC04 : 08 03 02 01
 FC08 : 02 03 04 05
 FC0C : 06	0A 1E	32
 FC10 : 70 00
 ;*************************************;
-; data below called by X (range of 1Ch or 28 bits?) 
-; (version of Vari Vectors? 4x7 bits)
+; Waveform data ? (range of 1Ch or 28 bytes) 
 ;*************************************; 
 ; called by PARAM2
 FC12 : FF	FF
@@ -737,6 +736,9 @@ FCA0 : 68	00
 FCA2 : 07	1F 0F	00 0C	80 80	00
 FCAA : FF FF FF 00 00 00 00	00 
 FCB2 : 00 00 00 00 FF FF FF	00
+;*************************************;
+; VVECT Vari Vectors of 6 bytes
+;*************************************;
 ; called by PARAM9 
 FCBA : FF 01 02 C3 FF 00 
 ; called by PRM101
@@ -758,7 +760,7 @@ FCEA : 50	FF 00 00 60 80
 ; called by PARAM3
 FCF0 : FF 02 01	06 FF 00 
 ;*************************************;
-; Vector Table VWTAB
+; VWTAB Vector Table
 ;*************************************; 
 FCF6 : 79	D0                    ;F9D0 SYNTH5
 FCF8 : 78	D5                    ;F8D5 PRM21
