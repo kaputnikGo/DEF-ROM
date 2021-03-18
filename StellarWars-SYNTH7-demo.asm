@@ -1,13 +1,13 @@
-; Stellar Wars SYNTH7 demo - 18 Mar 2021
+; Stellar Wars SYNTH7 demo - 19 Mar 2021
 ; hack for Heathkit ET-3400 Audio Setup - 2x PIA input params
 ; user RAM = 197 + 256 bytes = 453
 ; addr 0000 - 00C4 and 0100 - 01FF
 ; using PIA1 addr 8000-8003 (DAC, param1)
-; and PIA2 addr 8004-8007 (param3)
+; and PIA2 addr 4000-4003 (param2)
 ; mpu clock speed is default/low (quoted as 0.5 MHz), expecting ~894750 cycles per second
 ; using edited subroutines IRQ, IRQ4, UTIL1 SYNTH7
 ; 
-; PIA1 adn PIA2 init, mem relocation,
+; PIA1 and PIA2 init, mem relocation,
 ; ram alloc
 ;
 ;*************************************;
@@ -28,10 +28,10 @@
 0011 : 8E 01 FF   lds #$01FF          ; load SP with 01FFh
 0014 : CE 80 00	  ldx #$8000          ; load X with 8000h, PIA1 (DAC) addr
 0017 : 6F 02      clr $02,x           ; clear(00) addr X + 02h (set 8002 PIA1 PR/DDR port B in)
-0019 : 86 FF		  ldaa	#$FF          ; load A with FFh (1111 1111)
-001B : A7 00		  staa	$00,x         ; store A in addr X + 00h (set 8000 PIA1 PR/DDR port A out)
-001D : 86 3C		  ldaa	#$3C          ; load A with 3Ch(0011 1100)
-001F : A7 01		  staa	$01,x         ; store A in addr X + 01h (8001 PIA1 CR port A)
+0019 : 86 FF      ldaa  #$FF          ; load A with FFh (1111 1111)
+001B : A7 00      staa  $00,x         ; store A in addr X + 00h (set 8000 PIA1 PR/DDR port A out)
+001D : 86 3C      ldaa  #$3C          ; load A with 3Ch(0011 1100)
+001F : A7 01      staa  $01,x         ; store A in addr X + 01h (8001 PIA1 CR port A)
 0021 : 86 37      ldaa  #$37          ; load A with 37h(0011 0111)
 0023 : A7 03      staa  $03,x         ; store A in addr X + 03h (8003 PIA1 CR port B) 
 0025 : 7F 40 02   clr X4002           ; clear(00) 4002h (set PIA2 PR/DDR port B in)
@@ -51,20 +51,20 @@
 ;SYNTH7
 ;*************************************;
 003A : 84 1F      anda	#$1F          ;and A with 1Fh (0001 1111)
-003C : 27 FE      beq	LFB08           ;branch =0 to here <-- nop ?
+003C : 27 FE      beq	LFB08           ;branch =0 to here <-- nop (PC stops here after ~16 seconds)
 003E : 81 11      cmpa	#$11          ;comp A with 11h (0001 0001)
 0040 : 27 FE      beq	LFB0C           ;branch =0 to here <-- nop ?
 0042 : 81 12      cmpa	#$12          ;comp A with 12h (0001 0010)
 0044 : 27 FE      beq	LFB10           ;branch =0 to here <-- nop ?
 0046 : 84 0F      anda	#$0F          ;and A with 0Fh (0000 1111)
-0048 : CE 01 22 	ldx	#$0122          ;load X with 0122h (VSYN7 data 2)
+0048 : CE 01 33 	ldx	#$0133          ;load X with 0133h (VSYN7 data 2)
 004B : BD 01 00   jsr	L0100           ;jump sub IRQ4
 004E : A6 00      ldaa	$00,x         ;load A with addr X + 00h
 0050 : 97 04      staa	X0004         ;store A in addr 04
-0052 : CE 01 22	  ldx	#$0122          ;load X with 0122h (VSYN7 data 1)
+0052 : CE 01 23	  ldx	#$0123          ;load X with 0123h (VSYN7 data 1)
 0055 : C6 10      ldab	#$10          ;load B with 10h (0001 0000)
 0057 : BD 01 0F   jsr	L010F           ;jump sub UTIL1
-005A : CE 01 42   ldx	#$0142          ;load X with 0142h (VSYN7 data 3)
+005A : CE 01 43   ldx	#$0143          ;load X with 0143h (VSYN7 data 3)
 005D : E6 00      ldab	$00,x         ;load B with addr X + 00h
 ;LOOP1
 005F : D7 06      stab	X0006         ;store B in addr 06
@@ -89,16 +89,16 @@
 007E : 26 FD      bne	L008D           ;branch !=0 LOOP4
 0080 : 7A 00 05   dec	X0005           ;dec addr 05
 0083 : 26 E5      bne	L006A           ;branch !=0 LOOP3
-0085 : 7A 00 06 	dec	X0006           ;decr addr 06
+0085 : 7A 00 06   dec	X0006           ;decr addr 06
 0088 : 2A D9      bpl	L0063           ;branch if plus LOOP2
 008A : DE 08      ldx	X0008           ;load X with addr 08
 008C : 08         inx                 ;incr X
 008D : E6 00      ldab	$00,x         ;load B with addr X + 00h
 008F : 26 CE      bne	L005F           ;branch !=0 LOOP1
 0091 : 86 80      ldaa	#$80          ;load A with 80h (1000 0000)
-0093 : B7 80 00 	staa	X8000         ;store A in DAC output SOUND
+0093 : B7 80 00   staa	X8000         ;store A in DAC output SOUND
 0096 : 20 A2      bra	L003A           ;branch always SYNTH7
-; end synth7, up to 00C4
+; 0098 : end synth7, up to 00C4
 ;*************************************;
 ; IRQ4 org 0100
 ;*************************************;
@@ -131,20 +131,20 @@
 ; VSYN7 data below
 ;*************************************; 
 ; 1 called by SYNTH7
-0122 : DA FF DA 80
-0126 : 26 01 26 80
-012A : 07 0A 07 00
-012E : F9 F6 F9	00
+0123 : DA FF DA 80
+0127 : 26 01 26 80
+012B : 07 0A 07 00
+012F : F9 F6 F9 00
 ; 2 called by SYNTH7 
-0132 : 3A	3E 50 46
-0136 : 33	2C 27	20 
-013A : 25	1C 1A	17
-013E : 14	11 10	33
+0133 : 3A 3E 50 46
+0137 : 33 2C 27 20 
+013B : 25 1C 1A 17
+013F : 14 11 10 33
 ; 3 called by SYNTH7 (last 2 bytes, FF, added from next in ROM)
-0142 : 08 03 02 01
-0146 : 02 03 04 05
-014A : 06	0A 1E	32
-014E : 70 00 FF	FF
+0143 : 08 03 02 01
+0147 : 02 03 04 05
+014B : 06 0A 1E 32
+014F : 70 00 FF FF
 ;*************************************;
 ; 0122 : end (01FF)
 ;*************************************;
