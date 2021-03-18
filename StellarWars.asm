@@ -22,6 +22,7 @@
         ; L7BB4 is bad read?, '7' should be 'F' as in LFBB4
         ; bytes that use '7BB4' et al are annotated with replacement 'F'
         ; and logic checked. Mostly occurs with ldx bytes, mostly.
+        ; org 7800 instead of F800? so wrong org not bad rom read! due to smaller rom...
         ;
         ; updated 18 Mar 2021
 				;
@@ -158,7 +159,7 @@ F8C8 : 39         rts           ;return subroutine
 ;*************************************;
 ;PARAM2
 ;*************************************;
-F8C9 : CE 7C 12   ldx	#$7C12    ;load X with 7C12h (FC12 is data table?)
+F8C9 : CE 7C 12   ldx	#$7C12    ;load X with 7C12h (FC12 is data)
 ;LOOP3
 F8CC : C6 1C      ldab	#$1C    ;load B with 1Ch (0001 1100)
 F8CE : BD 7A 13   jsr	L7A13     ;jump sub L7A13 (FA13 is valid UTIL1)
@@ -700,60 +701,61 @@ FC10 : 70 00
 ; data below called by X (range of 1Ch or 28 bits?) 
 ; (version of Vari Vectors? 4x7 bits)
 ;*************************************; 
+; called by PARAM2
 FC12 : FF	FF
 FC14 : FF 90
 FC16 : FF FF FF	FF FF FF FF 90 
 FC1E : FF	FF FF FF FF FF FF FF 
 FC26 : 00 00 00 00 00 00 00 00
-; called by X
+; called by PRM21
 FC2E : 48 01
 FC30 : 00 00
 FC32 : 3F	3F 00 00 48	01 00 00
 FC3A : 01	08 00 00 81 01 00 00
 FC42 : 01 FF 00 00 01	08 00 00
-; called by X
+; called by PRM22
 FC4A : 01	10
 FC4C : 00 00
 FC4E : 3F	3F 00 00 01	10 00 00 
 FC56 : 05 05 00 00 01 01 00 00
 FC5E : 31 FF 00 00 05 05 00 00
-; called by X
+; called by PRM23
 FC66 : 30	00 
 FC68 : 00 00
 FC6A : 7F 00 00	00 30	00 00 00
 FC72 : 01	00 00 00 7F 00 00	00 
 FC7A : 02 00 00	00 01	00 00 00 
-; called by X
+; called by PRM24
 FC82 : 04	00 
 FC84 : 00 04 
 FC86 : 7F 00 00	7F 04 00 00 04 
 FC8E : FF 00 00 A0 00 00 00 00 
 FC96 : 00 00 00 00 FF 00 00	A0 
-; called by X
+; called by PRM25
 FC9E : 0C 68 
 FCA0 : 68	00
 FCA2 : 07	1F 0F	00 0C	80 80	00
 FCAA : FF FF FF 00 00 00 00	00 
 FCB2 : 00 00 00 00 FF FF FF	00
-; called by X 
+; called by PARAM9 
 FCBA : FF 01 02 C3 FF 00 
-; called by X
+; called by PRM101
 FCC0 : 01 03 FF 80 FF	00
-; called by X
+; called by LOOP19
 FCC6 : 20 03 FF 50 FF 00
-; called by X 
+; called by LOOP19 
 FCCC : 50 03 01 20 FF 00
-; called by X
+; called by PARAM11
 FCD2 : FE 04 02 04 FF 00 
-; called by X
+; called by PARAM13
 FCD8 : 48 03 01	0C FF 00 
-; called by X
+; called by PRM111
 FCDE : 48 02 01 0C FF 00 
-; called by X
+; called by PARAM12
 FCE4 : E0 01 02 10 FF 00 
-; called by X
+; called by PARAM14
 FCEA : 50	FF 00 00 60 80
-; called by X
+; called by PARAM3
 FCF0 : FF 02 01	06 FF 00 
 ;*************************************;
 ; Vector Table VWTAB
@@ -879,8 +881,8 @@ FFF0 : 00 00 00 00 00 00 00 00
 ;Motorola vector table
 ;*************************************;
 FFF8 : 7B 65	                ;IRQ	(FB65)
-FFFA : 78 01                  ;RESET (software) (FB01)
+FFFA : 78 01                  ;RESET (software) (F801)
 FFFC : 7B C3                  ;NMI (FBC3)
-FFFE : 78 01                  ;RESET (hardware) (FB01)
+FFFE : 78 01                  ;RESET (hardware) (F801)
 
 ;--------------------------------------------------------------
