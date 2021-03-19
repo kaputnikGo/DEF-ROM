@@ -12,6 +12,7 @@
 ;
 ; SW demo:
 ; [0011 1111][1000 0000] (coma to FE)
+; [0000 0000][1111 1111]
 ;
 ;*************************************;
 ; USED RAM ADDR LOCATIONS (typical values)
@@ -22,8 +23,8 @@
 0006 : nn 80                          ; B countdown, ?
 0008 : 00 nn                          ; X,
 000A : nn nn                          ; X,B
-000C : 00 00                          ; PIA1,PIA2 store 00-02 pitch/loop up/dwn speed slow to faster
-000E : 00 00                          ;not used
+000C : nn 00                          ; PIA1 store 00-02 pitch/loop up/dwn speed slow to faster
+000E : nn 00                          ; PIA2
 ;*************************************;
 ;RESET INIT (POWER-ON) org 0010
 ;*************************************; 
