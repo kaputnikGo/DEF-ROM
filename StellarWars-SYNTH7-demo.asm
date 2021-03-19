@@ -92,7 +92,7 @@
 0080 : 7A 00 05   dec	X0005           ;dec addr 05
 0083 : 26 E5      bne	L006A           ;branch !=0 LOOP3
 0085 : 7A 00 06   dec	X0006           ;decr addr 06
-0088 : 2A D9      bpl	L0063           ;branch if plus LOOP2
+0088 : 2A CB      bpl	L0055           ;branch if plus LOOP1 (from LOOP2)
 008A : DE 08      ldx	X0008           ;load X with addr 08
 008C : 08         inx                 ;incr X
 008D : E6 00      ldab	$00,x         ;load B with addr X + 00h
