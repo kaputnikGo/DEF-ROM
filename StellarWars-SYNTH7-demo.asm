@@ -9,7 +9,6 @@
 ; 
 ; PIA1 and PIA2 init, mem relocation,
 ; ram alloc, PIA1,2 param reads
-; loop PIA reads not working, requires restart
 ;
 ; SW demo:
 ; [0011 1111][1000 0000] (coma to FE)
