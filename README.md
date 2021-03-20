@@ -7,4 +7,6 @@ Examining and experimenting with the 2716 ROM code from Williams Electronics sou
 
 Workspace for the WiLL-i-ROMS Heathkit mod project at https://akm.net.au/will-i-roms/mods.html including mp3 sound player.
 
+Pinball Sound ROMs to examine: 3 (Laser Cue), 4 (Algar), 6 (Pharaoh), 7 (Solar Fire)
+
 Future possible comparison between Stellar Wars ROM and Varkon ROM to investigate asm routines and their changes over the lifespan of System 4-7 sound boards. 
