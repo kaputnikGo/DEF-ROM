@@ -1,8 +1,10 @@
 # DEF-ROM
 Sound board assembly project
 
-Examining the 2716 ROM code from Williams Electronics sound boards for games from 1979 to early-mid 1980s
+The DEF-ROM project is a place to archive sound code and audio samples.
 
-Workspace for the WiLL-i-ROMS project at https://github.com/kaputnikGo/WiLL-i-ROMS
+Examining and experimenting with the 2716 ROM code from Williams Electronics sound boards for games from 1979 to early-mid 1980s
 
-possible comparison between Stellar Wars ROM and Varkon ROM to investigate asm routines and their changes over the lifespan of System 4-7 sound boards. 
+Workspace for the WiLL-i-ROMS Heathkit mod project at https://akm.net.au/will-i-roms/mods.html including mp3 sound player.
+
+Future possible comparison between Stellar Wars ROM and Varkon ROM to investigate asm routines and their changes over the lifespan of System 4-7 sound boards. 
