@@ -10,3 +10,7 @@ Workspace for the WiLL-i-ROMS Heathkit mod project at https://akm.net.au/will-i-
 Pinball Sound ROMs to examine: 3 (Laser Cue), 4 (Algar), 6 (Pharaoh), 7 (Solar Fire)
 
 Future possible comparison between Stellar Wars ROM and Varkon ROM to investigate asm routines and their changes over the lifespan of System 4-7 sound boards. 
+
+Testing is done on this ET-3400 emulator fork : https://github.com/kaputnikGo/et3400-emu
+
+Disassembler archived here: https://www.oocities.org/pclareuk/DASMx/
