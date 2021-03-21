@@ -432,51 +432,45 @@ FA31 : 81 20      cmpa	#$20    ;comp A with 20h (0010 0000)
 FA33 : 26 D5      bne	LFA0A     ;branch !=0 LOOP15
 FA35 : 39         rts           ;return subroutine
 ;*************************************;
-; ? tables ? LFA36 never called LFA3
+; ? tables ? - 64 bytes
 ;*************************************;
-FA36 : 80 8C		"  "		suba	#$8C
-FA38 : 98 A5		"  "		eora	X00A5
-FA3A : B0 BC C6		"   "		suba	XBCC6
-FA3D : D0 DA		"  "		subb	X00DA
-FA3F : E2 EA		"  "		sbcb	$EA,x
-FA41 : F0 F5 FA		"   "		subb	XF5FA
-FA44 : FD		" "		db	$FD
-FA45 : FE FF FE		"   "		ldx	XFFFE
-FA48 : FD		" "		db	$FD
-FA49 : FA F5 F0		"   "		orab	XF5F0
-FA4C : EA E2		"  "		orab	$E2,x
-FA4E : DA D0		"  "		orab	X00D0
-FA50 : C6 BC		"  "		ldab	#$BC
-FA52 : B0 A5 98		"   "		suba	XA598
-FA55 : 8C 80 73		"  s"		cpx	#$8073
-FA58 : 67 5A		"gZ"		asr	$5A,x
-FA5A : 4F		"O"		clra
-FA5B : 43		"C"		coma
-FA5C : 39		"9"		rts
-;*************************************;
-; ? tables? LFA5D never called
-;*************************************;
-FA5D : 2F 25		"/%"		ble	LFA84
-FA5F : 1D 15		"  "		db	$1D, $15
-FA61 : 0F		" "		sei
-FA62 : 0A		" "		clv
-FA63 : 05 02		"  "		db	$05, $02
-FA65 : 01		" "		nop
-FA66 : 00		" "		db	$00
-FA67 : 01		" "		nop
-FA68 : 02 05		"  "		db	$02, $05
-FA6A : 0A		" "		clv
-FA6B : 0F		" "		sei
-FA6C : 15 1D		"  "		db	$15, $1D
-FA6E : 25 2F		"%/"		bcs	LFA9F
-FA70 : 39		"9"		rts
-;*************************************;
-; ? tables? LFA71 never called
-;*************************************;
-FA71 : 43		"C"		coma
-FA72 : 4F		"O"		clra
-FA73 : 5A		"Z"		decb
-FA74 : 67 73		"gs"		asr	$73,x
+FA36 : 80 8C      suba	#$8C
+FA38 : 98 A5      eora	X00A5
+FA3A : B0 BC C6   suba	XBCC6
+FA3D : D0 DA      subb	X00DA
+FA3F : E2 EA      sbcb	$EA,x
+FA41 : F0 F5 FA   subb	XF5FA
+FA44 : FD         db	$FD
+FA45 : FE FF FE   ldx	XFFFE
+FA48 : FD         db	$FD
+FA49 : FA F5 F0   orab	XF5F0
+FA4C : EA E2      orab	$E2,x
+FA4E : DA D0      orab	X00D0
+FA50 : C6 BC      ldab	#$BC
+FA52 : B0 A5 98   suba	XA598
+FA55 : 8C 80 73   cpx	#$8073
+FA58 : 67 5A      asr	$5A,x
+FA5A : 4F         clra
+FA5B : 43         coma
+FA5C : 39         rts
+FA5D : 2F 25      ble	LFA84
+FA5F : 1D 15      db	$1D, $15
+FA61 : 0F         sei
+FA62 : 0A         clv
+FA63 : 05 02      db	$05, $02
+FA65 : 01         nop
+FA66 : 00         db	$00
+FA67 : 01         nop
+FA68 : 02 05      db	$02, $05
+FA6A : 0A         clv
+FA6B : 0F         sei
+FA6C : 15 1D      db	$15, $1D
+FA6E : 25 2F      bcs	LFA9F
+FA70 : 39         rts
+FA71 : 43         coma
+FA72 : 4F         clra
+FA73 : 5A         decb
+FA74 : 67 73      asr	$73,x
 ;*************************************;
 ;PARAM10 called from VWTAB
 ;*************************************;
@@ -492,9 +486,9 @@ FA81 : 97 10      staa	X0010   ;store A in addr 10
 FA83 : 96 0F      ldaa	X000F   ;load A with addr 0F
 FA85 : 84 7F      anda	#$7F    ;and A with 7Fh (0111 1111)
 FA87 : 81 7F      cmpa	#$7F    ;comp A with 7Fh (0111 1111)
-FA89 : 26 01      bne	LFA8C     ;branch !=0 below
+FA89 : 26 01      bne	LFA8C     ;branch !=0 PRM111
 FA8B : 4F         clra          ;clr (00) A
-;LFA8C:
+;PRM111
 FA8C : 4C         inca          ;incr A
 FA8D : 97 0F      staa	X000F   ;store A in addr 0F
 FA8F : 39         rts           ;return subroutine
@@ -502,7 +496,7 @@ FA8F : 39         rts           ;return subroutine
 ;PARAM12 from IRQ
 ;*************************************;
 FA90 : 86 0E      ldaa	#$0E    ;load A with 0Eh (0000 1110)
-FA92 : 8D 5C      bsr	LFAF0     ;branch sub PARAM below
+FA92 : 8D 5C      bsr	LFAF0     ;branch sub PARAM17
 FA94 : 96 0F      ldaa	X000F   ;load A with addr 0F
 FA96 : 43         coma          ;complement 1s A
 FA97 : BD FB AB   jsr	LFBAB     ;jump sub PRM202
@@ -529,7 +523,7 @@ FAB4 : 39         rts           ;return subroutine
 ;PARAM14 called from IRQ
 ;*************************************;
 FAB5 : 86 0F      ldaa	#$0F    ;load A with 0Fh (0000 1111)
-FAB7 : 8D 37      bsr	LFAF0     ;branch sub
+FAB7 : 8D 37      bsr	LFAF0     ;branch sub PARAM17
 FAB9 : 96 10      ldaa	X0010   ;load A with addr 10
 FABB : 43         coma          ;complement 1s A
 FABC : BD FB AB   jsr	LFBAB     ;jump sub PRM202
@@ -926,7 +920,7 @@ FD0A : 8E 00 7F   lds	#$007F    ;load SP with 007Fh (0000 0000 0111 1111)
 FD0D : CE FF FF   ldx	#$FFFF    ;load X with FFFFh (1111 1111 1111 1111)
 FD10 : 5F         clrb          ;clear B
 ;LOOP39
-FD11 : E9 00      adcb	$00,x   ;B = Carry + B + 00h 
+FD11 : E9 00      adcb	$00,x   ;B = Carry + B + addr X +00h
 FD13 : 09         dex           ;decr X
 FD14 : 8C F8 00   cpx	#$F800    ;comp X with F800h (ROM start addr ?)
 FD17 : 26 F8      bne	LFD11     ;branch !=0 LOOP39
@@ -979,11 +973,11 @@ FD6D : FC 27                    ;SYNTH7
 ;VVECT    EQU *
 ;*************************************;
 ;called from PARAM1 
-FD6F : 40	01 00	10 E1 00 80 FF FF     ;SAW
-FD78 : 28 01 00	08 81 02 00 FF FF     ;FOSHIT
-FD81 : 00	FF 08 FF 68 04 80 00 FF     ;CSCALE
-FD8A : 36 21 09	06 EF 03 C0 00 FF     ; ? 
-FD93 : 0E E7 35	33 79 03 80 F2 FF     ; ?
+FD6F : 40 01 00 10 E1 00 80 FF FF     ;SAW
+FD78 : 28 01 00 08 81 02 00 FF FF     ;FOSHIT
+FD81 : 00 FF 08 FF 68 04 80 00 FF     ;CSCALE
+FD8A : 36 21 09 06 EF 03 C0 00 FF     ; ? 
+FD93 : 0E E7 35 33 79 03 80 F2 FF     ; ?
 ;*************************************;
 ;
 ;*************************************;
@@ -1266,16 +1260,16 @@ FF24 : 12 13 14 15
 FF28 : 16	17 18	19
 ;
 FF2C : 1A 1B 1C	
-FF2F : 80 7C		" |"		suba	#$7C
-FF31 : 78 74 70		"xtp"		asl	X7470
+FF2F : 80 7C
+FF31 : 78 74 70
 ;
-FF34 : 74 78 7C		"tx|"		lsr	X787C
+FF34 : 74 78 7C
 FF37 : 80 
 FF38 : 01	01
 FF3A : 02 02 
 FF3c : 04 04
 FF3E : 08	08
-FF40 : 10		" "		sba
+FF40 : 10
 FF41 : 20 28
 FF43 : 30	38
 FF45 : 40	48
@@ -1297,47 +1291,38 @@ FF62 : 01 02 04 08
 FF66 : 09	0A 0B	0C
 FF6A : 0E	0F 10 12 
 FF6E : 14	16
-FF70 : 40		"@"		nega
-FF71 : 10		" "		sba
-FF72 : 08		" "		inx
-FF73 : 01		" "		nop
-FF74				LFF74:
-FF74 : 92 01		"  "		sbca	X0001
-FF76 : 01		" "		nop
-FF77 : 01		" "		nop
-FF78 : 01		" "		nop
-				;
-FF79 : 02 02 03 03	"    "		db	$02, $02, $03, $03
-FF7D : 04 04 05		"   "		db	$04, $04, $05
-				;
-FF80 : 06		" "		tap
-FF81 : 08		" "		inx
-FF82 : 0A		" "		clv
-FF83 : 0C		" "		clc
-FF84 : 10		" "		sba
-				;
-FF85 : 14 18		"  "		db	$14, $18
-				;
-FF87 : 20 30		" 0"		bra	LFFB9
-				;
-FF89 : 40		"@"		nega
-FF8A : 50		"P"		negb
-FF8B : 40		"@"		nega
-FF8C : 30		"0"		tsx
-FF8D : 20 10		"  "		bra	LFF9F
-				;
-FF8F : 0C		" "		clc
-FF90 : 0A		" "		clv
-FF91 : 08		" "		inx
-FF92 : 07		" "		tpa
-FF93 : 06		" "		tap
-				;
-FF94 : 05 04 03 02	"    "		db	$05, $04, $03, $02
-FF98 : 02		" "		db	$02
-				;
-FF99 : 01		" "		nop
-FF9A : 01		" "		nop
-FF9B : 01		" "		nop
+FF70 : 40
+FF71 : 10
+FF72 : 08	
+FF73 : 01
+FF74 : 92 01
+FF76 : 01
+FF77 : 01
+FF78 : 01
+FF79 : 02 02 03 03
+FF7D : 04 04 05
+FF80 : 06
+FF81 : 08
+FF82 : 0A
+FF83 : 0C
+FF84 : 10
+FF85 : 14 18
+FF87 : 20 30
+FF89 : 40
+FF8A : 50
+FF8B : 40
+FF8C : 30
+FF8D : 20 10
+FF8F : 0C
+FF90 : 0A
+FF91 : 08
+FF92 : 07
+FF93 : 06
+FF94 : 05 04 03 02
+FF98 : 02
+FF99 : 01
+FF9A : 01
+FF9B : 01
 ;*************************************;
 ;
 ;*************************************;
@@ -1358,7 +1343,7 @@ FFB3 : F1	A0
 FFB5 : F1 C0 
 FFB7 : F1
 ;*************************************;
-; zero byte padding ?
+; zero byte padding
 ;*************************************;
 FFB8 : 00 00 00 00	"    "		db	$00, $00, $00, $00
 FFBC : 00 00 00 00	"    "		db	$00, $00, $00, $00
@@ -1374,17 +1359,18 @@ FFE0 : 00 00 00 00	"    "		db	$00, $00, $00, $00
 FFE4 : 00 00 00 00	"    "		db	$00, $00, $00, $00
 FFE8 : 00 00 00 00	"    "		db	$00, $00, $00, $00
 FFEC : 00 00 00 00	"    "		db	$00, $00, $00, $00
-FFF0 : 00 00 00		"   "		db	$00, $00, $00
 ;*************************************;
-; ? not likely
-;*************************************; 
-FFF3 : 7E FC DF   jmp	LFCDF   ;jump CALCOS <- not likely? another MOTVECT?
-FFF6 : DF DA      stx	X00DA   ;store X in addr DA
+; 6809 MOTVECT - not for 6800,6802,6808
+;*************************************;
+FFF0 : 00 00                  ;not used 
+FFF2 : 00 7E                  ;SWI3
+FFF4 : FC DF                  ;SWI2 CALCOS
+FFF6 : DF DA                  ;FIRQ
 ;*************************************;
 ;Motorola vector table
 ;*************************************;
 FFF8 : FC	66	                ;IRQ 
-FFFA : F8	01                  ;RESET (software) 
+FFFA : F8	01                  ;RESET SWI (software) 
 FFFC : FD	09                  ;NMI 
 FFFE : F8	01                  ;RESET (hardware) 
 
