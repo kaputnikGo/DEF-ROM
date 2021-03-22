@@ -2,10 +2,12 @@
 ; hack for Heathkit ET-3400 Audio Setup
 ; user RAM = 196 + 255 bytes = 453
 ; addr 0000 - 00C4 and 0100 - 01FF
+; addr 00C5 to 00FF is Monitor RAM
 ; using PIA addr 8000, 4000 (not 0400)
 ; mpu clock speed is default/low (quoted as 0.5 MHz), expecting ~894750 cycles per second
 ; using edited subroutines NMI, PARAM7, CALCOS, SYNTH8
 ; jmp,jsr,bsr addrs done
+; runs in emu
 ;
 ; attempting to get the NMI organ melody...
 ;
@@ -13,20 +15,20 @@
 ; [---- ----][---- ----]
 ;
 ;*************************************;
-; Main loop scratch memory reserves
+; Main loop scratch memory reserves (with halt values)
 ;*************************************;
 0000 : 00 00                          ; PIAs
 0002 : 00 00                          ;not used
 0004 : 00 00                          ; PRM71
 0006 : 00 00                          ;not used
-0008 : 00 00                          ; -,PRM71 X
-000A : 00 00                          ; X CAL A, PRM71 X
-000C : 00 00                          ; X,A
-000E : 00 00                          ; SYN8, PRM71 X
+0008 : 00 01                          ; -,PRM71 X
+000A : EB 7F                          ; X CAL A, PRM71 X
+000C : FF 00                          ; X,A
+000E : A8 3C                          ; SYN8, PRM71 X
 0010 : 00 00                          ; X SYN8, A
-0012 : 00 00                          ; B SYN8, B
-0014 : 00 00                          ; X, B
-0016 : 00 00                          ; B, B
+0012 : 00 00                          ;
+0014 : 00 00                          ;
+0016 : 00 00                          ;
 ;*************************************;
 ;INIT (POWER-ON) org 0018 
 ;*************************************;
@@ -62,7 +64,7 @@
 ;*************************************;
 004A : 7F 00 04   clr X0004           ;clr (00) addr 04
 004D : 97 0D      staa  X000D         ;store A in addr 0D
-004F : CE FD 94   ldx #$FD94          ;load X with FD94 (wavetable)
+004F : CE 01 55   ldx #$0155          ;load X with 0155 (wavetable)
 ;PRM72
 0052 : A6 00      ldaa  $00,x         ;load A with addr X + 00h
 0054 : 27 2D      beq L0083           ;branch =0 PRM75
@@ -90,6 +92,7 @@
 007B : 08         inx                 ;incr X
 007C : 08         inx                 ;incr X
 007D : DF 0B      stx X000B           ;store X in addr 0B
+; original hardware has $0000 - $007F RAM 
 007F : 9C 09      cpx X0009           ;comp X with addr 09
 0081 : 26 E7      bne LFA6E           ;branch !=0 PRM74
 ;PRM75
@@ -109,7 +112,7 @@
 ;*************************************;
 ;SYNTH8 org 0100 (up to 01FF)
 ;*************************************;
-0100 : CE 00 12   ldx #$0012          ;load X with 0012h
+0100 : CE 01 81   ldx #$0181          ;load X with flood start, move to wavetable area 0181-01FF
 0103 : 80 02      suba  #$02          ;A = A - 02h (0000 0010)
 ;SYN81
 0105 : 23 15      bls L011C           ;branch if lower or same SYN83
@@ -125,15 +128,16 @@
 0116 : E7 00      stab  $00,x         ;store B in addr X + 00h
 0118 : 6F 01      clr $01,x           ;clear addr X + 01h
 011A : 08         inx                 ;incr X       
-011B : 08         inx                 ;incr X (X = 15)
-;SYN83
+011B : 08         inx                 ;incr X
+;SYN83 a timer with a stored jmp?
 011C : C6 7E      ldab  #$7E          ;load B with 7Eh (0111 1110)
 011E : E7 00      stab  $00,x         ;store B in addr X + 00h
-0120 : C6 FA      ldab  #$FA          ;load B with FAh (1111 1010)
-0122 : E7 01      stab  $01,x         ;store B in addr X + 01h (X = 16)
-0124 : C6 B2      ldab  #$B2          ;load B with B2h (1011 0010) 
-0126 : E7 02      stab  $02,x         ;store B in addr X + 02h (X = 17)
+0120 : C6 01      ldab  #$01          ;load B with (was FAh (1111 1010)) <-- change to 01h (0000 0001)
+0122 : E7 01      stab  $01,x         ;store B in addr X + 01h
+0124 : C6 2A      ldab  #$2A          ;load B with B2h (1011 0010) <-- change to 2Ah (0010 1010) 
+0126 : E7 02      stab  $02,x         ;store B in addr X + 02h
 0128 : DE 0F      ldx X000F           ;load X with addr 0F
+;012A SYN83 stores 7E FA B2 jmp $FAB2, change to 7E 01 2A
 012A : 4F         clra                ;clear A
 012B : F6 00 0E   ldab  X000E         ;load B with addr 0E
 012E : 5C         incb                ;incr B
@@ -153,7 +157,7 @@
 0143 : 89 00      adca  #$00          ;A = Carry + A + 00h 
 0145 : 54         lsrb                ;logic shift right B (bit7=0)
 0146 : 89 00      adca  #$00          ;A = Carry + A + 00h 
-0148 : 1B          aba                 ;A = A + B 
+0148 : 1B         aba                 ;A = A + B 
 0149 : 48         asla                ;arith shift left A (bit0 is 0)
 014A : 48         asla                ;arith shift left A (bit0 is 0)
 014B : 48         asla                ;arith shift left A (bit0 is 0)
@@ -175,7 +179,12 @@
 0165 : 02 3E 7C 04 03 FF 3E 3F
 016D : 2C E2 7C 12 0D 74 7C 0D
 0175 : 0E 41 7C 23 0B 50 7C 1D
-017D : 29 F2 7C 3F 02 3E F8 04
+017D : 29 F2 7C 3F 
+;0181 : write flood zone below 
+;(01 with some var (7E 01 2A) values at :
+; 0181,0183-0186,0189,018B,018D-018F,0190-0192,0194,019E-019F,01A0,01A2)
+;7E 01 2A write at 01BF
+0181 : 02 3E F8 04
 0185 : 03 FF 7C 3F 2C E2 F8 12
 018D : 0D 74 F8 0D 0E 41 F8 23
 0195 : 0B 50 F8 1D 2F F2 F8 23
@@ -192,4 +201,4 @@
 01ED : 3F 37 30 29 23 1D 17 12
 01F5 : 0D 08 04
 ;*************************************;
-; 01F7 : end, up to 01FF
+; 01F8 : end, up to 01FF
