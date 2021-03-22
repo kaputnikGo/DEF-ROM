@@ -7,7 +7,7 @@
 ; mpu clock speed is default/low (quoted as 0.5 MHz), expecting ~894750 cycles per second
 ; using edited subroutines NMI, PARAM7, CALCOS, SYNTH8
 ; jmp,jsr,bsr addrs done
-; runs in emu
+; runs in emu, hardware single blip then silent looping
 ;
 ; attempting to get the NMI organ melody...
 ;
@@ -25,7 +25,7 @@
 000A : EB 7F                          ; X CAL A, PRM71 X
 000C : FF 00                          ; X,A
 000E : A8 3C                          ; SYN8, PRM71 X
-0010 : 00 00                          ; X SYN8, A
+0010 : 74 7C                          ; X SYN8, A
 0012 : 00 00                          ;
 0014 : 00 00                          ;
 0016 : 00 00                          ;
@@ -129,7 +129,7 @@
 0118 : 6F 01      clr $01,x           ;clear addr X + 01h
 011A : 08         inx                 ;incr X       
 011B : 08         inx                 ;incr X
-;SYN83 a timer with a stored jmp?
+;SYN83 a timer with stored jmp(s)?
 011C : C6 7E      ldab  #$7E          ;load B with 7Eh (0111 1110)
 011E : E7 00      stab  $00,x         ;store B in addr X + 00h
 0120 : C6 01      ldab  #$01          ;load B with (was FAh (1111 1010)) <-- change to 01h (0000 0001)
@@ -165,25 +165,24 @@
 014D : 48         asla                ;arith shift left A (bit0 is 0)
 014E : B7 04 00   staa  X0400         ;store A in DAC output SOUND
 0151 : 09         dex                 ;decr X
-; in here is a beq to a jmp 0012 (mem location) so is it executable?
-;0152 : 27 03      beq  LFADF     ;branch =0 SYN84
-;0154 : 7E 00 12   jmp  L0012     ;jump extended addr 0012 (scratch mem location?)
-;SYN84 LFADF:
-0152 : 39         rts                 ;return subroutine
-0153 : 01 01      nop nop             ;spare
+0152 : 27 03      beq  L0157          ;branch =0 SYN84
+0154 : 7E 01 81   jmp  L0181          ;jump to timer location 0181 (0012)
+;SYN84
+0157 : 39         rts                 ;return subroutine
 ;*************************************;
 ;ORGAN MELODY LFD94 wave/melody table ?
 ;*************************************;
-0155 : 0C 7F 1D 0F FB 7F 23 0F
-015D : 15 FE 08 50 8A 88 3E 3F
-0165 : 02 3E 7C 04 03 FF 3E 3F
-016D : 2C E2 7C 12 0D 74 7C 0D
-0175 : 0E 41 7C 23 0B 50 7C 1D
-017D : 29 F2 7C 3F 
+0158 : 0C 7F 1D 0F FB 7F 23 0F
+0160 : 15 FE 08 50 8A 88 3E 3F
+0168 : 02 3E 7C 04 03 FF 3E 3F
+0170 : 2C E2 7C 12 0D 74 7C 0D
+0178 : 0E 41 7C 23 0B 50 7C 1D
+0180 : 29
 ;0181 : write flood zone below 
-;(01 with some var (7E 01 2A) values at :
-; 0181,0183-0186,0189,018B,018D-018F,0190-0192,0194,019E-019F,01A0,01A2)
+;(01 with some var (7E 01 2A, 91, 80, C0) values at :
+; 0181,0183-0186,0189,018B,018D-018F,0190-0192,0194,019E-019F,01A0,01A2,01E0-01E2)
 ;7E 01 2A write at 01BF
+; this maybe a nop timer with differing times for note length/freq?
 0181 : 02 3E F8 04
 0185 : 03 FF 7C 3F 2C E2 F8 12
 018D : 0D 74 F8 0D 0E 41 F8 23
