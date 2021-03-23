@@ -14,3 +14,7 @@ Future possible comparison between Stellar Wars ROM and Varkon ROM to investigat
 Testing is done on this ET-3400 emulator fork : https://github.com/kaputnikGo/et3400-emu
 
 Disassembler archived here: https://www.oocities.org/pclareuk/DASMx/
+
+Photo of the current hardware setup of ET-3400, version 2 PIA breakout board and a Williams Electronics system 7 sound board
+
+<img src="https://github.com/kaputnikGo/DEF-ROM/blob/master/Def-Rom-hardware.jpg" height="612px" />
