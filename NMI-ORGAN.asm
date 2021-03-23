@@ -1,4 +1,4 @@
-; DEF-ROM NMI-ORGAN SOUNDS CODE - 23 Mar 2021
+; DEF-ROM NMI-ORGAN SOUNDS CODE - 24 Mar 2021
 ; hack for Heathkit ET-3400 Audio Setup
 ; user RAM = 196 + 255 bytes = 453
 ; addr 0000 - 00C4 and 0100 - 01FF
@@ -10,7 +10,7 @@
 ;
 ; Full NMI reset is 1st 2 bars JS Bach's Toccata and Fugue in D Minor + Williams Boot Carpet
 ; orig starts at last half 1st bar, repeat lower octave, then no more valid melody FDB
-; works, added FDBs are causing write floods to 008B :(
+; works, FDB write floods constrained.
 ;
 ; SW demo :
 ; [---- ----][---- ----]
@@ -27,15 +27,12 @@
 000C : 3E 3E                          ; X SYN8, A
 000E : 01 01                          ; jmp write here, write flood timer here with multiple jmp writes throughout
 ;~ all nops, then jmp writes:
-002E : 01
-002F : 91 00      cmpa $00            ;comp A with addr 00 (only sets condition codes NZVC)
-0031 : 7E 01 4D   jmp $014D           ;jump to addr 014D
-0034 : 00                             ;
-; ~ jmp write, this will 01 nop all prior, then they write back again. 
-0061 : 91 00      cmpa $00            ;comp A with addr 00
-0063 : 7E 01 4D   jmp $014D           ;jump to addr 014D (last flood write addr)
-; write flood caused by extra FDBs/values
-; 01 write flood plus 7E014D from 0086 to 008B (after ~ >=1 sec runtime, it goes beyond 66)
+002A : 01
+002B : 91 00      cmpa $00            ;comp A with addr 00 (only sets condition codes NZVC)
+002D : 7E 01 4D   jmp $014D           ;jump to addr 014D
+0030 : 00
+; ~                                   ;
+0065 : 00                             ;
 ; mem locations derived from X
 ;*************************************;
 ;INIT (POWER-ON) org 0066 
@@ -60,7 +57,7 @@
 0087 : B6 40 02   ldaa  $4002         ;load A with PIA2 B
 008A : 97 01      staa  $01           ;store A in addr 01
 ;*************************************;
-;NMI
+;NMI flood ends at PIA end
 ;*************************************;
 008C : 86 02      ldaa  #$02          ;load A with 02h (0000 0010)
 008E : 8D 14      bsr L00A4           ;branch sub PRM71 INIT
@@ -190,10 +187,13 @@
 0183 : 15 FE 08 50 8A 88 3E 3F        ;018A 3F 1st note pitch 
 018B : 02 3E 7C 04 03 FF 3E 3F        ;018B X=02 3E (1st length), 01BF X=03 FF(2nd length), 7C 04 2nd note, 3F 
 0193 : 2C E2 7C 12 0D 74 7C 0D        ;0193 X=2C E2(3rd length)
-019B : 0E 41 7C 23 0B
+019B : 0E 41 7C 23 0B 50 7C 1D        ;
+01A3 : 29 02 3E ;(7C) F8              ; <-- this val cause flood over mem 
+; change F8h (248) to 7Ch (124) write flood goes to 004D instead of 008B
+; scratch mem for flood should be within 0012 to 007F on orig hardware.
+ 
 ;split cut for error checks, write flood 
-01A0 : 50 7C 1D
-01A3 : 29 02 3E F8 04 03 FF 7C        ;
+01A6 : F8 04 03 FF 7C              ; 
 01AB : 3F 2C E2 F8 12 0D 0E 41        ;
 01B3 : F8 23 0B 50 F8 1D 2F F2        ;
 01BB : F8 23 05 A8 F8 12 06 BA        ;
