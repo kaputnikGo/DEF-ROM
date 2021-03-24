@@ -11,6 +11,8 @@
 ; Full NMI reset is 1st 2 bars JS Bach's Toccata and Fugue in D Minor + Williams Boot Carpet
 ; orig starts at last half 1st bar, repeat lower octave, then no more valid melody FDB
 ; works, FDB write floods constrained.
+; pitch is way up now :( pitch is product of jmp position in scratch mem)
+; so current last jmp at 002D means it should be back at 0063
 ;
 ; SW demo :
 ; [---- ----][---- ----]
@@ -29,11 +31,12 @@
 ;~ all nops, then jmp writes:
 002A : 01
 002B : 91 00      cmpa $00            ;comp A with addr 00 (only sets condition codes NZVC)
-002D : 7E 01 4D   jmp $014D           ;jump to addr 014D
-0030 : 00
-; ~                                   ;
-0065 : 00                             ;
+002D : 7E 01 4D   jmp $014D           ;jump to addr 014D <-- this should be at 0063
+0030 : 00                             ;not used unless FDB change
+; ~                                   ; ./cont
+0065 : 00                             ;not used unless FDB change
 ; mem locations derived from X
+; ensure hardware has zero'd (00) data to 0066
 ;*************************************;
 ;INIT (POWER-ON) org 0066 
 ;*************************************;
@@ -65,7 +68,7 @@
 0092 : 8D 10      bsr L00A4           ;branch sub PRM71 INIT
 0094 : 20 F6      bra L008C           ;branch always NMI <-- for endless loop
 ;*************************************;
-;CALCOS 0096
+;CALCOS (0096)
 ;*************************************;
 0096 : DF 05      stx X0005           ;store X in addr (09) 05
 0098 : 9B 06      adda  X0006         ;add A with addr (0A) 06
@@ -76,7 +79,7 @@
 00A1 : DE 05      ldx X0005           ;load X from addr (09) 05
 00A3 : 39         rts                 ;return subroutine
 ;*************************************;
-;PRM71 INIT org 00A4
+;PRM71 INIT (00A4)
 ;*************************************;
 00A4 : 7F 00 02   clr X0002           ;clr (00) addr 02 (04) <-- not used?
 00A7 : 97 09      staa  X0009         ;store A in addr (0D) 09
@@ -95,7 +98,7 @@
 ;00BE end
 ;00C4 : 6 bytes free (+ poss 5 if rem clr addr 02)
 ;*************************************;
-;PRM73 org 0100
+;PRM73 (0100)
 ;*************************************;
 ;PRM73
 0100 : 08         inx                 ;incr X
@@ -121,7 +124,7 @@
 ;PRM75
 0122 : 39         rts                 ;return subroutine
 ;*************************************;
-;SYNTH8 org 0123
+;SYNTH8 (0123)
 ;*************************************;
 0123 : CE 00 0E   ldx #$000E          ;load X with 000Eh flood start <-- ldx DE 0E direct ?
 0126 : 80 02      suba  #$02          ;A = A - 02h (0000 0010)
@@ -153,7 +156,7 @@
 014E : F6 00 0A   ldab  X000A         ;load B with addr (0E) 0A <-- ldab D6 0A direct?
 0151 : 5C         incb                ;incr B
 0152 : D7 0A      stab  X000A         ;store B in addr (0E) 0A
-0154 : D4 11      andb  X0011         ;and B with addr 11
+0154 : D4 0D      andb  X000D         ;and B with addr (11) 0D
 0156 : 54         lsrb                ;logic shift right B (bit7=0)
 0157 : 89 00      adca  #$00          ;A = Carry + A + 00h 
 0159 : 54         lsrb                ;logic shift right B (bit7=0)
@@ -181,29 +184,24 @@
 ;SYN84
 017A : 39         rts                 ;return subroutine
 ;*************************************;
-;ORGAN MELODY (LFD94) wave/melody table (74 bytes)
+;ORGAN MELODY (017B)(orig LFD94) wave/melody table
 ;*************************************;
 017B : 0C 7F 1D 0F FB 7F 23 0F        ;01A0 sound mod, octave info?
 0183 : 15 FE 08 50 8A 88 3E 3F        ;018A 3F 1st note pitch 
 018B : 02 3E 7C 04 03 FF 3E 3F        ;018B X=02 3E (1st length), 01BF X=03 FF(2nd length), 7C 04 2nd note, 3F 
 0193 : 2C E2 7C 12 0D 74 7C 0D        ;0193 X=2C E2(3rd length)
 019B : 0E 41 7C 23 0B 50 7C 1D        ;
-01A3 : 29 02 3E ;(7C) F8              ; <-- this val cause flood over mem 
-; change F8h (248) to 7Ch (124) write flood goes to 004D instead of 008B
+01A3 : 29 F2 7C 3F 02 3E F8 04        ;
+01AB : 03	FF 7C 3F 2C E2 F8 12        ;
+01B3 : 0D	74 F8 0D 0E	41 F8 23        ;
+01BB : 0B 50 F8 1D 2F	F2 F8 23        ;
+01C3 : 
 ; scratch mem for flood should be within 0012 to 007F on orig hardware.
- 
-;split cut for error checks, write flood 
-01A6 : F8 04 03 FF 7C              ; 
-01AB : 3F 2C E2 F8 12 0D 0E 41        ;
-01B3 : F8 23 0B 50 F8 1D 2F F2        ;
-01BB : F8 23 05 A8 F8 12 06 BA        ;
-01C3 : F8 04                          ;
 ;01C4 end
 ;*************************************;
 ;01C5 monitor RAM
 ; remainder from orig ROM below (83 bytes)
 ; ignore line numbers
-01A5 : 07 FF 7C 37 04 C1 7C 23
 01AD : 05 A8 7C 12 06 BA 3E 04
 01B5 : 07 FF 3E 37 04 C1 3E 23
 01BD : 05 A8 1F 12 06 BA 1F 04
