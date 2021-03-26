@@ -10,6 +10,7 @@
 ; Full NMI reset is 1st 2 bars JS Bach's Toccata and Fugue in D Minor + Williams Boot Carpet
 ; orig starts at last half 1st bar, repeat lower octave, then no more valid melody FDB
 ; move calcos (14 bytes) to ram1?
+; find melody fdb length sentinel var
 ;
 ; SW demo :
 ; [---- ----][---- ----]
@@ -35,35 +36,35 @@
 ;INIT (POWER-ON) org 0080 
 ;*************************************;
 0080 : 8E 01 FF   lds #$01FF          ; load SP with 01FFh
-0084 : CE 80 00   ldx #$8000          ; load X with 8000h, PIA1 (DAC) addr
-0087 : 6F 02      clr $02,x           ; clear(00) addr X + 02h (set 8002 PIA1 PR/DDR port B in)
-0089 : 86 FF      ldaa  #$FF          ; load A with FFh (1111 1111)
-008B : A7 00      staa  $00,x         ; store A in addr X + 00h (set 8000 PIA1 PR/DDR port A out)
-008D : 86 3C      ldaa  #$3C          ; load A with 3Ch(0011 1100)
-008F : A7 01      staa  $01,x         ; store A in addr X + 01h (8001 PIA1 CR port A)
-0091 : 86 37      ldaa  #$37          ; load A with 37h(0011 0111)
-0093 : A7 03      staa  $03,x         ; store A in addr X + 03h (8003 PIA1 CR port B) 
-0095 : 7F 40 02   clr X4002           ; clear(00) 4002h (set PIA2 PR/DDR port B in)
-0098 : 86 04      ldaa  #$04          ; set CR bit 2 high for PIA2
-009A : B7 40 03   staa X4003          ; store A in addr 4003 (PIA2 CR port B)
+0083 : CE 80 00   ldx #$8000          ; load X with 8000h, PIA1 (DAC) addr
+0086 : 6F 02      clr $02,x           ; clear(00) addr X + 02h (set 8002 PIA1 PR/DDR port B in)
+0088 : 86 FF      ldaa  #$FF          ; load A with FFh (1111 1111)
+008A : A7 00      staa  $00,x         ; store A in addr X + 00h (set 8000 PIA1 PR/DDR port A out)
+008C : 86 3C      ldaa  #$3C          ; load A with 3Ch(0011 1100)
+008E : A7 01      staa  $01,x         ; store A in addr X + 01h (8001 PIA1 CR port A)
+0090 : 86 37      ldaa  #$37          ; load A with 37h(0011 0111)
+0092 : A7 03      staa  $03,x         ; store A in addr X + 03h (8003 PIA1 CR port B) 
+0094 : 7F 40 02   clr X4002           ; clear(00) 4002h (set PIA2 PR/DDR port B in)
+0097 : 86 04      ldaa  #$04          ; set CR bit 2 high for PIA2
+0099 : B7 40 03   staa X4003          ; store A in addr 4003 (PIA2 CR port B)
 ;*************************************;
 ;PIA reads
 ;*************************************;
-009D : B6 80 02   ldaa  $8002         ;load A with PIA1 B
-00A0 : 97 00      staa  $00           ;store A in addr 00
-00A2 : B6 40 02   ldaa  $4002         ;load A with PIA2 B
-00A5 : 97 01      staa  $01           ;store A in addr 01
+009C : B6 80 02   ldaa  $8002         ;load A with PIA1 B
+009F : 97 00      staa  $00           ;store A in addr 00
+00A1 : B6 40 02   ldaa  $4002         ;load A with PIA2 B
+00A4 : 97 01      staa  $01           ;store A in addr 01
 ;*************************************;
 ;NMI
 ;*************************************;
-00A7 : 86 02      ldaa  #$02          ;load A with 02h (0000 0010)
-00A9 : BD 01 00   jsr L0100           ;jump sub PRM71
-00AC : 86 01      ldaa  #$01          ;load A with 01h (0000 0001)
-00AE : BD 01 00   jsr L0100           ;jump sub PRM71
-00B1 : 20 F4      bra L003E           ;branch always NMI <-- for endless loop
-;00B3 end 
+00A6 : 86 02      ldaa  #$02          ;load A with 02h (0000 0010)
+00A8 : BD 01 00   jsr L0100           ;jump sub PRM71
+00AB : 86 01      ldaa  #$01          ;load A with 01h (0000 0001)
+00AD : BD 01 00   jsr L0100           ;jump sub PRM71
+00B0 : 20 F4      bra L003E           ;branch always NMI <-- for endless loop
+;00B2 end 
 ; ~
-;00C4 : 17 bytes free space to here (calcos here?)
+;00C4 : 18 bytes free space to here (calcos here?)
 ;*************************************;
 ;PRM71 0100
 ;*************************************;
@@ -128,7 +129,7 @@
 0157 : 08         inx                 ;incr X
 0158 : 80 02      suba  #$02          ;A = A - 02h (0000 0010)
 015A : 20 F1      bra L014D           ;branch always SYN81
-;SYN82 - writes 91 00 (cmpa $00) gate for freq/pitch
+;SYN82 - writes 91 00 (cmpa $00) gate for freq/pitch end jmp
 015C : C6 91      ldab  #$91          ;load B with 91h (1001 0001) <-- poss param ?
 015E : E7 00      stab  $00,x         ;store B in addr X + 00h
 0160 : 6F 01      clr $01,x           ;clear addr X + 01h
@@ -175,7 +176,7 @@
 ;SYN84
 019F : 39         rts                 ;return subroutine
 ;*************************************;
-;ORGAN melody table
+;ORGAN melody table (total FDB 162 bytes, A2h length, orig:FE36 - FD94)
 ;*************************************;
 01A0 : 0C 7F 1D 0F FB 7F 23 0F        ;sound mod, pairs for X: 0C7F, 1D0F
 01A8 : 15 FE 08 50 8A 88 3E 3F        ;3F 1st note pitch,
