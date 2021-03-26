@@ -9,6 +9,7 @@
 ;
 ; Full NMI reset is 1st 2 bars JS Bach's Toccata and Fugue in D Minor + Williams Boot Carpet
 ; orig starts at last half 1st bar, repeat lower octave, then no more valid melody FDB
+; current: A2, G2, A2, E2, F2, C#2, D2 || A1 stuck and held
 ; find melody fdb length sentinel var
 ;
 ; SW demo :
@@ -30,7 +31,7 @@
 ; ~                                   ; last jmp write at 0065: 91 00 ; 0067: 7E 01 72
 006A : 00                             ;not used
 ; ~
-007F : 00                             ;not used (21 bytes); error write flood to 008D : 7E 01 72
+007F : 00                             ;not used (21 bytes)
 ;*************************************;
 ;INIT (POWER-ON) org 0080 
 ;*************************************;
@@ -132,15 +133,15 @@
 0153 : 6F 01      clr $01,x           ;clear addr X + 01h
 0155 : 08         inx                 ;incr X       
 0156 : 08         inx                 ;incr X
-;SYN83 - writes 7E 01 72 (jmp 0172) end freq/pitch
+;SYN83 - writes 7E 01 65 (jmp 0165) end freq/pitch
 0157 : C6 7E      ldab  #$7E          ;load B with 7Eh (1111 1110)
 0159 : E7 00      stab  $00,x         ;store B in addr X + 00h
 015B : C6 01      ldab  #$01          ;load B with 01h (0000 0001)
 015D : E7 01      stab  $01,x         ;store B in addr X + 01h
-015F : C6 72      ldab  #$72          ;load B with 72h (1110 0010) 
+015F : C6 65      ldab  #$65          ;load B with 65h (1110 0010) 
 0161 : E7 02      stab  $02,x         ;store B in addr X + 02h
 0163 : DE 0F      ldx X000F           ;load X with addr 0F
-;0172
+;0165
 0165 : 4F         clra                ;clear A
 0166 : F6 00 0E   ldab  X000E         ;load B with addr 0E
 0169 : 5C         incb                ;incr B
@@ -173,7 +174,7 @@
 ;SYN84
 0192 : 39         rts                 ;return subroutine
 ;*************************************;
-;ORGAN 0193 melody table (total FDB 162 bytes, A2h length, orig:FE36 - FD94)
+;ORGAN 0193 melody table (total FDB 162 bytes, A2h length)
 ;*************************************;
 0193 : 0C 7F 1D 0F FB 7F 23 0F        ;sound mod, pairs for X: 0C7F, 1D0F
 019B : 15 FE 08 50 8A 88 3E 3F        ;3F 1st note pitch,
@@ -182,7 +183,7 @@
 01B3 : 0E 41 7C 23 0B 50 7C 1D        ;
 01BB : 29 02 3E ;(CC) F8 04 03 FF 7C  ;error in write flood length here, change F8 to CC for shorter length.
 01C3 :                                ; 7C ends 0051,8C ends 0059, BC ends 0071, CC ends 0079 
-;01C4 end
+;01C4 end                             ; 
 ;*************************************;
 ;01C5 monitor RAM
 ; remainder from orig ROM below 
