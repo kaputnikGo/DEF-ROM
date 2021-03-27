@@ -1,5 +1,5 @@
 							;
-              ; updated 27/03/2021
+              ; updated 28/03/2021
               ;
 							;	Disassembled by:
 							;		DASMx object code disassembler
@@ -16,148 +16,147 @@
 							;
 							;	CPU:		Motorola 6802 (6800/6802/6808 family)
 							;
+              ; pinball Sound ROM 1 part no:5A-9198
+              ; for games: Flash[Sys 4][1979], Time Warp[Sys 6][1979], Stellar Wars[Sys 4][1979], 
+              ;            Scorpion[Sys 6][1980], Tri Zone[Sys 6][1979] 
 							;
 							;
-								org	$F800
+org	$F800
 							;
-F800 : 78 
+F800 : 78                       ;hmmm
 ;*************************************;
-;RESET
+;RESET power on
 ;*************************************;
 F801 : 0F         sei           ;set interrupt mask   
-F802 : 8E	00 7F   lds	#$007F    ;load stack pointer with 007Fh (0000 0000 0111 1111) 
-F805 : CE 04 00   ldx	#$0400    ;load X with 0400h (0000 0100 0000 0000) PIA addr
-F808 : 6F 01      clr	$01,x
-F80A : 6F 03			clr	$03,x
-F80C : 86 FF			ldaa	#$FF
-F80E : A7 00			staa	$00,x
-F810 : 6F 02			clr	$02,x
-F812 : 86 37			ldaa	#$37
-F814 : A7 03			staa	$03,x
-F816 : 86 3C			ldaa	#$3C
-F818 : A7 01			staa	$01,x
-F81A : 97 05			staa	$05
-F81C : 4F				  clra
-F81D : 97 03			staa	$03
-F81F : 97 00			staa	$00
-F821 : 97 01			staa	$01
-F823							XF823:
-F823 : 97 02			staa	$02
-F825 : 97 04			staa	$04
-F827 : 0E				  cli
+F802 : 8E	00 7F   lds	#$007F    ;load stack pointer with 007Fh 
+F805 : CE 04 00   ldx	#$0400    ;load X with 0400h (PIA addr)
+F808 : 6F 01      clr	$01,x     ;clear addr X + 01h (0401 PIA1 CR port A)
+F80A : 6F 03			clr	$03,x     ;clear addr X + 03h (0403 PIA1 CR port B)
+F80C : 86 FF			ldaa	#$FF    ;load A with value FFh
+F80E : A7 00			staa	$00,x   ;store A in addr X + 00h (0400 PIA1 PR/DDR port A out)
+F810 : 6F 02			clr	$02,x     ;clear addr X + 02h (0402 PIA1 PR/DDR port B in)
+F812 : 86 37			ldaa	#$37    ;load A with value 37h
+F814 : A7 03			staa	$03,x   ;store A ijn addr X + 03h (0403 PIA1 CR port B)
+F816 : 86 3C			ldaa	#$3C    ;load A with value 3Ch
+F818 : A7 01			staa	$01,x   ;store A in addr X + 01h (0401 PIA1 CR port A)
+F81A : 97 05			staa	$05     ;store A in addr 05
+F81C : 4F				  clra          ;clear (00) A
+F81D : 97 03			staa	$03     ;store A in addr 03
+F81F : 97 00			staa	$00     ;store A in addr 00
+F821 : 97 01			staa	$01     ;store A in addr 01
+F823 : 97 02			staa	$02     ;store A in addr 02
+F825 : 97 04			staa	$04     ;store A in addr 04
+F827 : 0E				  cli           ;clear interrupt
 ;LF828:
-F828 : 20 FE			bra	LF828
+F828 : 20 FE			bra	LF828     ;branch always here
 ;*************************************;
 ;PARAM1
 ;*************************************;
-;LF82A:
-F82A : 16				  tab
-F82B : 48				  asla
-F82C : 48				  asla
-F82D : 48				  asla
-F82E : 1B				  aba
-F82F : CE 00 0F   ldx	#$000F
-F832 : DF 0B			stx	$0B
-F834 : CE FD 60   ldx	#$FD60
-F837 : BD FC F0   jsr	LFCF0
-F83A : C6 09			ldab	#$09
-F83C : 7E FA E0   jmp	LFAE0
+F82A : 16				  tab           ;transfer A to B
+F82B : 48				  asla          ;arith shift left A (bit0 is 0)          
+F82C : 48				  asla          ;arith shift left A (bit0 is 0)
+F82D : 48				  asla          ;arith shift left A (bit0 is 0)
+F82E : 1B				  aba           ;A = A + B
+F82F : CE 00 0F   ldx	#$000F    ;load X with value 000Fh
+F832 : DF 0B			stx	$0B       ;store X in addr 0B
+F834 : CE FD 60   ldx	#$FD60    ;load X with value FD60h (VVECT SAW)
+F837 : BD FC F0   jsr	LFCF0     ;jump sub CALCOS
+F83A : C6 09			ldab	#$09    ;load B with value 09h
+F83C : 7E FA E0   jmp	LFAE0     ;jump UTIL1 
 ;*************************************;
 ;SYNTH1
 ;*************************************;
-;LF83F:
-F83F : 96 17		  ldaa	$17
-F841 : B7 04 00   staa	$0400
-;LF844:
-F844 : 96 0F		  ldaa	$0F
-F846 : 97 18		  staa	$18
-F848 : 96 10		  ldaa	$10
-F84A : 97 19		  staa	$19
-;LF84C:
-F84C : DE 14		  ldx	$14
-F84E							LF84E:
-F84E : 96 18		  ldaa	$18
-F850 : 73 04 00   com	$0400
-;LF853:
-F853 : 09				  dex
-F854 : 27 10		  beq	LF866
-F856 : 4A				  deca
-F857 : 26 FA		  bne	LF853
-F859 : 73 04 00   com	$0400
-F85C : 96 19		  ldaa	$19
-;LF85E:
-F85E : 09				  dex
-F85F : 27 05		  beq	LF866
-F861 : 4A				  deca
-F862 : 26 FA		  bne	LF85E
-F864 : 20 E8		  bra	LF84E
-;LF866:
-F866 : B6 04 00   ldaa	$0400
-F869 : 2B 01		  bmi	LF86C
-F86B : 43				  coma
-;LF86C:
-F86C : 8B 00		  adda	#$00
-F86E : B7 04 00   staa	$0400
-F871 : 96 18		  ldaa	$18
-F873 : 9B 11		  adda	$11
-F875 : 97 18		  staa	$18
-F877 : 96 19		  ldaa	$19
-F879 : 9B 12		  adda	$12
-F87B : 97 19		  staa	$19
-F87D : 91 13		  cmpa	$13
-F87F : 26 CB		  bne	LF84C
-F881 : 96 16		  ldaa	$16
-F883 : 27 06		  beq	LF88B
-F885 : 9B 0F		  adda	$0F
-F887 : 97 0F		  staa	$0F
-F889 : 26 B9		  bne	LF844
-;LF88B:
+F83F : 96 17		  ldaa	$17     ;load A with value in addr 17
+F841 : B7 04 00   staa	$0400   ;store A in DAC output SOUND
+;SYN11 LF844:
+F844 : 96 0F		  ldaa	$0F     ;load A with value in addr 0F
+F846 : 97 18		  staa	$18     ;store A in addr 18
+F848 : 96 10		  ldaa	$10     ;load A with value in addr 10
+F84A : 97 19		  staa	$19     ;store A in addr 19
+;SYN12 LF84C:
+F84C : DE 14		  ldx	$14       ;load X with value in addr 14
+;SYN13 LF84E:
+F84E : 96 18		  ldaa	$18     ;load A with value in addr 18
+F850 : 73 04 00   com	$0400     ;complement 1s in DAC output SOUND
+;SYN14 LF853:
+F853 : 09				  dex           ;decr X
+F854 : 27 10		  beq	LF866     ;branch if Z=1 SYN16
+F856 : 4A				  deca          ;decr A
+F857 : 26 FA		  bne	LF853     ;branch if Z=0 SYN14
+F859 : 73 04 00   com	$0400     ;complement 1s in DAC output SOUND
+F85C : 96 19		  ldaa	$19     ;load A with value in addr 19
+;SYN15 LF85E:
+F85E : 09				  dex           ;decr X
+F85F : 27 05		  beq	LF866     ;branch if Z=1 SYN16
+F861 : 4A				  deca          ;decr A
+F862 : 26 FA		  bne	LF85E     ;branch if Z=0 SYN15
+F864 : 20 E8		  bra	LF84E     ;branch always SYN13
+;SYN16 LF866:
+F866 : B6 04 00   ldaa	$0400   ;load A with value in addr DAC output SOUND
+F869 : 2B 01		  bmi	LF86C     ;branch if N=1 SYN17
+F86B : 43				  coma          ;complement 1s in A
+;SYN17 LF86C:
+F86C : 8B 00		  adda	#$00    ;add A with value 00h
+F86E : B7 04 00   staa	$0400   ;store A in DAC output SOUND
+F871 : 96 18		  ldaa	$18     ;load A with value in addr 18
+F873 : 9B 11		  adda	$11     ;add A with value in addr 11
+F875 : 97 18		  staa	$18     ;store A in addr 18
+F877 : 96 19		  ldaa	$19     ;load A with value in addr 19
+F879 : 9B 12		  adda	$12     ;add A with value in addr 12
+F87B : 97 19		  staa	$19     ;store A in addr 19
+F87D : 91 13		  cmpa	$13     ;compare A with value in addr 13
+F87F : 26 CB		  bne	LF84C     ;branch if Z=0 SYN12
+F881 : 96 16		  ldaa	$16     ;load A with value in addr 16
+F883 : 27 06		  beq	LF88B     ;branch if Z=1 SYN18
+F885 : 9B 0F		  adda	$0F     ;add A with value in addr 0F
+F887 : 97 0F		  staa	$0F     ;store A in addr 0F
+F889 : 26 B9		  bne	LF844     ;branch if Z=0 SYN11
+;SYN18 LF88B:
 F88B : 39				  rts           ;return subroutine
 ;*************************************;
 ;PARAM2
 ;*************************************;
-F88C : 86 01		  ldaa	#$01
-F88E : 97 16		  staa	$16
-F890 : C6 03		  ldab	#$03
-F892 : 20 0A		  bra	LF89E
-;
-F894 : 86 FE		  ldaa	#$FE
-F896 : 97 16		  staa	$16
-F898 : 86 C0		  ldaa	#$C0
-F89A : C6 10		  ldab	#$10
-F89C : 20 00		  bra	LF89E
+F88C : 86 01		  ldaa	#$01    ;load A with value 01h
+F88E : 97 16		  staa	$16     ;store A in addr 16
+F890 : C6 03		  ldab	#$03    ;load B with value 03h
+F892 : 20 0A		  bra	LF89E     ;branch always SYN21
 ;*************************************;
 ;SYNTH2
 ;*************************************;
-;LF89E:
-F89E : 97 15		  staa	$15
-F8A0 : 86 FF		  ldaa	#$FF
-F8A2 : B7 04 00   staa	$0400
-F8A5 : D7 11		  stab	$11
-;LF8A7:
-F8A7 : D6 11		  ldab	$11
-;LF8A9:
-F8A9 : 96 06		  ldaa	$06
-F8AB : 44				  lsra
-F8AC : 44				  lsra
-F8AD : 44				  lsra
-F8AE : 98 06		  eora	$06
-F8B0 : 44				  lsra
-F8B1 : 76 00 05   ror	$0005
-F8B4 : 76 00 06   ror	$0006
-F8B7 : 24 03		  bcc	LF8BC
-F8B9 : 73 04 00   com	$0400
-;LF8BC:
-F8BC : 96 15		  ldaa	$15
-;LF8BE:
-F8BE : 4A				  deca
-F8BF : 26 FD		  bne	LF8BE
-F8C1 : 5A				  decb
-F8C2 : 26 E5		  bne	LF8A9
-F8C4 : 96 15		  ldaa	$15
-F8C6 : 9B 16		  adda	$16
-F8C8 : 97 15		  staa	$15
-F8CA : 26 DB		  bne	LF8A7
+F894 : 86 FE		  ldaa	#$FE    ;load A with value FEh
+F896 : 97 16		  staa	$16     ;store A in addr 16
+F898 : 86 C0		  ldaa	#$C0    ;load A with value C0h
+F89A : C6 10		  ldab	#$10    ;load B with value 10h
+F89C : 20 00		  bra	LF89E     ;branch always SYN21
+;SYN21 LF89E
+F89E : 97 15		  staa	$15     ;store A in addr 15
+F8A0 : 86 FF		  ldaa	#$FF    ;load A with value FFh
+F8A2 : B7 04 00   staa	$0400   ;store A in DAC output SOUND
+F8A5 : D7 11		  stab	$11     ;store B in addr 11
+;SYN22 LF8A7:
+F8A7 : D6 11		  ldab	$11     ;load B with value in addr 11
+;SYN23 LF8A9:
+F8A9 : 96 06		  ldaa	$06     ;load A with value in addr 06
+F8AB : 44				  lsra          ;logic shift right A (bit7=0)
+F8AC : 44				  lsra          ;logic shift right A (bit7=0)
+F8AD : 44				  lsra          ;logic shift right A (bit7=0)
+F8AE : 98 06		  eora	$06     ;exclusive OR with value in addr 06
+F8B0 : 44				  lsra          ;logic shift right A (bit7=0)
+F8B1 : 76 00 05   ror	$0005     ;rotate right in addr 0005 (bit7 = C then C = bit0)
+F8B4 : 76 00 06   ror	$0006     ;rotate right in addr 0006 (bit7 = C then C = bit0)
+F8B7 : 24 03		  bcc	LF8BC     ;branch if C=0 SYN24
+F8B9 : 73 04 00   com	$0400     ;complement 1s in DAC output SOUND
+;SYN24 LF8BC:
+F8BC : 96 15		  ldaa	$15     ;load A in addr 15
+;SYN25 LF8BE:
+F8BE : 4A				  deca          ;decr A
+F8BF : 26 FD		  bne	LF8BE     ;branch if Z=0 SYN25
+F8C1 : 5A				  decb          ;decr B
+F8C2 : 26 E5		  bne	LF8A9     ;branch if Z=0 SYN23
+F8C4 : 96 15		  ldaa	$15     ;load A with value in addr 15
+F8C6 : 9B 16		  adda	$16     ;add A with value in addr 16
+F8C8 : 97 15		  staa	$15     ;store A in addr 15
+F8CA : 26 DB		  bne	LF8A7     ;branch if Z=0 SYN22
 F8CC : 39				  rts           ;return subroutine
 ;*************************************;
 ;SYNTH3
@@ -939,8 +938,8 @@ FD46 : FA FA                          ;PARAM11
 FD48 : F8	8C                          ;PARAM2
 FD4A : FB 47                          ;PARAM13
 FD4C : FA F4                          ;PARAM10 
-FD4E : F8	CD                          ;SYNTH2
-FD50 : F8 94                          ;SYNTH3 
+FD4E : F8	CD                          ;SYNTH3
+FD50 : F8 94                          ;SYNTH2
 FD52 : F9 1C                          ;PARAM4
 FD54 : F9 23                          ;PARAM5 
 FD56 : F9 A6                          ;SYNTH5 
