@@ -1,4 +1,4 @@
-; DEF-ROM NMI-ORGAN SOUNDS CODE - 1 Apr 2021
+; DEF-ROM NMI-ORGAN SOUNDS CODE - 4 Apr 2021
 ; hack for Heathkit ET-3400 Audio Setup
 ; user RAM = 196 + 255 bytes = 453
 ; addr 0000 - 00C4 and 0100 - 01FF
@@ -29,7 +29,7 @@
 ;F824 : 26 FB      bne	LF821     ;branch if Z=0 RST1 (loop clears mem addr 007F down to 0000)
 ;
 ;*************************************;
-; Scratch RAM (0000-0007F) (with typical values)
+; Scratch RAM (0000-0007F) (with typical values) (clear 00 at start)
 ;*************************************;
 0000 : 00 00                          ; PIAs
 0002 : 00 00                          ;not used <-- not used?
@@ -95,12 +95,12 @@
 0103 : 97 0D      staa  X000D         ;store A in addr 0D
 0105 : CE 01 93   ldx #$0193          ;load X with 0193 (addr of melody data)
 ;PRM72
-0108 : A6 00      ldaa  $00,x         ;load A with addr X + 00h
+0108 : A6 00      ldaa  $00,x         ;load A with value at addr X + 00h
 010A : 27 2D      beq L0083           ;branch if Z=1(in accum all bits are 0) to PRM75
-010C : 7A 00 0D   dec X000D           ;decr addr 0D
-010F : 27 06      beq L0061           ;branch =0 PRM73
+010C : 7A 00 0D   dec X000D           ;decr value in addr 0D
+010F : 27 06      beq L0061           ;branch if Z=1 PRM73
 0111 : 4C         inca                ;incr A
-0112 : BD 00 B2   jsr L00B2           ;jump sub CALCOS
+0112 : BD 00 B2   jsr L00B2           ;jump sub CALCOS (shifts X start addr 0193 to 01A0)
 0115 : 20 F1      bra L0052           ;branch always PRM72
 ;PRM73
 0117 : 08         inx                 ;incr X
@@ -123,7 +123,7 @@
 0133 : 08         inx                 ;incr X
 0134 : DF 0B      stx X000B           ;store X in addr 0B
 0136 : 9C 09      cpx X0009           ;comp X with addr 09
-0138 : 26 E7      bne L0121           ;branch !=0 PRM74
+0138 : 26 E7      bne L0121           ;branch Z=0 PRM74
 ;PRM75
 013A : 39         rts                 ;return subroutine
 ;*************************************;
@@ -132,16 +132,16 @@
 013B : CE 00 12   ldx #$0012          ;load X with 0012h flood start
 013E : 80 02      suba  #$02          ;A = A - 02h (0000 0010)
 ;SYN81 - 01 nop length writer for freq/pitch
-0140 : 23 15      bls L0157           ;branch if lower or same SYN83 <-- write loop from 0012
-0142 : 81 03      cmpa  #$03          ;compare A with 03h (0000 0011)
-0144 : 27 09      beq L014F           ;branch =0 SYN82 <-- loop countdown =0
+0140 : 23 15      bls L0157           ;branch if lower or same(C and Z = 1) SYN83 <-- write loop from 0012
+0142 : 81 03      cmpa  #$03          ;compare A with 03h (0000 0011) (needs 3 more bytes space for jmp write)
+0144 : 27 09      beq L014F           ;branch Z=1 SYN82 <-- loop countdown =0
 0146 : C6 01      ldab  #$01          ;load B with 01h (0000 0001)
 0148 : E7 00      stab  $00,x         ;store B in addr X + 00h <-- 01 nop writer
 014A : 08         inx                 ;incr X
 014B : 80 02      suba  #$02          ;A = A - 02h (0000 0010)
 014D : 20 F1      bra L0140           ;branch always SYN81
 ;SYN82 - writes 91 00 (cmpa $00) gate for freq/pitch end jmp
-014F : C6 91      ldab  #$91          ;load B with 91h (1001 0001) <-- poss param ?
+014F : C6 91      ldab  #$91          ;load B with 91h (1001 0001)
 0151 : E7 00      stab  $00,x         ;store B in addr X + 00h
 0153 : 6F 01      clr $01,x           ;clear addr X + 01h
 0155 : 08         inx                 ;incr X       
@@ -154,12 +154,12 @@
 015F : C6 65      ldab  #$65          ;load B with 65h (1110 0010) 
 0161 : E7 02      stab  $02,x         ;store B in addr X + 02h
 0163 : DE 0F      ldx X000F           ;load X with addr 0F
-;0165
+;0165 - synth putput writer and loop reader
 0165 : 4F         clra                ;clear A
 0166 : F6 00 0E   ldab  X000E         ;load B with addr 0E
 0169 : 5C         incb                ;incr B
-016A : D7 0E      stab  X000E         ;store B in addr 0E
-016C : D4 11      andb  X0011         ;and B with addr 11
+016A : D7 0E      stab  X000E         ;store B in addr 0E <-- counter up
+016C : D4 11      andb  X0011         ;and B with value in addr 11 (3E in 1st run)
 016E : 54         lsrb                ;logic shift right B (bit7=0)
 016F : 89 00      adca  #$00          ;A = Carry + A + 00h 
 0171 : 54         lsrb                ;logic shift right B (bit7=0)
@@ -172,33 +172,43 @@
 017B : 89 00      adca  #$00          ;A = Carry + A + 00h 
 017D : 54         lsrb                ;logic shift right B (bit7=0)
 017E : 89 00      adca  #$00          ;A = Carry + A + 00h 
-0180 : 54         lsrb                ;logic shift right B (bit7=0)
+0180 : 54         lsrb                ;logic shift right B (bit7=0) (shift down till C set for adca to count up, A to DAC)
 0181 : 89 00      adca  #$00          ;A = Carry + A + 00h 
 0183 : 1B         aba                 ;A = A + B 
 0184 : 48         asla                ;arith shift left A (bit0 is 0)
 0185 : 48         asla                ;arith shift left A (bit0 is 0)
 0186 : 48         asla                ;arith shift left A (bit0 is 0)
 0187 : 48         asla                ;arith shift left A (bit0 is 0)
-0188 : 48         asla                ;arith shift left A (bit0 is 0)
+0188 : 48         asla                ;arith shift left A (bit0 is 0) (increases value in A)
 0189 : B7 80 00   staa  X8000         ;store A in DAC output SOUND
 018C : 09         dex                 ;decr X
-018D : 27 03      beq  L019F          ;branch =0 SYN84
+018D : 27 03      beq  L019F          ;branch Z=1 SYN84
 018F : 7E 00 12   jmp  L0012          ;jump to timer location 0012 (to jmp writes that set freq/pitch duration)
 ;SYN84
 0192 : 39         rts                 ;return subroutine
 ;*************************************;
 ;ORGAN 0193 melody table (total FDB 162 bytes, A2h length)
 ;*************************************;
-0193 : 0C 7F 1D 0F FB 7F 23 0F        ;sound mod, pairs for X: 0C7F, 1D0F
-019B : 15 FE 08 50 8A 88 3E 3F        ;3F 1st note pitch,
-01A3 : 02 3E 7C 04 03 FF 3E 3F        ;X=02 3E (1st length), 01BF X=03 FF(2nd length), 7C 04 2nd note, 3F 
-01AB : 2C E2 7C 12 0D 74 7C 0D        ;X=2C E2(3rd length) break after 01AF
+0193 : 0C 7F 1D 0F FB 7F 23 0F        ;notes on fdb below
+019B : 15 FE 08 50 8A 88 3E 3F        ;
+01A3 : 02 3E 7C 04 03 FF 3E 3F        ;
+01AB : 2C E2 7C 12 0D 74 7C 0D        ;
 01B3 : 0E 41 7C 23 0B 50 7C 1D        ;
 01BB : 29 02 3E CC ;(F8) 04 03 FF 7C  ;error in write flood length here, change F8 to CC for shorter length.
 01C3 :                                ; 7C ends 0051,8C ends 0059, BC ends 0071, CC ends 0079 
 ;01C4 end                             ; 
 ;*************************************;
+;melody fdb X pairs for freq and length
+;*************************************;
+0193 : [0C 7F] 1D 0F FB 7F 23 0F                  ;PRM72 start X value 0193, jumps to 01A0 after CALCOS, rest skipped
+019B : 15 FE 08 50 8A [88] | [3E 3F]              ;skipped, then 1st
+01A3 : [02 3E] | [7C 04] [03 FF] | [3E 3F]        ; 
+01AB : [2C E2] | [7C 12] [0D 74] | [7C 0D]        ;
+01B3 : [0E 41] | [7C 23] [0B 50] | [7C 1D]        ;
+01BB : [29 02] | [3E CC] [?? ??]                  ;CC was F8, ?? ?? is [04 03]
+;*************************************;
 ; alt melody from Pharaoh ROM
+;*************************************;
 FECD : 34 7C 29 05 56 7C 1D 05        ;
 FED5 : FE 7C 17 0C B2 7C 1D 0B        ;
 FEDD : FC 7C 29 05 56 F8 04 07        ;
@@ -207,7 +217,7 @@ FEED : FE 7C 17 06 59 7C 04 07        ;
 FEF5 : FF 7C 1D 05 ;FE 7C 17 06
 ;*************************************;
 ;01C5 monitor RAM
-; remainder from orig ROM below 
+; remainder from orig ROM1 below 
 3F 2C E2 F8 12 0D 74 F8 
 0D 0E 41 F8 23 0B 50 F8 
 1D 2F F2 F8 23 05 A8 F8 
@@ -223,7 +233,7 @@ FEF5 : FF 7C 1D 05 ;FE 7C 17 06
 1D 5F E4 00 47 3F 37 30 
 29 23 1D 17 12 0D 08 04
 ;*************************************;
-;original ROM:
+;original ROM1:
 ;*************************************;
 ;called by NMI -> PARAM7
 FD94 : 0C 7F 1D 0F FB 7F 23	0F
@@ -274,3 +284,13 @@ FF5D : 29 0A AD 7C 3F	04 7D 7C
 FF65 : 37 04 C1 7C 3F 14 36	F8 
 FF6D : 1D 14 FF F8 04 03 FF 00 
 FF75 : 04 03 F8 F8 04 3F FF 00 
+;*************************************;
+;melody fdb X pairs for freq and length
+;*************************************;
+0193 : [0C 7F] 1D 0F FB 7F 23 0F                  ;PRM72 start X value 0193, jumps to 01A0 after CALCOS, rest skipped
+019B : 15 FE 08 50 8A [88] | [3E 3F]              ;skipped, then 1st
+01A3 : [02 3E] | [7C 04] [03 FF] | [3E 3F]        ; 
+01AB : [2C E2] | [7C 12] [0D 74] | [7C 0D]        ;
+01B3 : [0E 41] | [7C 23] [0B 50] | [7C 1D]        ;
+01BB : [29 02] | [3E CC] [?? ??]                  ;?? ?? is [04 03]
+
