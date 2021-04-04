@@ -57,9 +57,9 @@
 008E : A7 01      staa  $01,x         ; store A in addr X + 01h (8001 PIA1 CR port A)
 0090 : 86 37      ldaa  #$37          ; load A with 37h(0011 0111)
 0092 : A7 03      staa  $03,x         ; store A in addr X + 03h (8003 PIA1 CR port B) 
-0094 : 7F 40 02   clr X4002           ; clear(00) 4002h (set PIA2 PR/DDR port B in)
+0094 : 7F 40 02   clr $4002           ; clear(00) 4002h (set PIA2 PR/DDR port B in)
 0097 : 86 04      ldaa  #$04          ; set CR bit 2 high for PIA2
-0099 : B7 40 03   staa X4003          ; store A in addr 4003 (PIA2 CR port B)
+0099 : B7 40 03   staa $4003          ; store A in addr 4003 (PIA2 CR port B)
 ;*************************************;
 ;PIA reads
 ;*************************************;
@@ -78,51 +78,51 @@
 ;*************************************;
 ;CALCOS 00B2
 ;*************************************;
-00B2 : DF 09      stx X0009           ;store X in addr 09
-00B4 : 9B 0A      adda  X000A         ;add A with addr 0A
-00B6 : 97 0A      staa  X000A         ;store A in addr 0A
+00B2 : DF 09      stx $09             ;store X in addr 09
+00B4 : 9B 0A      adda  $0A           ;add A with addr 0A
+00B6 : 97 0A      staa  $0A           ;store A in addr 0A
 00B8 : 24 03      bcc L008F           ;branch Carry clear CAL1
-00BA : 7C 00 09   inc X0009           ;incr addr 09
+00BA : 7C 00 09   inc $0009           ;incr addr 09
 ;CAL1:
-00BD : DE 09      ldx X0009           ;load X from addr 09
+00BD : DE 09      ldx $09             ;load X from addr 09
 00BF : 39         rts                 ;return subroutine 
 ;00C0 : end
 ;00C4 
 ;*************************************;
 ;PRM71 0100
 ;*************************************;
-0100 : 7F 00 04   clr X0004           ;clr (00) addr 04 <-- not used?
-0103 : 97 0D      staa  X000D         ;store A in addr 0D
+0100 : 7F 00 04   clr $0004           ;clr (00) addr 04 <-- not used?
+0103 : 97 0D      staa  $0D           ;store A in addr 0D
 0105 : CE 01 93   ldx #$0193          ;load X with 0193 (addr of melody data)
 ;PRM72
 0108 : A6 00      ldaa  $00,x         ;load A with value at addr X + 00h
 010A : 27 2D      beq L0083           ;branch if Z=1(in accum all bits are 0) to PRM75
-010C : 7A 00 0D   dec X000D           ;decr value in addr 0D
+010C : 7A 00 0D   dec $000D           ;decr value in addr 0D
 010F : 27 06      beq L0061           ;branch if Z=1 PRM73
 0111 : 4C         inca                ;incr A
 0112 : BD 00 B2   jsr L00B2           ;jump sub CALCOS (shifts X start addr 0193 to 01A0)
 0115 : 20 F1      bra L0052           ;branch always PRM72
 ;PRM73
 0117 : 08         inx                 ;incr X
-0118 : DF 0B      stx X000B           ;store X in addr 0B
+0118 : DF 0B      stx $0B             ;store X in addr 0B
 011A : BD 00 B2   jsr L00B2           ;jump sub CALCOS
 ; +1 byte instruction from here
-011D : DF 09      stx X0009           ;store X in addr 09
-011F : DE 0B      ldx X000B           ;load X in addr 0B
+011D : DF 09      stx $09             ;store X in addr 09
+011F : DE 0B      ldx $0B             ;load X in addr 0B
 ;PRM74 - store melody location into mem 11, sets X with melody addr and A with X(lo)
 0121 : A6 00      ldaa  $00,x         ;load A with addr X + 00h
 0123 : 97 11      staa  X0011         ;store A in addr 11
 0125 : A6 01      ldaa  $01,x         ;load A with addr X + 01h
 0127 : EE 02      ldx $02,x           ;load X with addr X + 02h
-0129 : DF 0F      stx X000F           ;store X in addr 0F
+0129 : DF 0F      stx $0F             ;store X in addr 0F
 012B : BD 01 3B   jsr L013B           ;jump sub SYNTH8 013B
-012E : DE 0B      ldx X000B           ;load X with addr 0B
+012E : DE 0B      ldx $0B             ;load X with addr 0B
 0130 : 08         inx                 ;incr X
 0131 : 08         inx                 ;incr X
 0132 : 08         inx                 ;incr X
 0133 : 08         inx                 ;incr X
-0134 : DF 0B      stx X000B           ;store X in addr 0B
-0136 : 9C 09      cpx X0009           ;comp X with addr 09
+0134 : DF 0B      stx $0B             ;store X in addr 0B
+0136 : 9C 09      cpx $09             ;comp X with addr 09
 0138 : 26 E7      bne L0121           ;branch Z=0 PRM74
 ;PRM75
 013A : 39         rts                 ;return subroutine
@@ -153,13 +153,13 @@
 015D : E7 01      stab  $01,x         ;store B in addr X + 01h
 015F : C6 65      ldab  #$65          ;load B with 65h (1110 0010) 
 0161 : E7 02      stab  $02,x         ;store B in addr X + 02h
-0163 : DE 0F      ldx X000F           ;load X with addr 0F
+0163 : DE 0F      ldx $0F             ;load X with addr 0F
 ;0165 - synth putput writer and loop reader
 0165 : 4F         clra                ;clear A
-0166 : F6 00 0E   ldab  X000E         ;load B with addr 0E
+0166 : F6 00 0E   ldab  $000E         ;load B with addr 0E
 0169 : 5C         incb                ;incr B
-016A : D7 0E      stab  X000E         ;store B in addr 0E <-- counter up
-016C : D4 11      andb  X0011         ;and B with value in addr 11 (3E in 1st run)
+016A : D7 0E      stab  $0E           ;store B in addr 0E <-- counter up
+016C : D4 11      andb  $11           ;and B with value in addr 11 (3E in 1st run)
 016E : 54         lsrb                ;logic shift right B (bit7=0)
 016F : 89 00      adca  #$00          ;A = Carry + A + 00h 
 0171 : 54         lsrb                ;logic shift right B (bit7=0)
@@ -180,7 +180,7 @@
 0186 : 48         asla                ;arith shift left A (bit0 is 0)
 0187 : 48         asla                ;arith shift left A (bit0 is 0)
 0188 : 48         asla                ;arith shift left A (bit0 is 0) (increases value in A)
-0189 : B7 80 00   staa  X8000         ;store A in DAC output SOUND
+0189 : B7 80 00   staa  $8000         ;store A in DAC output SOUND
 018C : 09         dex                 ;decr X
 018D : 27 03      beq  L019F          ;branch Z=1 SYN84
 018F : 7E 00 12   jmp  L0012          ;jump to timer location 0012 (to jmp writes that set freq/pitch duration)
@@ -201,7 +201,7 @@
 ;melody fdb X pairs for freq and length
 ;*************************************;
 0193 : [0C 7F] 1D 0F FB 7F 23 0F                  ;PRM72 start X value 0193, jumps to 01A0 after CALCOS, rest skipped
-019B : 15 FE 08 50 8A [88] | [3E 3F]              ;skipped, then 1st
+019B : 15 FE 08 50 8A [88] | [3E 3F]              ;skipped, [88] called via CALCOS ldx $09 (01A0), 1st
 01A3 : [02 3E] | [7C 04] [03 FF] | [3E 3F]        ; 
 01AB : [2C E2] | [7C 12] [0D 74] | [7C 0D]        ;
 01B3 : [0E 41] | [7C 23] [0B 50] | [7C 1D]        ;
