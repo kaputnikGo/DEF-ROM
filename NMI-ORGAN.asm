@@ -11,10 +11,10 @@
 ; orig starts at last half 1st bar, repeat lower octave, then no more valid melody FDB
 ; current: A2, G2, A2, E2, F2, C#2, D2 || A1 stuck and held
 ; note: 01BE change from F8 to CC for last jmp write location means mem length broken here.
-; find melody fdb length sentinel var
-; duration + pair pitch values for samp freq/counter?
-;
+; duration + pair pitch values for samp freq/counter
 ; added SoundROM6 melody FDB for testing
+;
+; figure why use CALCOS to skip 13 bytes in fdb melody, ie can recover that mem?
 ;
 ; SW demo :
 ; [---- ----][---- ----]
@@ -96,7 +96,7 @@
 0105 : CE 01 93   ldx #$0193          ;load X with 0193 (addr of melody data)
 ;PRM72
 0108 : A6 00      ldaa  $00,x         ;load A with value at addr X + 00h
-010A : 27 2D      beq L0083           ;branch if Z=1(in accum all bits are 0) to PRM75
+010A : 27 2E      beq L0083           ;branch if Z=1(in accum all bits are 0) to PRM75
 010C : 7A 00 0D   dec $000D           ;decr value in addr 0D
 010F : 27 06      beq L0061           ;branch if Z=1 PRM73
 0111 : 4C         inca                ;incr A
@@ -106,7 +106,6 @@
 0117 : 08         inx                 ;incr X
 0118 : DF 0B      stx $0B             ;store X in addr 0B
 011A : BD 00 B2   jsr L00B2           ;jump sub CALCOS
-; +1 byte instruction from here
 011D : DF 09      stx $09             ;store X in addr 09
 011F : DE 0B      ldx $0B             ;load X in addr 0B
 ;PRM74 - store melody location into mem 11, sets X with melody addr and A with X(lo)
@@ -154,7 +153,7 @@
 015F : C6 65      ldab  #$65          ;load B with 65h (1110 0010) 
 0161 : E7 02      stab  $02,x         ;store B in addr X + 02h
 0163 : DE 0F      ldx $0F             ;load X with addr 0F
-;0165 - synth putput writer and loop reader
+;0165 - synth output writer and loop reader
 0165 : 4F         clra                ;clear A
 0166 : F6 00 0E   ldab  $000E         ;load B with addr 0E
 0169 : 5C         incb                ;incr B
@@ -194,18 +193,18 @@
 01A3 : 02 3E 7C 04 03 FF 3E 3F        ;
 01AB : 2C E2 7C 12 0D 74 7C 0D        ;
 01B3 : 0E 41 7C 23 0B 50 7C 1D        ;
-01BB : 29 02 3E CC ;(F8) 04 03 FF 7C  ;error in write flood length here, change F8 to CC for shorter length.
-01C3 :                                ; 7C ends 0051,8C ends 0059, BC ends 0071, CC ends 0079 
+01BB : 29 F2 7C 3F;02 3E F8 04        ;
+01C3 :                                ;
 ;01C4 end                             ; 
 ;*************************************;
 ;melody fdb X pairs for freq and length
 ;*************************************;
-0193 : [0C 7F] 1D 0F FB 7F 23 0F                  ;PRM72 start X value 0193, jumps to 01A0 after CALCOS, rest skipped
-019B : 15 FE 08 50 8A [88] | [3E 3F]              ;skipped, [88] called via CALCOS ldx $09 (01A0), 1st
-01A3 : [02 3E] | [7C 04] [03 FF] | [3E 3F]        ; 
-01AB : [2C E2] | [7C 12] [0D 74] | [7C 0D]        ;
-01B3 : [0E 41] | [7C 23] [0B 50] | [7C 1D]        ;
-01BB : [29 02] | [3E CC] [?? ??]                  ;CC was F8, ?? ?? is [04 03]
+0193 : [0C 7F] 1D 0F FB 7F 23 0F             ;PRM72 start X val 0193, +13 bytes to 01A0 after CALCOS
+019B : 15 FE 08 50 8A [88] | [3E 3F]         ;skipped, [88] called via CALCOS ldx $09 (01A0), 1st
+01A3 : [02 3E] | [7C 04] [03 FF] | [3E 3F]   ; 
+01AB : [2C E2] | [7C 12] [0D 74] | [7C 0D]   ;
+01B3 : [0E 41] | [7C 23] [0B 50] | [7C 1D]   ;
+01BB : [29 F2] | [7C 3F] ;[?? ??]            ; ?? ?? is [02 3E]
 ;*************************************;
 ; alt melody from Pharaoh ROM
 ;*************************************;
@@ -215,23 +214,6 @@ FEDD : FC 7C 29 05 56 F8 04 07        ;
 FEE5 : FF 7C 29 05 56 7C 1D 05        ;
 FEED : FE 7C 17 06 59 7C 04 07        ;
 FEF5 : FF 7C 1D 05 ;FE 7C 17 06
-;*************************************;
-;01C5 monitor RAM
-; remainder from orig ROM1 below 
-3F 2C E2 F8 12 0D 74 F8 
-0D 0E 41 F8 23 0B 50 F8 
-1D 2F F2 F8 23 05 A8 F8 
-12 06 BA F8 04 07 FF 7C 
-37 04 C1 7C 23 05 A8 7C 
-12 06 BA 3E 04 07 FF 3E 
-37 04 C1 3E 23 05 A8 1F 
-12 06 BA 1F 04 07 FF 1F 
-37 04 C1 1F 23 16 A0 FE 
-1D 17 F9 7F 37 13 06 7F 
-3F 08 FA FE 04 0F FF FE
-0D 0E 41 FE 23 0B 50 FE 
-1D 5F E4 00 47 3F 37 30 
-29 23 1D 17 12 0D 08 04
 ;*************************************;
 ;original ROM1:
 ;*************************************;
@@ -287,10 +269,55 @@ FF75 : 04 03 F8 F8 04 3F FF 00
 ;*************************************;
 ;melody fdb X pairs for freq and length
 ;*************************************;
-0193 : [0C 7F] 1D 0F FB 7F 23 0F                  ;PRM72 start X value 0193, jumps to 01A0 after CALCOS, rest skipped
-019B : 15 FE 08 50 8A [88] | [3E 3F]              ;skipped, then 1st
-01A3 : [02 3E] | [7C 04] [03 FF] | [3E 3F]        ; 
-01AB : [2C E2] | [7C 12] [0D 74] | [7C 0D]        ;
-01B3 : [0E 41] | [7C 23] [0B 50] | [7C 1D]        ;
-01BB : [29 02] | [3E CC] [?? ??]                  ;?? ?? is [04 03]
+0193 : [0C 7F] 1D 0F FB 7F 23 0F   ;PRM72 start X value 0193, jumps to 01A0 after CALCOS, rest skipped
+019B : 15 FE 08 50 8A [88] 
+note| [?  nop][? length]
+A2  | [3E 3F] [02 3E] 
+G2  | [7C 04] [03 FF] 
+A2  | [3E 3F] [2C E2] 
+E2  | [7C 12] [0D 74] 
+F2  | [7C 0D] [0E 41] 
+C#2 | [7C 23] [0B 50] 
+D2  | [7C 1D] [29 02] 
+A1  | [3E CC] [?? ??]  ;?? ?? is [04 03]
+
+;note mapping ROM1
+FDA2 : 3E 3F 02	3E 
+FDA6 : 7C 04 03	FF 
+FDAA : 3E 3F 2C E2 
+FDAE : 7C 12 0D 74 
+FDB2 : 7C 0D 0E	41 
+FDB6 : 7C 23 0B	50 
+FDBA : 7C 1D 29 F2 
+FDBE : 7C 3F 02	3E 
+FDC2 : F8 04 03	FF 
+FDC6 : 7C 3F 2C E2 
+FDCA : F8 12 0D	74 
+FDCE : F8 0D 0E	41 
+FDD2 : F8 23 0B 50 
+FDD6 : F8 1D 2F	F2 
+FDDA : F8 23 05 A8 
+FDDE : F8 12 06	BA 
+FDE2 : F8 04 07	FF 
+FDE6 : 7C 37 04	C1 
+FDEA : 7C	23 05 A8 
+FDEE : 7C	12 06	BA 
+FDF2 : 3E 04 07	FF 
+FDF6 : 3E 37 04	C1 
+FDFA : 3E	23 05 A8 
+FDFE : 1F 12 06 BA 
+FE02 : 1F 04 07	FF 
+FE06 : 1F 37 04	C1 
+FE0A : 1F	23 16 A0 
+FE0E : FE	1D 17	F9 
+FE12 : 7F 37 13 06 
+FE16 : 7F 3F 08 FA 
+FE1A : FE 04 0F	FF 
+FE1E : FE 0D 0E 41 
+FE22 : FE 23 0B	50 
+FE26 : FE 1D 5F	E4 
+FE2A : 00	47 3F	37 
+FE2E : 30	29 23	1D 
+FE32 : 17	12 0D 08 
+FE36 : 04
 
