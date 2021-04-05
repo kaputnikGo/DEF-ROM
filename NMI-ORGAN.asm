@@ -1,4 +1,4 @@
-; DEF-ROM NMI-ORGAN SOUNDS CODE - 4 Apr 2021
+; DEF-ROM NMI-ORGAN SOUNDS CODE - 5 Apr 2021
 ; hack for Heathkit ET-3400 Audio Setup
 ; user RAM = 196 + 255 bytes = 453
 ; addr 0000 - 00C4 and 0100 - 01FF
@@ -24,9 +24,9 @@
 ;possible addition to make programming heathkit easier (from SoundROM6):
 ;F81E : CE 00 7F   ldx #$007F    ;load X with value 007F
 ;RST1:
-;F821 : 6F 00      clr	$00,x     ;clear addr X + 00h
+;F821 : 6F 00      clr $00,x     ;clear addr X + 00h
 ;F823 : 09         dex           ;decr X
-;F824 : 26 FB      bne	LF821     ;branch if Z=0 RST1 (loop clears mem addr 007F down to 0000)
+;F824 : 26 FB      bne LF821     ;branch if Z=0 RST1 (loop clears mem addr 007F down to 0000)
 ;
 ;*************************************;
 ; Scratch RAM (0000-0007F) (with typical values) (clear 00 at start)
@@ -41,12 +41,18 @@
 000E : A8 3C                          ; SYN8, PRM71 X, 000E rapid counter up
 0010 : 00 00                          ; X SYN8, A
 0012 : 00 00                          ; write flood, should contain several 7E 01 65 writes for PC jmps
-; ~                                   ; last jmp write at 0077: 7E 01 65
-007A : 00                             ;not used
 ; ~
-007F : 00                             ;not used (21 bytes)
+0077 : 7E 01 65                       ; nop writer jmp
 ;*************************************;
-;INIT (POWER-ON) org 0080 
+;MEM CLR (POWER-ON) org 0078 (nop writer will overwrite to 0079) 
+;*************************************;
+0078 : CE 00 7F   ldx #$007F          ;load X with value 007F
+;CLR1:
+007B : 6F 00      clr $00,x           ;clear addr X + 00h
+007D : 09         dex                 ;decr X
+007E : 26 FB      bne L007B           ;branch if Z=0 CLR1 (loop clears mem addr 007F down to 0000)
+;*************************************;
+;INIT 0080 
 ;*************************************;
 0080 : 8E 01 FF   lds #$01FF          ; load SP with 01FFh
 0083 : CE 80 00   ldx #$8000          ; load X with 8000h, PIA1 (DAC) addr
@@ -200,7 +206,7 @@
 ;melody fdb X pairs for freq and length
 ;*************************************;
 0193 : [0C 7F] 1D 0F FB 7F 23 0F             ;PRM72 start X val 0193, +13 bytes to 01A0 after CALCOS
-019B : 15 FE 08 50 8A [88] | [3E 3F]         ;skipped, [88] called via CALCOS ldx $09 (01A0), 1st
+019B : 15 FE 08 50 8A [88] | [3E 3F]         ;skipped, [88] called via CALCOS ldx $09 (01A0), 01A1 is 1st note
 01A3 : [02 3E] | [7C 04] [03 FF] | [3E 3F]   ; 
 01AB : [2C E2] | [7C 12] [0D 74] | [7C 0D]   ;
 01B3 : [0E 41] | [7C 23] [0B 50] | [7C 1D]   ;
@@ -218,26 +224,26 @@ FEF5 : FF 7C 1D 05 ;FE 7C 17 06
 ;original ROM1:
 ;*************************************;
 ;called by NMI -> PARAM7
-FD94 : 0C 7F 1D 0F FB 7F 23	0F
-FD9C : 15	FE 08 50 8A 88 3E	3F
-FDA4 : 02	3E 7C 04 03	FF 3E 3F
-FDAC : 2C E2 7C 12 0D	74 7C 0D
-FDB4 : 0E	41 7C 23 0B	50 7C 1D 
-FDBC : 29 F2 7C 3F 02	3E F8 04 
-FDC4 : 03	FF 7C 3F 2C E2 F8 12 
-FDCC : 0D	74 F8 0D 0E	41 F8 23 
-FDD4 : 0B 50 F8 1D 2F	F2 F8 23
-FDDC : 05 A8 F8 12 06	BA F8 04
-FDE4 : 07	FF 7C 37 04	C1 7C	23 
-FDEC : 05 A8 7C	12 06	BA 3E 04
-FDF4 : 07	FF 3E 37 04	C1 3E	23 
+FD94 : 0C 7F 1D 0F FB 7F 23 0F
+FD9C : 15 FE 08 50 8A 88 3E 3F
+FDA4 : 02 3E 7C 04 03 FF 3E 3F
+FDAC : 2C E2 7C 12 0D 74 7C 0D
+FDB4 : 0E 41 7C 23 0B 50 7C 1D 
+FDBC : 29 F2|7C 3F 02 3E F8 04        ; 2nd part starts here, FDBE : 7C 3F (note: A1)
+FDC4 : 03 FF 7C 3F 2C E2 F8 12 
+FDCC : 0D 74 F8 0D 0E 41 F8 23 
+FDD4 : 0B 50 F8 1D 2F F2 F8 23
+FDDC : 05 A8 F8 12 06 BA F8 04
+FDE4 : 07 FF 7C 37 04 C1 7C 23 
+FDEC : 05 A8 7C 12 06 BA 3E 04
+FDF4 : 07 FF 3E 37 04 C1 3E 23 
 FDFC : 05 A8 1F 12 06 BA 1F 04
-FE04 : 07	FF 1F 37 04	C1 1F	23 
-FD0C : 16 A0 FE	1D 17	F9 7F 37
+FE04 : 07 FF 1F 37 04 C1 1F 23 
+FD0C : 16 A0 FE 1D 17 F9 7F 37
 FE14 : 13 06 7F 3F 08 FA FE 04
-FE1C : 0F	FF FE 0D 0E 41 FE 23 
-FE24 : 0B	50 FE 1D 5F	E4 00	47
-FE2C : 3F	37 30	29 23	1D 17	12
+FE1C : 0F FF FE 0D 0E 41 FE 23 
+FE24 : 0B 50 FE 1D 5F E4 00 47
+FE2C : 3F 37 30 29 23 1D 17 12
 FE34 : 0D 08 04
 ;FE36 - FD94 = A2h (162 bytes)
 ;*************************************;
@@ -250,20 +256,20 @@ FEE5 : FF 7C 29 05 56 7C 1D 05
 FEED : FE 7C 17 06 59 7C 04 07
 FEF5 : FF 7C 1D 05 ;FE 7C 17 06
 ;
-FEFD : 59	7C 29 2A B6 18 F8	04 
-FF05 : 02	FF 00 23 06	01 F8 04 
-FF0D : 03	FF 00 23 02	AB F8	04
+FEFD : 59 7C 29 2A B6 18 F8 04 
+FF05 : 02 FF 00 23 06 01 F8 04 
+FF0D : 03 FF 00 23 02 AB F8 04
 FF15 : 07 FF 7C 29 15 5B 60 7C
 FF1D : 1D 05 FE F8 04 1F FF 7C 
-FF25 : 04	1F FF 7C 1D 11 FA 00 
-FF2D : 1D 02 FF 7C 1D	02 FF 7C 
-FF35 : 17 0C B2 7C 1D	0B FC	7C 
-FF3D : 23 0A AD 7C 37	09 83	7C 
-FF45 : 3F 11 F5 3E 3F	11 F5 7C 
-FF4D : 17	16 34	7C 1D 02 FF 7C 
-FF55 : 17	0C B2 7C 1D 0B FC 7C 
-FF5D : 29 0A AD 7C 3F	04 7D 7C 
-FF65 : 37 04 C1 7C 3F 14 36	F8 
+FF25 : 04 1F FF 7C 1D 11 FA 00 
+FF2D : 1D 02 FF 7C 1D 02 FF 7C 
+FF35 : 17 0C B2 7C 1D 0B FC 7C 
+FF3D : 23 0A AD 7C 37 09 83 7C 
+FF45 : 3F 11 F5 3E 3F 11 F5 7C 
+FF4D : 17 16 34 7C 1D 02 FF 7C 
+FF55 : 17 0C B2 7C 1D 0B FC 7C 
+FF5D : 29 0A AD 7C 3F 04 7D 7C 
+FF65 : 37 04 C1 7C 3F 14 36 F8 
 FF6D : 1D 14 FF F8 04 03 FF 00 
 FF75 : 04 03 F8 F8 04 3F FF 00 
 ;*************************************;
@@ -278,46 +284,46 @@ A2  | [3E 3F] [2C E2]
 E2  | [7C 12] [0D 74] 
 F2  | [7C 0D] [0E 41] 
 C#2 | [7C 23] [0B 50] 
-D2  | [7C 1D] [29 02] 
-A1  | [3E CC] [?? ??]  ;?? ?? is [04 03]
+D2  | [7C 1D] [29 F2] 
+A1  | [7C 3F] [?? ??]  ;?? ?? is [02 3E]
 
 ;note mapping ROM1
-FDA2 : 3E 3F 02	3E 
-FDA6 : 7C 04 03	FF 
+FDA2 : 3E 3F 02 3E  ;start 1st
+FDA6 : 7C 04 03 FF 
 FDAA : 3E 3F 2C E2 
 FDAE : 7C 12 0D 74 
-FDB2 : 7C 0D 0E	41 
-FDB6 : 7C 23 0B	50 
-FDBA : 7C 1D 29 F2 
-FDBE : 7C 3F 02	3E 
-FDC2 : F8 04 03	FF 
+FDB2 : 7C 0D 0E 41 
+FDB6 : 7C 23 0B 50 
+FDBA : 7C 1D 29 F2  ;end 1st
+FDBE : 7C 3F 02 3E  ;start 2nd
+FDC2 : F8 04 03 FF 
 FDC6 : 7C 3F 2C E2 
-FDCA : F8 12 0D	74 
-FDCE : F8 0D 0E	41 
+FDCA : F8 12 0D 74 
+FDCE : F8 0D 0E 41 
 FDD2 : F8 23 0B 50 
-FDD6 : F8 1D 2F	F2 
-FDDA : F8 23 05 A8 
-FDDE : F8 12 06	BA 
-FDE2 : F8 04 07	FF 
-FDE6 : 7C 37 04	C1 
-FDEA : 7C	23 05 A8 
-FDEE : 7C	12 06	BA 
-FDF2 : 3E 04 07	FF 
-FDF6 : 3E 37 04	C1 
-FDFA : 3E	23 05 A8 
+FDD6 : F8 1D 2F F2 
+FDDA : F8 23 05 A8  ;end 2nd ?
+FDDE : F8 12 06 BA
+FDE2 : F8 04 07 FF 
+FDE6 : 7C 37 04 C1 
+FDEA : 7C 23 05 A8 
+FDEE : 7C 12 06 BA 
+FDF2 : 3E 04 07 FF 
+FDF6 : 3E 37 04 C1 
+FDFA : 3E 23 05 A8 
 FDFE : 1F 12 06 BA 
-FE02 : 1F 04 07	FF 
-FE06 : 1F 37 04	C1 
-FE0A : 1F	23 16 A0 
-FE0E : FE	1D 17	F9 
+FE02 : 1F 04 07 FF 
+FE06 : 1F 37 04 C1 
+FE0A : 1F 23 16 A0 
+FE0E : FE 1D 17 F9 
 FE12 : 7F 37 13 06 
 FE16 : 7F 3F 08 FA 
-FE1A : FE 04 0F	FF 
+FE1A : FE 04 0F FF 
 FE1E : FE 0D 0E 41 
-FE22 : FE 23 0B	50 
-FE26 : FE 1D 5F	E4 
-FE2A : 00	47 3F	37 
-FE2E : 30	29 23	1D 
-FE32 : 17	12 0D 08 
+FE22 : FE 23 0B 50 
+FE26 : FE 1D 5F E4 
+FE2A : 00 47 3F 37 
+FE2E : 30 29 23 1D 
+FE32 : 17 12 0D 08 
 FE36 : 04
 
