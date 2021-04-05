@@ -13,8 +13,9 @@
 ; note: 01BE change from F8 to CC for last jmp write location means mem length broken here.
 ; duration + pair pitch values for samp freq/counter
 ; added SoundROM6 melody FDB for testing
+; Audacity playback wav speed x2.25 to get approx
 ;
-; figure why use CALCOS to skip 13 bytes in fdb melody, ie can recover that mem?
+; figure why use CALCOS to skip 11 bytes in fdb melody, ie can recover that mem?
 ;
 ; SW demo :
 ; [---- ----][---- ----]
@@ -37,7 +38,7 @@
 ; ~
 0077 : 7E 01 65                       ; nop writer jmp
 ;*************************************;
-;MEM CLR (POWER-ON) org 0078 (nop writer will overwrite to 0079) 
+;MEM CLR (POWER-ON) org 0078 (first run - nop writer will overwrite to 0079)
 ;*************************************;
 0078 : CE 00 77   ldx #$0077          ;load X with value 0077 (don't write over self...)
 ;CLR1:
@@ -45,7 +46,7 @@
 007D : 09         dex                 ;decr X
 007E : 26 FB      bne L007B           ;branch if Z=0 CLR1 (loop clears mem addr 0077 down to 0000)
 ;*************************************;
-;INIT 0080 
+;INIT 0080 (2nd run org 0080)
 ;*************************************;
 0080 : 8E 01 FF   lds #$01FF          ; load SP with 01FFh
 0083 : CE 80 00   ldx #$8000          ; load X with 8000h, PIA1 (DAC) addr
@@ -192,18 +193,18 @@
 01A3 : 02 3E 7C 04 03 FF 3E 3F        ;
 01AB : 2C E2 7C 12 0D 74 7C 0D        ;
 01B3 : 0E 41 7C 23 0B 50 7C 1D        ;
-01BB : 29 F2 7C 3F;02 3E F8 04        ;
-01C3 :                                ;
+01BB : 29 F2 7C 3F 02 3E;F8 04        ;
+01C1 :                                ;
 ;01C4 end                             ; 
 ;*************************************;
 ;melody fdb X pairs for freq and length
 ;*************************************;
-0193 : [0C 7F] 1D 0F FB 7F 23 0F             ;PRM72 start X val 0193, +13 bytes to 01A0 after CALCOS
-019B : 15 FE 08 50 8A [88] | [3E 3F]         ;skipped, [88] called via CALCOS ldx $09 (01A0), 01A1 is 1st note
+0193 : [0C 7F] 1D 0F FB 7F 23 0F             ;PRM72/CALCOS X=(01(A=0C++ ADDA 93h)++) ie. start X=0193 then X=01A1
+019B : 15 FE 08 50 8A [88] | [3E 3F]         ;11 bytes skipped to [88] called via CALCOS ldx $09 (01A0), 01A1 is 1st note
 01A3 : [02 3E] | [7C 04] [03 FF] | [3E 3F]   ; 
 01AB : [2C E2] | [7C 12] [0D 74] | [7C 0D]   ;
 01B3 : [0E 41] | [7C 23] [0B 50] | [7C 1D]   ;
-01BB : [29 F2] | [7C 3F] ;[?? ??]            ; ?? ?? is [02 3E]
+01BB : [29 F2] | [7C 3F] [02 3E] |           ;
 ;*************************************;
 ; alt melody from Pharaoh ROM
 ;*************************************;
@@ -212,7 +213,7 @@ FED5 : FE 7C 17 0C B2 7C 1D 0B        ;
 FEDD : FC 7C 29 05 56 F8 04 07        ;
 FEE5 : FF 7C 29 05 56 7C 1D 05        ;
 FEED : FE 7C 17 06 59 7C 04 07        ;
-FEF5 : FF 7C 1D 05 ;FE 7C 17 06
+FEF5 : FF 7C 1D 05 FE 7C ;17 06       ; last note to fit in mem
 ;*************************************;
 ;original ROM1:
 ;*************************************;
@@ -222,7 +223,7 @@ FD9C : 15 FE 08 50 8A 88 3E 3F
 FDA4 : 02 3E 7C 04 03 FF 3E 3F
 FDAC : 2C E2 7C 12 0D 74 7C 0D
 FDB4 : 0E 41 7C 23 0B 50 7C 1D 
-FDBC : 29 F2|7C 3F 02 3E F8 04        ; 2nd part starts here, FDBE : 7C 3F (note: A1)
+FDBC : 29 F2 7C 3F 02 3E F8 04
 FDC4 : 03 FF 7C 3F 2C E2 F8 12 
 FDCC : 0D 74 F8 0D 0E 41 F8 23 
 FDD4 : 0B 50 F8 1D 2F F2 F8 23
@@ -247,7 +248,7 @@ FED5 : FE 7C 17 0C B2 7C 1D 0B
 FEDD : FC 7C 29 05 56 F8 04 07
 FEE5 : FF 7C 29 05 56 7C 1D 05
 FEED : FE 7C 17 06 59 7C 04 07
-FEF5 : FF 7C 1D 05 ;FE 7C 17 06
+FEF5 : FF 7C 1D 05 FE 7C ;17 06
 ;
 FEFD : 59 7C 29 2A B6 18 F8 04 
 FF05 : 02 FF 00 23 06 01 F8 04 
@@ -280,43 +281,43 @@ C#2 | [7C 23] [0B 50]
 D2  | [7C 1D] [29 F2] 
 A1  | [7C 3F] [?? ??]  ;?? ?? is [02 3E]
 
-;note mapping ROM1
-FDA2 : 3E 3F 02 3E  ;start 1st
+;note mapping ROM1 for recording from hardware (small ram alloc)
+FDA2 : 3E 3F 02 3E  ;start part1
 FDA6 : 7C 04 03 FF 
 FDAA : 3E 3F 2C E2 
 FDAE : 7C 12 0D 74 
 FDB2 : 7C 0D 0E 41 
 FDB6 : 7C 23 0B 50 
-FDBA : 7C 1D 29 F2  ;end 1st
-FDBE : 7C 3F 02 3E  ;start 2nd
+FDBA : 7C 1D 29 F2  ;end part1
+FDBE : 7C 3F 02 3E  ;start part2
 FDC2 : F8 04 03 FF 
 FDC6 : 7C 3F 2C E2 
 FDCA : F8 12 0D 74 
 FDCE : F8 0D 0E 41 
 FDD2 : F8 23 0B 50 
-FDD6 : F8 1D 2F F2 
-FDDA : F8 23 05 A8  ;end 2nd ?
+FDD6 : F8 1D 2F F2  ;end part2
+FDDA : F8 23 05 A8  ;start part3
 FDDE : F8 12 06 BA
 FDE2 : F8 04 07 FF 
 FDE6 : 7C 37 04 C1 
 FDEA : 7C 23 05 A8 
 FDEE : 7C 12 06 BA 
 FDF2 : 3E 04 07 FF 
-FDF6 : 3E 37 04 C1 
-FDFA : 3E 23 05 A8 
+FDF6 : 3E 37 04 C1  ;end part3
+FDFA : 3E 23 05 A8  ;start part4
 FDFE : 1F 12 06 BA 
 FE02 : 1F 04 07 FF 
 FE06 : 1F 37 04 C1 
 FE0A : 1F 23 16 A0 
 FE0E : FE 1D 17 F9 
 FE12 : 7F 37 13 06 
-FE16 : 7F 3F 08 FA 
-FE1A : FE 04 0F FF 
+FE16 : 7F 3F 08 FA  ;end part4 
+FE1A : FE 04 0F FF  ;start part5
 FE1E : FE 0D 0E 41 
 FE22 : FE 23 0B 50 
 FE26 : FE 1D 5F E4 
 FE2A : 00 47 3F 37 
 FE2E : 30 29 23 1D 
-FE32 : 17 12 0D 08 
-FE36 : 04
-
+FE32 : 17 12 0D 08  
+FE36 : 04           ;end part5
+; missing last 3 high notes...
