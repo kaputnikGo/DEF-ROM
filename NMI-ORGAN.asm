@@ -22,11 +22,11 @@
 ; PIA1 writes to $0011 (000D here) changes pitch
 ;
 ;possible addition to make programming heathkit easier (from SoundROM6):
-;F81E : CE 00 7F   ldx #$007F    ;load X with value 007F
+;F81E : CE 00 77   ldx #$0077    ;load X with value 0077  (don't write over self...)
 ;RST1:
 ;F821 : 6F 00      clr $00,x     ;clear addr X + 00h
 ;F823 : 09         dex           ;decr X
-;F824 : 26 FB      bne LF821     ;branch if Z=0 RST1 (loop clears mem addr 007F down to 0000)
+;F824 : 26 FB      bne LF821     ;branch if Z=0 RST1 (loop clears mem addr 0077 down to 0000)
 ;
 ;*************************************;
 ; Scratch RAM (0000-0007F) (with typical values) (clear 00 at start)
