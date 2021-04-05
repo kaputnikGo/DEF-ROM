@@ -21,13 +21,6 @@
 ; note from older SYNTH8.asm file: if write flood starts at $0016, PIA2 write to $0022 (001E here) adds inner loop, and
 ; PIA1 writes to $0011 (000D here) changes pitch
 ;
-;possible addition to make programming heathkit easier (from SoundROM6):
-;F81E : CE 00 77   ldx #$0077    ;load X with value 0077  (don't write over self...)
-;RST1:
-;F821 : 6F 00      clr $00,x     ;clear addr X + 00h
-;F823 : 09         dex           ;decr X
-;F824 : 26 FB      bne LF821     ;branch if Z=0 RST1 (loop clears mem addr 0077 down to 0000)
-;
 ;*************************************;
 ; Scratch RAM (0000-0007F) (with typical values) (clear 00 at start)
 ;*************************************;
@@ -46,11 +39,11 @@
 ;*************************************;
 ;MEM CLR (POWER-ON) org 0078 (nop writer will overwrite to 0079) 
 ;*************************************;
-0078 : CE 00 7F   ldx #$007F          ;load X with value 007F
+0078 : CE 00 77   ldx #$0077          ;load X with value 0077 (don't write over self...)
 ;CLR1:
 007B : 6F 00      clr $00,x           ;clear addr X + 00h
 007D : 09         dex                 ;decr X
-007E : 26 FB      bne L007B           ;branch if Z=0 CLR1 (loop clears mem addr 007F down to 0000)
+007E : 26 FB      bne L007B           ;branch if Z=0 CLR1 (loop clears mem addr 0077 down to 0000)
 ;*************************************;
 ;INIT 0080 
 ;*************************************;
