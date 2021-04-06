@@ -1,4 +1,4 @@
-; DEF-ROM NMI-ORGAN SOUNDS CODE - 5 Apr 2021
+; DEF-ROM NMI-ORGAN SOUNDS CODE - 6 Apr 2021
 ; hack for Heathkit ET-3400 Audio Setup
 ; user RAM = 196 + 255 bytes = 453
 ; addr 0000 - 00C4 and 0100 - 01FF
@@ -9,16 +9,17 @@
 ;
 ; Full NMI reset is 1st 2 bars JS Bach's Toccata and Fugue in D Minor + Williams Boot Carpet
 ; orig starts at last half 1st bar, repeat lower octave, then no more valid melody FDB
-; current: A2, G2, A2, E2, F2, C#2, D2 || A1 stuck and held
+; current: A2, G2, A2, E2, F2, C#2, D2 in part 1, other parts below
 ; note: 01BE change from F8 to CC for last jmp write location means mem length broken here.
-; duration + pair pitch values for samp freq/counter
+; duration (X count) + pitch (NOP) values
 ; added SoundROM6 melody FDB for testing
 ; Audacity playback wav speed x2.25 to get approx
+; FDB table CALCOS offset change to 02h allows 10 bytes recovered mem
+; SoundROM6 (Pharaoh) melody FDB tables identified
 ;
-; figure why use CALCOS to skip 11 bytes in fdb melody, ie can recover that mem?
 ;
 ; SW demo :
-; [---- ----][---- ----]
+; [---- ---- ---- ----]
 ; note from older SYNTH8.asm file: if write flood starts at $0016, PIA2 write to $0022 (001E here) adds inner loop, and
 ; PIA1 writes to $0011 (000D here) changes pitch
 ;
@@ -189,7 +190,7 @@
 ;ORGAN 0193 melody table (total FDB 162 bytes, A2h length)
 ;*************************************;
 0193 : 0C 7F 1D 0F FB 7F 23 0F        ;notes on fdb below
-019B : 15 FE 08 50 8A 88 3E 3F        ;
+019B : 15 FE 08 50 8A 88 3E 3F        ;alt fdb tables below
 01A3 : 02 3E 7C 04 03 FF 3E 3F        ;
 01AB : 2C E2 7C 12 0D 74 7C 0D        ;
 01B3 : 0E 41 7C 23 0B 50 7C 1D        ;
@@ -199,21 +200,53 @@
 ;*************************************;
 ;melody fdb X pairs for freq and length
 ;*************************************;
-0193 : [0C 7F] 1D 0F FB 7F 23 0F             ;PRM72/CALCOS X=(01(A=0C++ ADDA 93h)++) ie. start X=0193 then X=01A1
-019B : 15 FE 08 50 8A [88] | [3E 3F]         ;11 bytes skipped to [88] called via CALCOS ldx $09 (01A0), 01A1 is 1st note
+; [pitch:nop length:X]
+0193 : [0C [7F] 1D 0F FB] [7F 23 0F          ;PRM72/CALCOS X=(01(A=0C++ ADDA 93h)++) ie. start X=0193 then X=01A1
+019B : 15] [FE 08 50 8A] [88] | [3E 3F]      ;11 bytes skipped to [88] called via CALCOS ldx $09 (01A0), 01A1 is 1st note
 01A3 : [02 3E] | [7C 04] [03 FF] | [3E 3F]   ; 
 01AB : [2C E2] | [7C 12] [0D 74] | [7C 0D]   ;
 01B3 : [0E 41] | [7C 23] [0B 50] | [7C 1D]   ;
 01BB : [29 F2] | [7C 3F] [02 3E] |           ;
 ;*************************************;
-; alt melody from Pharaoh ROM
+; ALT OFFSET +2 fdb table - works
 ;*************************************;
-FECD : 34 7C 29 05 56 7C 1D 05        ;
-FED5 : FE 7C 17 0C B2 7C 1D 0B        ;
-FEDD : FC 7C 29 05 56 F8 04 07        ;
-FEE5 : FF 7C 29 05 56 7C 1D 05        ;
-FEED : FE 7C 17 06 59 7C 04 07        ;
-FEF5 : FF 7C 1D 05 FE 7C ;17 06       ; last note to fit in mem
+0193 : [02 7F] 8A [88]|[3E 3F 02 3E] |      ; filler 8A (padding) is skipped, added 10 bytes mem here
+019B : [7C 04 03 FF] |[3E 3F 2C E2] |      ;
+01A3 : [7C 12 0D 74] |[7C 0D 0E 41] |      ;
+01AB : [7C 23 0B 50] |[7C 1D 29 F2] |      ;
+01B3 : [7C 3F 02 3E] |[F8 04 03 FF] |      ; 1 added note
+01BB : [7C 3F 2C E2] |[F8 12 0D 74] |      ; 2 added notes
+;01C3 : end
+;*************************************;
+; ALT OFFSET +2 fdb table & 1/2 NOP (hi,lo) ~= 12 semitones (on Heathkit hardware clock)
+;*************************************;
+0193 : [02 7F] 8A [88]|[1F 1F 02 3E] |      ; filler 8A (padding) is skipped, added 10 bytes mem here
+019B : [3E 02 03 FF] |[1F 1F 2C E2] |      ;
+01A3 : [3E 09 0D 74] |[3E 06 0E 41] |      ;
+01AB : [3E 11 0B 50] |[3E 0E 29 F2] |      ;
+01B3 : [3E 1F 02 3E] |[7C 02 03 FF] |      ; 1 added note
+01BB : [3E 1F 2C E2] |[7C 09 0D 74] |      ; 2 added notes
+;01C3 : end
+;*************************************;
+; ALT OFFSET +2 fdb table & 1/2 X (hi,lo) counter
+;*************************************;
+0193 : [02 7F] 8A [88]|[3E 3F 01 1F] |      ; filler 8A (padding) is skipped, added 10 bytes mem here, 0197 :notes
+019B : [7C 04 01 FF] |[3E 3F 16 71] |      ;
+01A3 : [7C 12 06 BA] |[7C 0D 07 20] |      ;
+01AB : [7C 23 05 A8] |[7C 1D 14 F9] |      ;
+01B3 : [7C 3F 01 1F] |[F8 04 01 1F] |      ; 1 added note
+01BB : [7C 3F 16 71] |[F8 12 06 BA] |      ; 2 added notes
+;01C3 : end
+;*************************************;
+; ALT OFFSET melody from Pharaoh ROM
+;*************************************;
+0193 : [02 7F]8A [88]| [7C 29 05 56] |    ;+2 offset, 8A padding, [A=88], 1st note
+019B : [7C 1D 05 FE] | [7C 17 0C B2] |    ;
+01A3 : [7C 1D 0B FC] | [7C 29 05 56] |    ;
+01AB : [F8 04 07 FF] | [7C 29 05 56] |    ;
+01B3 : [7C 1D 05 FE] | [7C 17 06 59] |    ;
+01BB : [7C 04 07 FF] | [7C 1D 05 FE] |    ;
+;FEFD : 59]
 ;*************************************;
 ;original ROM1:
 ;*************************************;
@@ -243,45 +276,37 @@ FE34 : 0D 08 04
 ;*************************************;
 ; SoundROM 6 (Pharaoh) melody fdb
 ;*************************************;
-FECD : 34 7C 29 05 56 7C 1D 05
-FED5 : FE 7C 17 0C B2 7C 1D 0B
-FEDD : FC 7C 29 05 56 F8 04 07
-FEE5 : FF 7C 29 05 56 7C 1D 05
-FEED : FE 7C 17 06 59 7C 04 07
-FEF5 : FF 7C 1D 05 FE 7C ;17 06
-;
-FEFD : 59 7C 29 2A B6 18 F8 04 
-FF05 : 02 FF 00 23 06 01 F8 04 
-FF0D : 03 FF 00 23 02 AB F8 04
-FF15 : 07 FF 7C 29 15 5B 60 7C
-FF1D : 1D 05 FE F8 04 1F FF 7C 
-FF25 : 04 1F FF 7C 1D 11 FA 00 
-FF2D : 1D 02 FF 7C 1D 02 FF 7C 
-FF35 : 17 0C B2 7C 1D 0B FC 7C 
-FF3D : 23 0A AD 7C 37 09 83 7C 
-FF45 : 3F 11 F5 3E 3F 11 F5 7C 
-FF4D : 17 16 34 7C 1D 02 FF 7C 
-FF55 : 17 0C B2 7C 1D 0B FC 7C 
-FF5D : 29 0A AD 7C 3F 04 7D 7C 
-FF65 : 37 04 C1 7C 3F 14 36 F8 
-FF6D : 1D 14 FF F8 04 03 FF 00 
-FF75 : 04 03 F8 F8 04 3F FF 00 
+FECD : 34                            ;offset 34h not used
+FECE : [7C 29 05 56][7C 1D 05 FE]    ;Sound7 start part1
+FED6 : [7C 17 0C B2][7C 1D 0B FC]
+FEDE : [7C 29 05 56][F8 04 07 FF] 
+FEE6 : [7C 29 05 56][7C 1D 05 FE] 
+FEEE : [7C 17 06 59][7C 04 07 FF] 
+FEF6 : [7C 1D 05 FE]                 ;end Sound7 part1
+FEFA : 
+;unknown below
+7C 17 
+06 59 7C 29 
+2A B6 18 F8 04 02 FF 00
+23 06 01 F8 04 03 FF 00 
+23 02 AB F8 04 07 FF 7C 
+29 15 5B 60
+;end unknown 
+[7C 1D 05 FE][F8 04 1F FF]   ;Sound24 start
+[7C 04 1F FF][7C 1D 11 FA]   
+[00 1D 02 FF][7C 1D 02 FF] 
+[7C 17 0C B2][7C 1D 0B FC]
+[7C 23 0A AD][7C 37 09 83] 
+[7C 3F 11 F5][3E 3F 11 F5]
+[7C 17 16 34][7C 1D 02 FF]
+[7C 17 0C B2][7C 1D 0B FC]
+[7C 29 0A AD][7C 3F 04 7D]
+[7C 37 04 C1][7C 3F 14 36]
+[F8 1D 14 FF][F8 04 03 FF]
+[00 04 03 F8][F8 04 3F FF]   ;end Sound24
 ;*************************************;
-;melody fdb X pairs for freq and length
+;note mapping ROM for recording from hardware (small ram alloc)
 ;*************************************;
-0193 : [0C 7F] 1D 0F FB 7F 23 0F   ;PRM72 start X value 0193, jumps to 01A0 after CALCOS, rest skipped
-019B : 15 FE 08 50 8A [88] 
-note| [?  nop][? length]
-A2  | [3E 3F] [02 3E] 
-G2  | [7C 04] [03 FF] 
-A2  | [3E 3F] [2C E2] 
-E2  | [7C 12] [0D 74] 
-F2  | [7C 0D] [0E 41] 
-C#2 | [7C 23] [0B 50] 
-D2  | [7C 1D] [29 F2] 
-A1  | [7C 3F] [?? ??]  ;?? ?? is [02 3E]
-
-;note mapping ROM1 for recording from hardware (small ram alloc)
 FDA2 : 3E 3F 02 3E  ;start part1
 FDA6 : 7C 04 03 FF 
 FDAA : 3E 3F 2C E2 
@@ -318,6 +343,9 @@ FE22 : FE 23 0B 50
 FE26 : FE 1D 5F E4 
 FE2A : 00 47 3F 37 
 FE2E : 30 29 23 1D 
-FE32 : 17 12 0D 08  
-FE36 : 04           ;end part5
-; missing last 3 high notes...
+FE32 : 17 12 0D 08  ;end part5
+;
+FD95 : 7F 1D 0F FB  ;start part6, last 3 notes, stored at start of FDB table...
+FD99 : 7F 23 0F 15 
+FD9D : FE 08 50 8A  ;end part6
+;*************************************;
