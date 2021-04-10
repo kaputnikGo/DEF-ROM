@@ -14,34 +14,19 @@
 				;
 				;	CPU:		Motorola 6800 (6800/6802/6808 family)
 				;
-        ; Ratrace, 10 made, no production, Sound ROM is 8k, PIA addr 2000, DAC output is portB 2002
+        ; Rat Race, 10 made, no production, Sound ROM is 8k, PIA addr 2000, DAC output is portB 2002
 				; January 1983, System 7
         ; probably sound rom has lots beta/unused/inactive code etc
+        ;
+        ; Upper part of ROM is E000 - EFFF and has 0-padding from E5E3 (0A1Ch, 2588d, 2.5K bytes)
+        ; Lower part of ROM is F000 - FFFF and is full
+        ; MotVects load lower half F001
+        ;
+        ; NMI organ FDBs not sounding good in ROM1 SYNTH
 				;
+        ;     
 					org	$E000
-;*************************************;
-;FDB melody table pairs - NMI organ test
-;*************************************;
-;+ 2 more rows for hardware test
-[29 07 1E 38][37 03 2B 00] 
-[29 07 1E 38][29 07 1E 00]
-;orig PARAM call below
-[29 07 1E 38][37 03 2B 00]
-[29 07 1E 38][3F 02 FE 00]
-[29	07 1E 38][37 04 3A 00]
-[29 07 1E 38][3F 02 FE 4F] ;end orig
-;
-[29 07 1E 38][04 05 55 00] ;1st of ROM mem space 
-[29 07 1E 38][0D 04 C0 00] 
-[29 07 1E 38][04 05 55 00]
-[29 07 1E 38][3F 05 FC 00] 
-[29 07 1E 38][04 05 55 00] 
-[29 07 1E 38][0D 04 C0 00] ;end 1st
-; alt +2 offset 1st X load -no
-; alt +2 offset table start X load -no
-; alt table original -no
-
-
+          
 ;*************************************;
 ;FDB melody table - NMI organ ?
 ;*************************************;
@@ -181,24 +166,24 @@ E166 : 76 00 80   ror	$0080
 E169 : 76 00 81   ror	$0081
 E16C : 39				  rts           ;return subroutine
 ;*************************************;
-;SYNTH
+;SYNTH (same as ROM1 SYNTH10)
 ;*************************************;
-E16D : CE 00 E0		"   "		ldx	#$00E0
-E170 : 5F		"_"		clrb
-E171				LE171:
-E171 : 86 20		"  "		ldaa	#$20
-E173 : 8D 14		"  "		bsr	LE189
-E175				LE175:
-E175 : 09		" "		dex
-E176 : 26 FD		"& "		bne	LE175
-E178 : 7F 20 02		"   "		clr	X2002   ;clear DAC output SOUND
-E17B				LE17B:
-E17B : 5A		"Z"		decb
-E17C : 26 FD		"& "		bne	LE17B
-E17E : 73 20 02		"s  "		com	X2002   ;complement 1s in DAC output SOUND
-E181 : DE 8C		"  "		ldx	X008C
-E183 : 8C 12 00		"   "		cpx	#$1200
-E186 : 26 E9		"& "		bne	LE171
+E16D : CE 00 E0   ldx	#$00E0    ;load X with value 00E0h
+E170 : 5F				  clrb          ;clear B
+;LE171:
+E171 : 86 20		  ldaa	#$20    ;load A with value 20h
+E173 : 8D 14		  bsr	LE189     ;branch sub CALCOS
+;LE175:
+E175 : 09				  dex           ;decr X
+E176 : 26 FD		  bne	LE175     ;branch Z=0
+E178 : 7F 20 02   clr	X2002     ;clear DAC output SOUND
+;LE17B:
+E17B : 5A				  decb          ;decr B
+E17C : 26 FD		  bne	LE17B     ;branch Z=0 
+E17E : 73 20 02   com	X2002     ;complement 1s in DAC output SOUND
+E181 : DE 8C		  ldx	$8C       ;load X with value in addr 8C
+E183 : 8C 12 00   cpx	#$1200    ;compare X with value 1200h
+E186 : 26 E9		  bne	LE171     ;branch Z=0
 E188 : 39				  rts           ;return subroutine
 ;*************************************;
 ;CALCOS 
@@ -214,119 +199,120 @@ E197 : 39				  rts           ;return subroutine
 ;*************************************;
 ;SYNTH
 ;*************************************;
-E198 : C6 BF		"  "		ldab	#$BF
-E19A				LE19A:
-E19A : 4F		"O"		clra
-E19B : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-E19E : 17		" "		tba
-E19F				LE19F:
-E19F : 4A		"J"		deca
-E1A0 : 26 FD		"& "		bne	LE19F
-E1A2 : 17		" "		tba
-E1A3 : 43		"C"		coma
-E1A4 : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-E1A7 : 8D B6		"  "		bsr	LE15F
-E1A9				LE1A9:
-E1A9 : 4A		"J"		deca
-E1AA : 26 FD		"& "		bne	LE1A9
-E1AC : 5A		"Z"		decb
-E1AD : 26 EB		"& "		bne	LE19A
+E198 : C6 BF		  ldab	#$BF
+;LE19A:
+E19A : 4F				  clra          ;clear A
+E19B : B7 20 02   staa	X2002   ;store A in DAC output SOUND
+E19E : 17				  tba
+;LE19F:
+E19F : 4A				  deca
+E1A0 : 26 FD		  bne	LE19F
+E1A2 : 17				  tba
+E1A3 : 43				  coma
+E1A4 : B7 20 02   staa	X2002   ;store A in DAC output SOUND
+E1A7 : 8D B6		  bsr	LE15F
+;LE1A9:
+E1A9 : 4A				  deca
+E1AA : 26 FD		  bne	LE1A9
+E1AC : 5A				  decb
+E1AD : 26 EB		  bne	LE19A
 E1AF : 39				  rts           ;return subroutine
 ;*************************************;
-;SYNTH
+;SYNTH dupe with below except ldab FF
 ;*************************************;
-E1B0 : C6 FF		"  "		ldab	#$FF
-E1B2 : 7F 20 02		"   "		clr	X2002   ;clear DAC output SOUND
-E1B5				LE1B5:
-E1B5 : BD E1 5F		"  _"		jsr	LE15F
-E1B8 : 96 81		"  "		ldaa	X0081
-E1BA				LE1BA:
-E1BA : 20 00		"  "		bra	LE1BC
-				;
-E1BC				LE1BC:
-E1BC : 4A		"J"		deca
-E1BD : 26 FB		"& "		bne	LE1BA
-E1BF : 73 20 02		"s  "		com	X2002   ;complement 1s in DAC output SOUND
-E1C2 : C5 01		"  "		bitb	#$01
-E1C4 : 26 03		"& "		bne	LE1C9
-E1C6 : 7A 20 02		"z  "		dec	X2002   ;decr value in DAC output SOUND
-E1C9				LE1C9:
-E1C9 : 17		" "		tba
-E1CA				LE1CA:
-E1CA : 4A		"J"		deca
-E1CB : 26 FD		"& "		bne	LE1CA
-E1CD : 73 20 02		"s  "		com	X2002   ;complement 1s in DAC output SOUND
-E1D0 : 5A		"Z"		decb
-E1D1 : 26 E2		"& "		bne	LE1B5
+E1B0 : C6 FF		  ldab	#$FF
+E1B2 : 7F 20 02   clr	X2002     ;clear DAC output SOUND
+;LE1B5:
+E1B5 : BD E1 5F   jsr	LE15F
+E1B8 : 96 81		  ldaa	X0081
+;LE1BA:
+E1BA : 20 00		  bra	LE1BC
+;LE1BC:
+E1BC : 4A				  deca
+E1BD : 26 FB		  bne	LE1BA
+E1BF : 73 20 02   com	X2002     ;complement 1s in DAC output SOUND
+E1C2 : C5 01		  bitb	#$01
+E1C4 : 26 03		  bne	LE1C9
+E1C6 : 7A 20 02   dec	X2002     ;decr value in DAC output SOUND
+;LE1C9:
+E1C9 : 17				  tba
+;LE1CA:
+E1CA : 4A				  deca
+E1CB : 26 FD		  bne	LE1CA
+E1CD : 73 20 02   com	X2002     ;complement 1s in DAC output SOUND
+E1D0 : 5A				  decb
+E1D1 : 26 E2		  bne	LE1B5
 E1D3 : 39				  rts           ;return subroutine
 ;*************************************;
-;SYNTH
+;SYNTH dupe with above except ldab 01
 ;*************************************;
-E1D4 : C6 01		"  "		ldab	#$01
-E1D6 : 7F 20 02		"   "		clr	X2002   ;clear DAC output SOUND
-E1D9				LE1D9:
-E1D9 : BD E1 5F		"  _"		jsr	LE15F
-E1DC : 96 81		"  "		ldaa	X0081
-E1DE				LE1DE:
-E1DE : 20 00		"  "		bra	LE1E0
-				;
-E1E0				LE1E0:
-E1E0 : 4A		"J"		deca
-E1E1 : 26 FB		"& "		bne	LE1DE
-E1E3 : 73 20 02		"s  "		com	X2002   ;complement 1s in DAC output SOUND
-E1E6 : C5 01		"  "		bitb	#$01
-E1E8 : 26 03		"& "		bne	LE1ED
-E1EA : 7A 20 02		"z  "		dec	X2002   ;decr value in DAC output SOUND
-E1ED				LE1ED:
-E1ED : 17		" "		tba
-E1EE				LE1EE:
-E1EE : 4A		"J"		deca
-E1EF : 26 FD		"& "		bne	LE1EE
-E1F1 : 73 20 02		"s  "		com	X2002   ;complement 1s in DAC output SOUND
-E1F4 : 5C		"\"		incb
-E1F5 : 26 E2		"& "		bne	LE1D9
+E1D4 : C6 01		  ldab	#$01
+E1D6 : 7F 20 02   clr	X2002     ;clear DAC output SOUND
+;LE1D9:
+E1D9 : BD E1 5F   jsr	LE15F
+E1DC : 96 81		  ldaa	X0081
+;LE1DE:
+E1DE : 20 00		  bra	LE1E0
+;LE1E0:
+E1E0 : 4A				  deca
+E1E1 : 26 FB		  bne	LE1DE
+E1E3 : 73 20 02   com	X2002     ;complement 1s in DAC output SOUND
+E1E6 : C5 01		  bitb	#$01
+E1E8 : 26 03		  bne	LE1ED
+E1EA : 7A 20 02   dec	X2002     ;decr value in DAC output SOUND
+;LE1ED:
+E1ED : 17				  tba
+;LE1EE:
+E1EE : 4A				  deca
+E1EF : 26 FD		  bne	LE1EE
+E1F1 : 73 20 02   com	X2002     ;complement 1s in DAC output SOUND
+E1F4 : 5C				  incb
+E1F5 : 26 E2		  bne	LE1D9
 E1F7 : 39				  rts           ;return subroutine
 ;*************************************;
-;
+;FDB data
 ;*************************************;
-E1F8 : 01		" "		nop
-				;
-E1F9 : 03		" "		db	$03
-				;
-E1FA : FF 80 FF		"   "		stx	X80FF
-				;
-E1FD : 00		" "		db	$00
-				;
-E1FE : CE E1 F8		"   "		ldx	#$E1F8
-E201				LE201:
-E201 : BD F8 57		"  W"		jsr	LF857
-E204 : 7E F8 70		"~ p"		jmp	LF870
-				;
-E207 : 48		"H"		asla
-				;
-E208 : 03		" "		db	$03
-				;
-E209 : 01		" "		nop
-E20A : 0C		" "		clc
-E20B : FF 00 86		"   "		stx	X0086
-E20E : FF 97 89		"   "		stx	X9789
-E211 : CE E2 07		"   "		ldx	#$E207
-E214				LE214:
-E214 : 8D EB		"  "		bsr	LE201
-E216 : 8D 6E		" n"		bsr	LE286
-E218 : 20 FA		"  "		bra	LE214
-				;
-E21A : E0 01		"  "		subb	$01,x
-				;
-E21C : 02		" "		db	$02
-				;
-E21D : 10		" "		sba
-E21E : FF 00 86		"   "		stx	X0086
-E221 : FF 97 89		"   "		stx	X9789
-E224 : CE E2 1A		"   "		ldx	#$E21A
-E227 : 20 EB		"  "		bra	LE214
+E1F8 : 01 03 FF 80 FF	00 
 ;*************************************;
-;
+;PARAM
+;*************************************;
+E1FE : CE E1 F8   ldx #$E1F8    ;load X with value E1F8h (FDB data above)
+;*************************************;
+;PARAM
+;*************************************;
+;LE201:
+E201 : BD F8 57   jsr	LF857     ;jump sub PRMXLD 
+E204 : 7E F8 70   jmp	LF870     ;jump SYNTH low mem
+;*************************************;
+;FDB data
+;*************************************;
+E207 : 48 03 01 0C FF 00
+;*************************************;
+;PARAM
+;*************************************;
+E20D : 86	FF      ldaa #$FF     ;load A with value FFh
+E20F : 97 89      staa $89      ;store A in addr 89 
+E211 : CE E2 07   ldx #$E207    ;load X with value E207h (FDB data above)
+;*************************************;
+;PARAM
+;*************************************;
+;LE214:
+E214 : 8D EB      bsr	LE201     ;branch sub PARAM above
+E216 : 8D 6E      bsr	LE286     ;branch sub PARAM below
+E218 : 20 FA      bra	LE214     ;branch always here
+;*************************************;
+;FDB data
+;*************************************;
+E21A : E0 01 02	10 FF 00 
+;*************************************;
+;PARAM
+;*************************************;
+E220 : 86	FF      ldaa #$FF     ;load A with value FFh
+E222 : 97 89      staa $89      ;store A in addr 89
+E224 : CE E2 1A   ldx	#$E21A    ;load X with value E21Ah (FDB data)
+E227 : 20 EB      bra	LE214     ;branch always PARAM above
+;*************************************;
+;FDB data
 ;*************************************;
 E229 : 20 03 FF 50 FF	00
 ;
@@ -334,234 +320,236 @@ E22F : 50	03 01 20 FF	00
 ;*************************************;
 ;PARAM
 ;*************************************;
-E235 : C6 2F		" /"		ldab	#$2F
-E237 : D7 89		"  "		stab	X0089
-E239				LE239:
-E239 : CE E2 29		"  )"		ldx	#$E229
-E23C : 8D C3		"  "		bsr	LE201
-E23E : CE E2 2F		"  /"		ldx	#$E22F
-E241 : 8D BE		"  "		bsr	LE201
-E243 : 5A		"Z"		decb
-E244 : 26 F3		"& "		bne	LE239
+E235 : C6 2F      ldab	#$2F
+E237 : D7 89      stab	X0089
+;LE239:
+E239 : CE E2 29   ldx	#$E229    ;load X with value E229h (FDB data)
+E23C : 8D C3      bsr	LE201     ;branch sub PARAM above
+E23E : CE E2 2F   ldx	#$E22F    ;load X with value E22Fh (FDB data)
+E241 : 8D BE      bsr	LE201     ;branch sub PARAM above
+E243 : 5A         decb
+E244 : 26 F3      bne	LE239     ;branch Z=0
 E246 : 39				  rts           ;return subroutine
 ;*************************************;
-;SYNTH
+;SYNTH (similar ROM1 SYNTH2)
 ;*************************************;
-E247 : 86 FF		"  "		ldaa	#$FF
-E249 : 97 97		"  "		staa	X0097
-E24B : 86 60		" `"		ldaa	#$60
-E24D : C6 FF		"  "		ldab	#$FF
-E24F				LE24F:
-E24F : 97 96		"  "		staa	X0096
-E251 : 86 FF		"  "		ldaa	#$FF
-E253 : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-E256 : D7 92		"  "		stab	X0092
-E258				LE258:
-E258 : D6 92		"  "		ldab	X0092
-E25A				LE25A:
-E25A : 96 81		"  "		ldaa	X0081
-E25C : 44		"D"		lsra
-E25D : 44		"D"		lsra
-E25E : 44		"D"		lsra
-E25F : 98 81		"  "		eora	X0081
-E261 : 44		"D"		lsra
-E262 : 76 00 80		"v  "		ror	X0080
-E265 : 76 00 81		"v  "		ror	X0081
-E268 : 24 03		"$ "		bcc	LE26D
-E26A : 73 20 02		"s  "		com	X2002   ;complement 1s in DAC output SOUND
-E26D				LE26D:
-E26D : 96 96		"  "		ldaa	X0096
-E26F				LE26F:
-E26F : 4A		"J"		deca
-E270 : 26 FD		"& "		bne	LE26F
-E272 : 5A		"Z"		decb
-E273 : 26 E5		"& "		bne	LE25A
-E275 : 96 96		"  "		ldaa	X0096
-E277 : 9B 97		"  "		adda	X0097
-E279 : 97 96		"  "		staa	X0096
-E27B : 26 DB		"& "		bne	LE258
+E247 : 86 FF      ldaa	#$FF
+E249 : 97 97      staa	X0097
+E24B : 86 60      ldaa	#$60
+E24D : C6 FF      ldab	#$FF
+;LE24F:
+E24F : 97 96      staa	X0096
+E251 : 86 FF      ldaa	#$FF
+E253 : B7 20 02   staa	X2002   ;store A in DAC output SOUND
+E256 : D7 92      stab	X0092
+;LE258:
+E258 : D6 92      ldab	X0092
+;LE25A:
+E25A : 96 81      ldaa	X0081
+E25C : 44				  lsra
+E25D : 44				  lsra
+E25E : 44				  lsra
+E25F : 98 81      eora	X0081
+E261 : 44				  lsra
+E262 : 76 00 80   ror	X0080
+E265 : 76 00 81   ror	X0081
+E268 : 24 03      bcc	LE26D
+E26A : 73 20 02   com	X2002   ;complement 1s in DAC output SOUND
+;LE26D:
+E26D : 96 96      ldaa	X0096
+;LE26F:
+E26F : 4A				  deca
+E270 : 26 FD      bne	LE26F
+E272 : 5A				  decb
+E273 : 26 E5      bne	LE25A
+E275 : 96 96      ldaa	X0096
+E277 : 9B 97      adda	X0097
+E279 : 97 96      staa	X0096
+E27B : 26 DB      bne	LE258
 E27D : 39				  rts           ;return subroutine
 ;*************************************;
 ;PARAM
 ;*************************************;
-E27E : 86 01		"  "		ldaa	#$01
-E280 : 97 97		"  "		staa	X0097
-E282 : C6 03		"  "		ldab	#$03
-E284 : 20 C9		"  "		bra	LE24F
+E27E : 86 01      ldaa	#$01
+E280 : 97 97      staa	X0097
+E282 : C6 03      ldab	#$03
+E284 : 20 C9      bra	LE24F     ;branch always SYNTH above
+;*************************************;
+;PARAM
+;*************************************;
 ;LE286:
-E286 : 96 89		"  "		ldaa	X0089
-E288 : 80 08		"  "		suba	#$08
-E28A : 2A 03		"* "		bpl	LE28F
-E28C : 97 89		"  "		staa	X0089
+E286 : 96 89      ldaa	X0089
+E288 : 80 08      suba	#$08
+E28A : 2A 03      bpl	LE28F     ;branch N=0 
+E28C : 97 89      staa	X0089
 E28E : 39				  rts           ;return subroutine
 ;*************************************;
-;
+;PRMSTK (param stack)
 ;*************************************;
 ;LE28F:
-E28F : 32		"2"		pula
-E290 : 32		"2"		pula
+E28F : 32         pula          ;SP + 1 pull stack into A
+E290 : 32         pula          ;SP + 1 pull stack into A
 E291 : 39				  rts           ;return subroutine
 ;*************************************;
 ;SYNTH
 ;*************************************;
-E292 : C6 11		"  "		ldab	#$11
-E294 : D7 AC		"  "		stab	X00AC
-E296 : 86 FE		"  "		ldaa	#$FE
-E298 : 97 91		"  "		staa	X0091
-E29A : 86 9F		"  "		ldaa	#$9F
-E29C : D6 AC		"  "		ldab	X00AC
-E29E				LE29E:
-E29E : CE 01 C0		"   "		ldx	#$01C0
-E2A1				LE2A1:
-E2A1 : 09		" "		dex
-E2A2 : 27 20		"' "		beq	LE2C4
-E2A4 : F7 00 90		"   "		stab	X0090
-E2A7 : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-E2AA				LE2AA:
-E2AA : 09		" "		dex
-E2AB : 27 17		"' "		beq	LE2C4
-E2AD : 7A 00 90		"z  "		dec	X0090
-E2B0 : 26 F8		"& "		bne	LE2AA
-E2B2 : 09		" "		dex
-E2B3 : 27 0F		"' "		beq	LE2C4
-E2B5 : D7 90		"  "		stab	X0090
-E2B7 : 73 20 02		"s  "		com	X2002   ;complement 1s in DAC output SOUND
-E2BA				LE2BA:
-E2BA : 09		" "		dex
-E2BB : 27 07		"' "		beq	LE2C4
-E2BD : 7A 00 90		"z  "		dec	X0090
-E2C0 : 26 F8		"& "		bne	LE2BA
-E2C2 : 20 DD		"  "		bra	LE2A1
-				;
-E2C4				LE2C4:
-E2C4 : D0 91		"  "		subb	X0091
-E2C6 : C1 10		"  "		cmpb	#$10
-E2C8 : 22 D4		"" "		bhi	LE29E
+E292 : C6 11      ldab	#$11
+E294 : D7 AC      stab	X00AC
+E296 : 86 FE      ldaa	#$FE
+E298 : 97 91      staa	X0091
+E29A : 86 9F      ldaa	#$9F
+E29C : D6 AC      ldab	X00AC
+;LE29E:
+E29E : CE 01 C0   ldx	#$01C0    ;load X with value 01C0h
+;LE2A1:
+E2A1 : 09				  dex
+E2A2 : 27 20      beq	LE2C4
+E2A4 : F7 00 90   stab	X0090
+E2A7 : B7 20 02   staa	X2002   ;store A in DAC output SOUND
+;LE2AA:
+E2AA : 09				  dex
+E2AB : 27 17      beq	LE2C4
+E2AD : 7A 00 90   dec	X0090
+E2B0 : 26 F8      bne	LE2AA
+E2B2 : 09				  dex
+E2B3 : 27 0F      beq	LE2C4
+E2B5 : D7 90      stab	X0090
+E2B7 : 73 20 02   com	X2002     ;complement 1s in DAC output SOUND
+;LE2BA:
+E2BA : 09				  dex
+E2BB : 27 07      beq	LE2C4
+E2BD : 7A 00 90   dec	X0090
+E2C0 : 26 F8      bne	LE2BA
+E2C2 : 20 DD      bra	LE2A1
+;LE2C4:
+E2C4 : D0 91      subb	X0091
+E2C6 : C1 10      cmpb	#$10
+E2C8 : 22 D4      bhi	LE29E
 E2CA : 39				  rts           ;return subroutine
 ;*************************************;
-;SYNTH
+;SYNTH (same as ROM1 SYNTH6)
 ;*************************************;
-E2CB : 4F		"O"		clra
-E2CC : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-E2CF : 97 87		"  "		staa	X0087
-E2D1				LE2D1:
-E2D1 : 4F		"O"		clra
-E2D2				LE2D2:
-E2D2 : 91 87		"  "		cmpa	X0087
-E2D4 : 26 03		"& "		bne	LE2D9
-E2D6 : 73 20 02		"s  "		com	X2002   ;complement 1s in DAC output SOUND
-E2D9				LE2D9:
-E2D9 : C6 12		"  "		ldab	#$12
-E2DB				LE2DB:
-E2DB : 5A		"Z"		decb
-E2DC : 26 FD		"& "		bne	LE2DB
-E2DE : 4C		"L"		inca
-E2DF : 2A F1		"* "		bpl	LE2D2
-E2E1 : 73 20 02		"s  "		com	X2002   ;complement 1s in DAC output SOUND
-E2E4 : 7C 00 87		"|  "		inc	X0087
-E2E7 : 2A E8		"* "		bpl	LE2D1
+E2CB : 4F				  clra
+E2CC : B7 20 02   staa	X2002   ;store A in DAC output SOUND
+E2CF : 97 87      staa	X0087
+;LE2D1:
+E2D1 : 4F         clra
+;LE2D2:
+E2D2 : 91 87      cmpa	X0087
+E2D4 : 26 03      bne	LE2D9
+E2D6 : 73 20 02   com	X2002   ;complement 1s in DAC output SOUND
+;LE2D9:
+E2D9 : C6 12      ldab	#$12
+;LE2DB:
+E2DB : 5A         decb
+E2DC : 26 FD      bne	LE2DB
+E2DE : 4C         inca
+E2DF : 2A F1      bpl	LE2D2
+E2E1 : 73 20 02   com	X2002   ;complement 1s in DAC output SOUND
+E2E4 : 7C 00 87   inc	X0087
+E2E7 : 2A E8      bpl	LE2D1
 E2E9 : 39				  rts           ;return subroutine
 ;*************************************;
-;SYNTH
+;SYNTH (same as ROM1 SYNTH7)
 ;*************************************;
-E2EA : CE 00 90		"   "		ldx	#$0090
-E2ED				LE2ED:
-E2ED : 6F 00		"o "		clr	$00,x
-E2EF : 08		" "		inx
-E2F0 : 8C 00 A0		"   "		cpx	#$00A0
-E2F3 : 26 F8		"& "		bne	LE2ED
-E2F5 : 86 18		"  "		ldaa	#$18
-E2F7 : 97 90		"  "		staa	X0090
-E2F9				LE2F9:
-E2F9 : CE 00 90		"   "		ldx	#$0090
-E2FC : 86 C0		"  "		ldaa	#$C0
-E2FE : 97 87		"  "		staa	X0087
-E300 : 5F		"_"		clrb
-E301				LE301:
-E301 : A6 01		"  "		ldaa	$01,x
-E303 : AB 00		"  "		adda	$00,x
-E305 : A7 01		"  "		staa	$01,x
-E307 : 2A 02		"* "		bpl	LE30B
-E309 : DB 87		"  "		addb	X0087
-E30B				LE30B:
-E30B : 74 00 87		"t  "		lsr	X0087
-E30E : 08		" "		inx
-E30F : 08		" "		inx
-E310 : 8C 00 A0		"   "		cpx	#$00A0
-E313 : 26 EC		"& "		bne	LE301
-E315 : F7 20 02		"   "		stab	X2002   ;store B in DAC output SOUND
-E318 : 7C 00 88		"|  "		inc	X0088
-E31B : 26 DC		"& "		bne	LE2F9
-E31D : CE 00 90		"   "		ldx	#$0090
-E320 : 5F		"_"		clrb
-E321				LE321:
-E321 : A6 00		"  "		ldaa	$00,x
-E323 : 27 0B		"' "		beq	LE330
-E325 : 81 37		" 7"		cmpa	#$37
-E327 : 26 04		"& "		bne	LE32D
-E329 : C6 19		"  "		ldab	#$19
-E32B : E7 02		"  "		stab	$02,x
-E32D				LE32D:
-E32D : 6A 00		"j "		dec	$00,x
-E32F : 5C		"\"		incb
-E330				LE330:
-E330 : 08		" "		inx
-E331 : 08		" "		inx
-E332 : 8C 00 A0		"   "		cpx	#$00A0
-E335 : 26 EA		"& "		bne	LE321
-E337 : 5D		"]"		tstb
-E338 : 26 BF		"& "		bne	LE2F9
+E2EA : CE 00 90   ldx	#$0090
+;LE2ED:
+E2ED : 6F 00      clr	$00,x
+E2EF : 08				  inx
+E2F0 : 8C 00 A0   cpx	#$00A0
+E2F3 : 26 F8      bne	LE2ED
+E2F5 : 86 18      ldaa	#$18
+E2F7 : 97 90      staa	X0090
+;LE2F9:
+E2F9 : CE 00 90   ldx	#$0090
+E2FC : 86 C0      ldaa	#$C0
+E2FE : 97 87      staa	X0087
+E300 : 5F				  clrb
+;LE301:
+E301 : A6 01      ldaa	$01,x
+E303 : AB 00      adda	$00,x
+E305 : A7 01      staa	$01,x
+E307 : 2A 02      bpl	LE30B
+E309 : DB 87      addb	X0087
+;LE30B:
+E30B : 74 00 87   lsr	X0087
+E30E : 08				  inx
+E30F : 08				  inx
+E310 : 8C 00 A0   cpx	#$00A0
+E313 : 26 EC      bne	LE301
+E315 : F7 20 02   stab	X2002   ;store B in DAC output SOUND
+E318 : 7C 00 88   inc	X0088
+E31B : 26 DC      bne	LE2F9
+E31D : CE 00 90   ldx	#$0090
+E320 : 5F				  clrb
+;LE321:
+E321 : A6 00      ldaa	$00,x
+E323 : 27 0B      beq	LE330
+E325 : 81 37      cmpa	#$37
+E327 : 26 04      bne	LE32D
+E329 : C6 19      ldab	#$19
+E32B : E7 02      stab	$02,x
+;LE32D:
+E32D : 6A 00      dec	$00,x
+E32F : 5C				  incb
+;LE330:
+E330 : 08				  inx
+E331 : 08				  inx
+E332 : 8C 00 A0   cpx	#$00A0
+E335 : 26 EA      bne	LE321
+E337 : 5D         tstb
+E338 : 26 BF      bne	LE2F9
 E33A : 39				  rts           ;return subroutine
 ;*************************************;
-;SYNTH
+;SYNTH (same as ROM1 SYNTH1)
 ;*************************************;
 ;LE33B:
-E33B : 96 98		"  "		ldaa	X0098
-E33D : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-E340				LE340:
-E340 : 96 90		"  "		ldaa	X0090
-E342 : 97 99		"  "		staa	X0099
-E344 : 96 91		"  "		ldaa	X0091
-E346 : 97 9A		"  "		staa	X009A
-E348				LE348:
-E348 : DE 95		"  "		ldx	X0095
-E34A				LE34A:
-E34A : 96 99		"  "		ldaa	X0099
-E34C : 73 20 02		"s  "		com	X2002   ;complement 1s in DAC output SOUND
-E34F				LE34F:
-E34F : 09		" "		dex
-E350 : 27 10		"' "		beq	LE362
-E352 : 4A		"J"		deca
-E353 : 26 FA		"& "		bne	LE34F
-E355 : 73 20 02		"s  "		com	X2002   ;complement 1s in DAC output SOUND
-E358 : 96 9A		"  "		ldaa	X009A
-E35A				LE35A:
-E35A : 09		" "		dex
-E35B : 27 05		"' "		beq	LE362
-E35D : 4A		"J"		deca
-E35E : 26 FA		"& "		bne	LE35A
-E360 : 20 E8		"  "		bra	LE34A
+E33B : 96 98      ldaa	X0098
+E33D : B7 20 02   staa	$2002   ;store A in DAC output SOUND
+;LE340:
+E340 : 96 90      ldaa	X0090
+E342 : 97 99      staa	X0099
+E344 : 96 91      ldaa	X0091
+E346 : 97 9A      staa	X009A
+;LE348:
+E348 : DE 95      ldx	X0095
+;LE34A:
+E34A : 96 99      ldaa	X0099
+E34C : 73 20 02   com	$2002     ;complement 1s in DAC output SOUND
+;LE34F:
+E34F : 09				  dex
+E350 : 27 10      beq	LE362
+E352 : 4A				  deca
+E353 : 26 FA      bne	LE34F
+E355 : 73 20 02   com	$2002     ;complement 1s in DAC output SOUND
+E358 : 96 9A      ldaa	X009A
+;LE35A:
+E35A : 09				  dex
+E35B : 27 05      beq	LE362
+E35D : 4A				  deca
+E35E : 26 FA      bne	LE35A
+E360 : 20 E8      bra	LE34A
 ;LE362:
-E362 : B6 20 02		"   "		ldaa	X2002   ;load A with value in DAC output SOUND
-E365 : 2B 01		"+ "		bmi	LE368
-E367 : 43		"C"		coma
-E368				LE368:
-E368 : 8B 00		"  "		adda	#$00
-E36A : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-E36D : 96 99		"  "		ldaa	X0099
-E36F : 9B 92		"  "		adda	X0092
-E371 : 97 99		"  "		staa	X0099
-E373 : 96 9A		"  "		ldaa	X009A
-E375 : 9B 93		"  "		adda	X0093
-E377 : 97 9A		"  "		staa	X009A
-E379 : 91 94		"  "		cmpa	X0094
-E37B : 26 CB		"& "		bne	LE348
-E37D : 96 97		"  "		ldaa	X0097
-E37F : 27 06		"' "		beq	LE387
-E381 : 9B 90		"  "		adda	X0090
-E383 : 97 90		"  "		staa	X0090
-E385 : 26 B9		"& "		bne	LE340
-E387				LE387:
+E362 : B6 20 02   ldaa	$2002   ;load A with value in DAC output SOUND
+E365 : 2B 01		  bmi	LE368
+E367 : 43				  coma
+;LE368:
+E368 : 8B 00      adda	#$00
+E36A : B7 20 02   staa	$2002   ;store A in DAC output SOUND
+E36D : 96 99      ldaa	X0099
+E36F : 9B 92      adda	X0092
+E371 : 97 99      staa	X0099
+E373 : 96 9A      ldaa	X009A
+E375 : 9B 93      adda	X0093
+E377 : 97 9A      staa	X009A
+E379 : 91 94      cmpa	X0094
+E37B : 26 CB      bne	LE348
+E37D : 96 97      ldaa	X0097
+E37F : 27 06      beq	LE387
+E381 : 9B 90      adda	X0090
+E383 : 97 90      staa	X0090
+E385 : 26 B9      bne	LE340
+;LE387:
 E387 : 39				  rts           ;return subroutine
 ;*************************************;
 ;VVECTs ?
@@ -570,118 +558,116 @@ E388 : 58	01 00	08 81 02 00	FF FF
 ;
 E391 : 48	91 00	FC 01	02 00 FC FF 
 ;*************************************;
-;
+;SYNTH (same as ROM1 SYNTH3)
 ;*************************************;
-E39A : 86 20		"   "		ldaa	#$20
-E39C : 97 92		"  "		staa	X0092
-E39E : 97 95		"  "		staa	X0095
-E3A0 : 86 01		"  "		ldaa	#$01
-E3A2 : CE 00 01		"   "		ldx	#$0001
-E3A5 : C6 FF		"  "		ldab	#$FF
-E3A7 : 97 90		"  "		staa	X0090
-E3A9				LE3A9:
-E3A9 : DF 93		"  "		stx	X0093
-E3AB				LE3AB:
-E3AB : D7 91		"  "		stab	X0091
-E3AD : D6 92		"  "		ldab	X0092
-E3AF				LE3AF:
-E3AF : 96 81		"  "		ldaa	X0081
-E3B1 : 44		"D"		lsra
-E3B2 : 44		"D"		lsra
-E3B3 : 44		"D"		lsra
-E3B4 : 98 81		"  "		eora	X0081
-E3B6 : 44		"D"		lsra
-E3B7 : 76 00 80		"v  "		ror	X0080
-E3BA : 76 00 81		"v  "		ror	X0081
-E3BD : 86 00		"  "		ldaa	#$00
-E3BF : 24 02		"$ "		bcc	LE3C3
-E3C1 : 96 91		"  "		ldaa	X0091
-E3C3				LE3C3:
-E3C3 : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-E3C6 : DE 93		"  "		ldx	X0093
-E3C8				LE3C8:
-E3C8 : 09		" "		dex
-E3C9 : 26 FD		"& "		bne	LE3C8
-E3CB : 5A		"Z"		decb
-E3CC : 26 E1		"& "		bne	LE3AF
-E3CE : D6 91		"  "		ldab	X0091
-E3D0 : D0 90		"  "		subb	X0090
-E3D2 : 27 09		"' "		beq	LE3DD
-E3D4 : DE 93		"  "		ldx	X0093
-E3D6 : 08		" "		inx
-E3D7 : 96 95		"  "		ldaa	X0095
-E3D9 : 27 D0		"' "		beq	LE3AB
-E3DB : 20 CC		"  "		bra	LE3A9
-E3DD				LE3DD:
+E39A : 86 20      ldaa	#$20
+E39C : 97 92      staa	X0092
+E39E : 97 95      staa	X0095
+E3A0 : 86 01      ldaa	#$01
+E3A2 : CE 00 01   ldx	#$0001
+E3A5 : C6 FF      ldab	#$FF
+E3A7 : 97 90      staa	X0090
+;LE3A9:
+E3A9 : DF 93      stx	X0093
+;LE3AB:
+E3AB : D7 91      stab	X0091
+E3AD : D6 92      ldab	X0092
+;LE3AF:
+E3AF : 96 81      ldaa	X0081
+E3B1 : 44				  lsra
+E3B2 : 44				  lsra
+E3B3 : 44				  lsra
+E3B4 : 98 81      eora	X0081
+E3B6 : 44				  lsra
+E3B7 : 76 00 80   ror	X0080
+E3BA : 76 00 81   ror	X0081
+E3BD : 86 00      ldaa	#$00
+E3BF : 24 02      bcc	LE3C3
+E3C1 : 96 91      ldaa	X0091
+;LE3C3:
+E3C3 : B7 20 02   staa	X2002   ;store A in DAC output SOUND
+E3C6 : DE 93      ldx	X0093
+;LE3C8:
+E3C8 : 09				  dex
+E3C9 : 26 FD      bne	LE3C8
+E3CB : 5A				  decb
+E3CC : 26 E1      bne	LE3AF
+E3CE : D6 91      ldab	X0091
+E3D0 : D0 90      subb	X0090
+E3D2 : 27 09      beq	LE3DD
+E3D4 : DE 93      ldx	X0093
+E3D6 : 08				  inx
+E3D7 : 96 95      ldaa	X0095
+E3D9 : 27 D0      beq	LE3AB
+E3DB : 20 CC      bra	LE3A9
+;LE3DD:
 E3DD : 39				  rts           ;return subroutine
 ;*************************************;
-;
+;PARAM (same as ROM1 PARAM13x)
 ;*************************************;
 ;LE3DE: called by NMI lo mem
-E3DE : 8D 03		"  "		bsr	LE3E3
-E3E0 : 7E F1 70		"~ p"		jmp	LF170
-				;
-E3E3				LE3E3:
+E3DE : 8D 03      bsr	LE3E3
+E3E0 : 7E F1 70   jmp	LF170
+;LE3E3:
 E3E3 : 16		" "		tab
 E3E4 : 58		"X"		aslb
 E3E5 : 1B		" "		aba
 E3E6 : 1B		" "		aba
 E3E7 : 1B		" "		aba
-E3E8 : CE E4 49		"  I"		ldx	#$E449
-E3EB : BD E1 89		"   "		jsr	LE189
-E3EE : A6 00		"  "		ldaa	$00,x
+E3E8 : CE E4 49   ldx	#$E449    ;load X with value E449h (FDB data below)
+E3EB : BD E1 89   jsr	LE189     ;jump sub CALCOS
+E3EE : A6 00      ldaa	$00,x
 E3F0 : 16		" "		tab
-E3F1 : 84 0F		"  "		anda	#$0F
-E3F3 : 97 92		"  "		staa	X0092
+E3F1 : 84 0F      anda	#$0F
+E3F3 : 97 92      staa	X0092
 E3F5 : 54		"T"		lsrb
 E3F6 : 54		"T"		lsrb
 E3F7 : 54		"T"		lsrb
 E3F8 : 54		"T"		lsrb
-E3F9 : D7 91		"  "		stab	X0091
-E3FB : A6 01		"  "		ldaa	$01,x
+E3F9 : D7 91      stab	X0091
+E3FB : A6 01      ldaa	$01,x
 E3FD : 16		" "		tab
 E3FE : 54		"T"		lsrb
 E3FF : 54		"T"		lsrb
 E400 : 54		"T"		lsrb
 E401 : 54		"T"		lsrb
-E402 : D7 93		"  "		stab	X0093
-E404 : 84 0F		"  "		anda	#$0F
-E406 : 97 87		"  "		staa	X0087
-E408 : DF 8A		"  "		stx	X008A
-E40A : CE F2 4F		"  O"		ldx	#$F24F
-E40D				LE40D:
-E40D : 7A 00 87		"z  "		dec	X0087
-E410 : 2B 08		"+ "		bmi	LE41A
-E412 : A6 00		"  "		ldaa	$00,x
+E402 : D7 93      stab	X0093
+E404 : 84 0F      anda	#$0F
+E406 : 97 87      staa	X0087
+E408 : DF 8A      stx	X008A
+E40A : CE F2 4F   ldx	#$F24F    ;load X with value F24Fh (FDB data low mem)
+;LE40D:
+E40D : 7A 00 87   dec	X0087
+E410 : 2B 08      bmi	LE41A
+E412 : A6 00      ldaa	$00,x
 E414 : 4C		"L"		inca
-E415 : BD E1 89		"   "		jsr	LE189
-E418 : 20 F3		"  "		bra	LE40D
-				;
-E41A				LE41A:
-E41A : DF 96		"  "		stx	X0096
-E41C : BD F1 FA		"   "		jsr	LF1FA
-E41F : DE 8A		"  "		ldx	X008A
-E421 : A6 02		"  "		ldaa	$02,x
-E423 : 97 98		"  "		staa	X0098
-E425 : BD F2 0C		"   "		jsr	LF20C
-E428 : DE 8A		"  "		ldx	X008A
-E42A : A6 03		"  "		ldaa	$03,x
-E42C : 97 94		"  "		staa	X0094
-E42E : A6 04		"  "		ldaa	$04,x
-E430 : 97 95		"  "		staa	X0095
-E432 : A6 05		"  "		ldaa	$05,x
+E415 : BD E1 89   jsr	LE189     ;jump sub CALCOS
+E418 : 20 F3      bra	LE40D
+;LE41A:
+E41A : DF 96      stx	X0096
+E41C : BD F1 FA   jsr	LF1FA
+E41F : DE 8A      ldx	X008A
+E421 : A6 02      ldaa	$02,x
+E423 : 97 98      staa	X0098
+E425 : BD F2 0C   jsr	LF20C
+E428 : DE 8A      ldx	X008A
+E42A : A6 03      ldaa	$03,x
+E42C : 97 94      staa	X0094
+E42E : A6 04      ldaa	$04,x
+E430 : 97 95      staa	X0095
+E432 : A6 05      ldaa	$05,x
 E434 : 16		" "		tab
-E435 : A6 06		"  "		ldaa	$06,x
-E437 : CE E4 E3		"   "		ldx	#$E4E3
-E43A : BD E1 89		"   "		jsr	LE189
+E435 : A6 06      ldaa	$06,x
+E437 : CE E4 E3   ldx	#$E4E3    ;load X with value E4E3h (FDB data)
+E43A : BD E1 89   jsr	LE189     ;jump sub CALCOS
 E43D : 17		" "		tba
-E43E : DF 99		"  "		stx	X0099
-E440 : 7F 00 A1		"   "		clr	X00A1
-E443 : BD E1 89		"   "		jsr	LE189
-E446 : DF 9B		"  "		stx	X009B
+E43E : DF 99      stx	X0099
+E440 : 7F 00 A1   clr	X00A1
+E443 : BD E1 89   jsr	LE189     ;jump sub CALCOS
+E446 : DF 9B      stx	X009B
 E448 : 39				  rts           ;return subroutine
 ;*************************************;
-;
+;FDB data
 ;*************************************;
 E449 : 81 24		" $"		cmpa	#$24
 				;
@@ -821,7 +807,11 @@ E4DB : BC FF 16		"   "		cpx	XFF16
 E4DE : 00 00 00		"   "		db	$00, $00, $00
 				;
 E4E1 : 08		" "		inx
-E4E2 : 88 A0		"  "		eora	#$A0
+E4E2 : 88 
+;*************************************;
+;FDB data
+;*************************************;
+E4E3 : A0		"  "		eora	#$A0
 E4E4 : 98 90		"  "		eora	X0090
 E4E6 : 88 80		"  "		eora	#$80
 E4E8 : 78 70 68		"xph"		asl	X7068
@@ -1070,15 +1060,15 @@ E5E0 : 08		" "		inx
 E5E1 : 18		" "		db	$18
 				;
 E5E2 : 19		" "		daa
-				;
+;*************************************;
+;zero padding
+;*************************************;
 E5E3 : 00 00 00 00	"    "		db	$00, $00, $00, $00
 E5E7 : 00 00 00 00	"    "		db	$00, $00, $00, $00
 E5EB : 00 00 00 00	"    "		db	$00, $00, $00, $00
-E5EF				LE5EF:
 E5EF : 00 00 00 00	"    "		db	$00, $00, $00, $00
 E5F3 : 00 00 00 00	"    "		db	$00, $00, $00, $00
 E5F7 : 00 00 00 00	"    "		db	$00, $00, $00, $00
-E5FB				LE5FB:
 E5FB : 00 00 00 00	"    "		db	$00, $00, $00, $00
 E5FF : 00 00 00 00	"    "		db	$00, $00, $00, $00
 E603 : 00 00 00 00	"    "		db	$00, $00, $00, $00
@@ -1657,17 +1647,21 @@ EEF3 : 00 00 00 00	"    "		db	$00, $00, $00, $00
 EEF7 : 00 00 00 00	"    "		db	$00, $00, $00, $00
 EEFB : 00 00 00 00	"    "		db	$00, $00, $00, $00
 EEFF : 00		" "		db	$00
-				;
-EF00 : CE FF FF		"   "		ldx	#$FFFF
-EF03 : 5F		"_"		clrb
-EF04				LEF04:
-EF04 : E9 00		"  "		adcb	$00,x
-EF06 : 09		" "		dex
-EF07 : 8C F0 00		"   "		cpx	#$F000
-EF0A : 26 F8		"& "		bne	LEF04
-EF0C : E7 00		"  "		stab	$00,x
-EF0E : 3E		">"		wai
-				;
+;*************************************;
+; MIDROM (decr X from FFFF to F000, starts at Motorola Vectors)
+;*************************************;
+EF00 : CE FF FF   ldx	#$FFFF    ;load X with FFFFh
+EF03 : 5F         clrb          ;clear B
+;MDRM1 LEF04:
+EF04 : E9 00      adcb	$00,x   ;B = Carry + B + value in addr X + 00h
+EF06 : 09         dex           ;decr X
+EF07 : 8C F0 00   cpx	#$F000    ;compare X with value F000h
+EF0A : 26 F8      bne	LEF04     ;branch Z=0 MDRM1
+EF0C : E7 00      stab	$00,x   ;store B in addr X + 00h <-- huh?
+EF0E : 3E         wai           ;wait interrupt
+;*************************************;
+;zero padding
+;*************************************;
 EF0F : 00 00 00 00	"    "		db	$00, $00, $00, $00
 EF13 : 00 00 00 00	"    "		db	$00, $00, $00, $00
 EF17 : 00 00 00 00	"    "		db	$00, $00, $00, $00
@@ -1729,7 +1723,9 @@ EFF3 : 00 00 00 00	"    "		db	$00, $00, $00, $00
 EFF7 : 00 00 00 00	"    "		db	$00, $00, $00, $00
 EFFB : 00 00 00 00	"    "		db	$00, $00, $00, $00
 EFFF : 00		" "		db	$00
-				;
+;*************************************;
+;
+;*************************************;
 F000 : D2
 ;*************************************;
 ; RESET org F001
@@ -1792,12 +1788,12 @@ F055 : 20 E7      bra	LF03E     ;branch always NMI1
 F057 : 81 01      cmpa	#$01    ;compare A with value 01h
 F059 : 25 4A      bcs	LF0A5     ;branch C=1 NMIC
 F05B : 22 03      bhi	LF060     ;branch C=0 and Z=0 NMI5
-F05D : 7E F0 EC   jmp	LF0EC     ;jump PARAM below
+F05D : 7E F0 EC   jmp	LF0EC     ;jump PRMFDB1
 ;NMI5 LF060:
 F060 : 81 19      cmpa	#$19    ;compare A with value 19h
 F062 : 22 08      bhi	LF06C     ;branch C=0 and Z=0 NMI6
 F064 : 80 02      suba	#$02    ;subtract A with value 02h
-F066 : BD F1 0A   jsr	LF10A     ;jump sub PARAM below
+F066 : BD F1 0A   jsr	LF10A     ;jump sub PARAM1
 F069 : 7E F1 70   jmp	LF170     ;jump SYNTH below
 ;NMI6 LF06C:
 F06C : 81 2F      cmpa	#$2F    ;compare A with value 2Fh
@@ -1855,86 +1851,84 @@ F0C6 : F9 00                    ;PARAM below
 F0C8 : F9 04                    ;PARAM below
 F0CA : F9 08                    ;PARAM below
 F0CC : F9 0C                    ;PARAM below
-F0CE : FF 94 
-F0D0 : E2	20 
-F0D2 : E2 35		"5"		txs
-F0D4 : E2 47		" G"		sbcb	$47,x
-F0D6 : E2 7E		" ~"		sbcb	$7E,x
-F0D8 : E1 6D		" m"		cmpb	$6D,x
-F0DA : E1 B0		"  "		cmpb	$B0,x
-F0DC : E1 D4		"  "		cmpb	$D4,x
-F0DE : E1 FE		"  "		cmpb	$FE,x
-F0E0 : E2 0D		"  "		sbcb	$0D,x
-F0E2 : E2 92		"  "		sbcb	$92,x
-F0E4 : E2 CB		"  "		sbcb	$CB,x
-F0E6 : E2 EA		"  "		sbcb	$EA,x
-F0E8 : E3	9A
-F0EA : E0	CD		" "		db	$CD
+F0CE : FF 94                    ;PARAM below 
+F0D0 : E2	20                    ;PARAM above 
+F0D2 : E2 35                    ;PARAM above
+F0D4 : E2 47                    ;SYNTH above
+F0D6 : E2 7E                    ;PARAM above
+F0D8 : E1 6D                    ;SYNTH above
+F0DA : E1 B0                    ;SYNTH above
+F0DC : E1 D4                    ;SYNTH above
+F0DE : E1 FE                    ;PARAM above
+F0E0 : E2 0D                    ;PARAM above
+F0E2 : E2 92                    ;SYNTH above
+F0E4 : E2 CB                    ;SYNTH above
+F0E6 : E2 EA                    ;SYNTH above
+F0E8 : E3	9A                    ;SYNTH above
+F0EA : E0	CD                    ;PARAM above (top)
 ;*************************************;
-;PARAM
+;PRMFDB1
 ;*************************************;
-;LF0EC:
 F0EC : CE F1 02   ldx	#$F102    ;load X with value F102h (FDB data below)
 ;LF0EF:
-F0EF : A6 00		  ldaa	$00,x
-F0F1 : 26 01		  bne	LF0F4
+F0EF : A6 00		  ldaa	$00,x   ;load A with value in addr X + 00h
+F0F1 : 26 01		  bne	LF0F4     ;branch Z=0 PRMFDB2 
 F0F3 : 39				  rts           ;return subroutine
 ;*************************************;
-;PARAM 
+;PRMFDB2 
 ;*************************************;
 ;LF0F4:
-F0F4 : 81 01		  cmpa	#$01
+F0F4 : 81 01		  cmpa	#$01    ;compare A with value 01h
 F0F6 : 27 07		  beq	LF0FF     ;branch Z=1 
-F0F8 : DF 82		  stx	X0082
+F0F8 : DF 82		  stx	$82       ;store X in addr 82
 F0FA : BD F0 57   jsr	LF057     ;jump sub NMI4
-F0FD : DE 82		  ldx	X0082
+F0FD : DE 82		  ldx	$82       ;load X with value in addr 82
 ;LF0FF:
-F0FF : 08		" "		inx
-F100 : 20 ED		  bra	LF0EF     ;branch always PARAM above
+F0FF : 08         inx           ;incr X
+F100 : 20 ED		  bra	LF0EF     ;branch always PRMFDB1
 ;*************************************;
 ;FDB data
 ;*************************************;
 F102 : 03 06 0A	04 0E	05 09	00
 ;*************************************;
-;PARAM
+;PARAM1 (similar to ROM1 PARAM13x)
 ;*************************************;
-;LF10A:
-F10A : 16		" "		tab
-F10B : 58		"X"		aslb
-F10C : 1B		" "		aba
-F10D : 1B		" "		aba
-F10E : 1B		" "		aba
+F10A : 16         tab           ;transfer A to B (A unchanged)
+F10B : 58         aslb          ;arith shift left B (bit0 is 0)
+F10C : 1B         aba           ;A = A + B
+F10D : 1B         aba           ;A = A + B
+F10E : 1B         aba           ;A = A + B
 F10F : CE F3 87   ldx	#$F387    ;load X with value F387h (FDB data below)
 F112 : BD E1 89   jsr	LE189     ;jump sub CALCOS top mem
-F115 : A6 00		  ldaa	$00,x
-F117 : 16		" "		tab
-F118 : 84 0F		  anda	#$0F
-F11A : 97 92		  staa	X0092
-F11C : 54		"T"		lsrb
-F11D : 54		"T"		lsrb
-F11E : 54		"T"		lsrb
-F11F : 54		"T"		lsrb
-F120 : D7 91		  stab	X0091
-F122 : A6 01		  ldaa	$01,x
-F124 : 16		" "		tab
-F125 : 54		"T"		lsrb
-F126 : 54		"T"		lsrb
-F127 : 54		"T"		lsrb
-F128 : 54		"T"		lsrb
-F129 : D7 93		  stab	X0093
-F12B : 84 0F		  anda	#$0F
-F12D : 97 87		  staa	X0087
-F12F : DF 8A		  stx	X008A
+F115 : A6 00		  ldaa	$00,x   ;load A with value at addr X + 00h
+F117 : 16         tab           ;transfer A to B (A unchanged)
+F118 : 84 0F		  anda	#$0F    ;and A with value 0Fh
+F11A : 97 92		  staa	$92     ;store A in addr 92
+F11C : 54         lsrb          ;logic shift right B (bit7=0)
+F11D : 54         lsrb          ;logic shift right B (bit7=0)
+F11E : 54         lsrb          ;logic shift right B (bit7=0)
+F11F : 54         lsrb          ;logic shift right B (bit7=0)
+F120 : D7 91		  stab	$91     ;store B in addr 91
+F122 : A6 01		  ldaa	$01,x   ;load A with value at addr X + 00h
+F124 : 16         tab           ;transfer A to B (A unchanged)
+F125 : 54         lsrb          ;logic shift right B (bit7=0)
+F126 : 54         lsrb          ;logic shift right B (bit7=0)
+F127 : 54         lsrb          ;logic shift right B (bit7=0)
+F128 : 54         lsrb          ;logic shift right B (bit7=0)
+F129 : D7 93		  stab	$93     ;store B in addr 93
+F12B : 84 0F		  anda	#$0F    ;and A with value 0Fh
+F12D : 97 87		  staa	$87     ;store A in addr 87
+F12F : DF 8A		  stx	$8A       ;store X in addr 8A
 F131 : CE F2 4F   ldx	#$F24F    ;load X with value F24Fh (FDB data below)
 ;LF134:
-F134 : 7A 00 87   dec	X0087
+F134 : 7A 00 87   dec	$0087     ;decr value in addr 0087
 F137 : 2B 08		  bmi	LF141     ;branch N=1 PARAM below
-F139 : A6 00		  ldaa	$00,x
-F13B : 4C		"L"		inca
+F139 : A6 00		  ldaa	$00,x   ;load A with value at addr X + 00h
+F13B : 4C         inca          ;incr A
 F13C : BD E1 89   jsr	LE189     ;jump sub CALCOS top mem
-F13F : 20 F3		  bra	LF134     ;
+F13F : 20 F3		  bra	LF134     ;branch always
 ;*************************************;
-; PARAM
+;PARAM2 (similar to ROM1 PRM134
 ;*************************************;
 ;LF141:
 F141 : DF 96		  stx	X0096
@@ -3097,20 +3091,20 @@ F6B3 : 02 39
 ;*************************************;
 ;PRMLDXx1
 ;*************************************;
-F6B5 : BD F5 FD		"   "		jsr	LF5FD
+F6B5 : BD F5 FD   jsr	LF5FD     ;jump sub PRMLOAD
 F6B8 : CE F7 28		"  ("		ldx	#$F728
 F6BB : 20 0E		"  "		bra	LF6CB
 ;*************************************;
 ;PRMLDXx2
 ;*************************************;
-F6BD : BD F5 FD		"   "		jsr	LF5FD
+F6BD : BD F5 FD   jsr	LF5FD     ;jump sub PRMLOAD
 F6C0 : CE F7 0C		"   "		ldx	#$F70C
 F6C3 : 20 06		"  "		bra	LF6CB
 ;*************************************;
 ;PRMLDXx3
 ;*************************************;
 ;LF6C5
-F6C5 : BD F5 FD		"   "		jsr	LF5FD
+F6C5 : BD F5 FD   jsr	LF5FD     ;jump sub PRMLOAD
 F6C8 : CE F6 F0		"   "		ldx	#$F6F0
 ;LF6CB:
 F6CB : C6 1C		"  "		ldab	#$1C
@@ -3201,93 +3195,48 @@ F742 : 00 00		"  "		db	$00, $00
 ;*************************************;
 ;SYNTH
 ;*************************************;
-F744 : BD F5 FD		"   "		jsr	LF5FD
-F747 : 86 80		"  "		ldaa	#$80
-F749 : 97 9A		"  "		staa	X009A
-F74B : 86 F7		"  "		ldaa	#$F7
-F74D : 97 98		"  "		staa	X0098
-F74F				LF74F:
-F74F : 86 80		"  "		ldaa	#$80
-F751 : 97 87		"  "		staa	X0087
-F753				LF753:
-F753 : 86 12		"  "		ldaa	#$12
-F755				LF755:
-F755 : 4A		"J"		deca
-F756 : 26 FD		"& "		bne	LF755
-F758 : 96 97		"  "		ldaa	X0097
-F75A : 9B 9A		"  "		adda	X009A
-F75C : 97 97		"  "		staa	X0097
-F75E : 44		"D"		lsra
-F75F : 44		"D"		lsra
-F760 : 44		"D"		lsra
-F761 : 8B 7B		" {"		adda	#$7B
-F763 : 97 99		"  "		staa	X0099
-F765 : DE 98		"  "		ldx	X0098
-F767 : A6 00		"  "		ldaa	$00,x
-F769 : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-F76C : 7A 00 87		"z  "		dec	X0087
-F76F : 26 E2		"& "		bne	LF753
-F771 : 7A 00 9A		"z  "		dec	X009A
-F774 : 96 9A		"  "		ldaa	X009A
-F776 : 81 20		"  "		cmpa	#$20
-F778 : 26 D5		"& "		bne	LF74F
+F744 : BD F5 FD   jsr	LF5FD     ;jump sub PRMLOAD
+F747 : 86 80      ldaa	#$80
+F749 : 97 9A      staa	X009A
+F74B : 86 F7      ldaa	#$F7
+F74D : 97 98      staa	X0098
+;LF74F:
+F74F : 86 80      ldaa	#$80
+F751 : 97 87      staa	X0087
+;LF753:
+F753 : 86 12      ldaa	#$12
+;LF755:
+F755 : 4A				  deca
+F756 : 26 FD      bne	LF755
+F758 : 96 97      ldaa	X0097
+F75A : 9B 9A      adda	X009A
+F75C : 97 97      staa	X0097
+F75E : 44				  lsra
+F75F : 44				  lsra
+F760 : 44				  lsra
+F761 : 8B 7B      adda	#$7B
+F763 : 97 99      staa	X0099
+F765 : DE 98      ldx	X0098
+F767 : A6 00      ldaa	$00,x
+F769 : B7 20 02   staa	X2002   ;store A in DAC output SOUND
+F76C : 7A 00 87   dec	X0087
+F76F : 26 E2      bne	LF753
+F771 : 7A 00 9A   dec	X009A
+F774 : 96 9A      ldaa	X009A
+F776 : 81 20      cmpa	#$20
+F778 : 26 D5      bne	LF74F
 F77A : 39				  rts           ;return subroutine
 ;*************************************;
-;
+;FDB data ??
 ;*************************************;
-F77B : 80 8C		"  "		suba	#$8C
-F77D : 98 A5		"  "		eora	X00A5
-F77F : B0 BC C6		"   "		suba	XBCC6
-F782 : D0 DA		"  "		subb	X00DA
-F784 : E2 EA		"  "		sbcb	$EA,x
-F786 : F0 F5 FA		"   "		subb	XF5FA
-				;
-F789 : FD		" "		db	$FD
-				;
-F78A : FE FF FE		"   "		ldx	XFFFE
-				;
-F78D : FD		" "		db	$FD
-				;
-F78E : FA F5 F0		"   "		orab	XF5F0
-F791 : EA E2		"  "		orab	$E2,x
-F793 : DA D0		"  "		orab	X00D0
-F795 : C6 BC		"  "		ldab	#$BC
-F797 : B0 A5 98		"   "		suba	XA598
-F79A : 8C 80 73		"  s"		cpx	#$8073
-F79D : 67 5A		"gZ"		asr	$5A,x
-F79F : 4F		"O"		clra
-F7A0 : 43		"C"		coma
-F7A1 : 39		"9"		rts
-				;
-F7A2 : 2F 25		"/%"		ble	LF7C9
-				;
-F7A4 : 1D 15		"  "		db	$1D, $15
-				;
-F7A6 : 0F		" "		sei
-F7A7 : 0A		" "		clv
-				;
-F7A8 : 05 02		"  "		db	$05, $02
-				;
-F7AA : 01		" "		nop
-				;
-F7AB : 00		" "		db	$00
-				;
-F7AC : 01		" "		nop
-				;
-F7AD : 02 05		"  "		db	$02, $05
-				;
-F7AF : 0A		" "		clv
-F7B0 : 0F		" "		sei
-				;
-F7B1 : 15 1D		"  "		db	$15, $1D
-				;
-F7B3 : 25 2F		"%/"		bcs	LF7E4
-F7B5 : 39		"9"		rts
-				;
-F7B6 : 43		"C"		coma
-F7B7 : 4F		"O"		clra
-F7B8 : 5A		"Z"		decb
-F7B9 : 67 73		"gs"		asr	$73,x
+F77B : 80 8C 98 A5 B0 BC C6 D0 
+F783 : DA E2 EA F0 F5 FA FD FE 
+F78B : FF FE FD FA F5 F0 EA E2
+F793 : DA D0 C6 BC B0 A5 98 8C 
+F79B : 80 73 67 5A 4F 43 39 2F 
+F7A3 : 25 1D 15 0F 0A 05 02 01
+F7AB : 00 01 02 05 0A 0F 15 1D
+F7B3 : 25 2F 39 43 4F 5A 67 73
 ;*************************************;
 ;SYNTH
 ;*************************************;
@@ -3339,26 +3288,11 @@ F801 : 39				  rts           ;return subroutine
 ;*************************************;
 ;FDB
 ;*************************************;
-F802 : 01		" "		nop
-				;
-F803 : FC 02 FC 03	"    "		db	$FC, $02, $FC, $03
-				;
-F807 : F8 04 F8		"   "		eorb	X04F8
-F80A : 06		" "		tap
-F80B : F8 08 F4		"   "		eorb	X08F4
-F80E : 0C		" "		clc
-F80F : F4 10 F4		"   "		andb	X10F4
-F812 : 20 F2		"  "		bra	LF806
-				;
-F814 : 40		"@"		nega
-F815 : F1 60 F1		" ` "		cmpb	X60F1
-F818 : 80 F1		"  "		suba	#$F1
-F81A : A0 F1		"  "		suba	$F1,x
-F81C : C0 F1		"  "		subb	#$F1
-				;
-F81E : 00 00		"  "		db	$00, $00
-;
-F820 : FE 04 02	04 FF 00 
+F802 : 01	FC 02 FC 03 F8 04 F8
+F80A : 06	F8 08 F4 0C	F4 10 F4
+F812 : 20 F2 40	F1 60 F1 80 F1
+F81A : A0 F1 C0 F1 00 00 FE 04 
+F822 : 02 04 FF 00 
 ;*************************************;
 ;PRMSYNx5
 ;*************************************;
@@ -3378,17 +3312,17 @@ F83B : C6 30      ldab	#$30    ;load B with value 30h
 F83D : CE F8 32   ldx	#$F832    ;load X with value F832h (FDB data above)
 F840 : 8D 15      bsr	LF857     ;branch sub PRMXLD
 ;LF842:
-F842 : 96 81      ldaa	X0081
-F844 : 48				  asla
-F845 : 9B 81      adda	X0081
-F847 : 8B 0B      adda	#$0B
-F849 : 97 81      staa	X0081
-F84B : 44				  lsra
-F84C : 44				  lsra
-F84D : 8B 0C      adda	#$0C
-F84F : 97 91      staa	X0091
+F842 : 96 81      ldaa	$81     ;load A with value in addr 81
+F844 : 48				  asla          ;arith shift left A (bit0 is 0)
+F845 : 9B 81      adda	$81     ;add A with value in addr 81
+F847 : 8B 0B      adda	#$0B    ;add A with value 0Bh
+F849 : 97 81      staa	$81     ;store A in addr 81
+F84B : 44				  lsra          ;logic shift right A (bit7=0)
+F84C : 44				  lsra          ;logic shift right A (bit7=0)
+F84D : 8B 0C      adda	#$0C    ;add A with value 0Ch
+F84F : 97 91      staa	$91     ;store A in addr 91
 F851 : 8D 1D      bsr	LF870     ;branch sub SYNTH below
-F853 : 5A				  decb
+F853 : 5A				  decb          ;decr B
 F854 : 26 EC      bne	LF842     ;branch Z=0 
 F856 : 39				  rts           ;return subroutine
 ;*************************************;
@@ -3412,150 +3346,135 @@ F86F : 39				  rts           ;return subroutine
 ;SYNTH
 ;*************************************;
 ;LF870:
-F870 : 96 89		"  "		ldaa	X0089
-F872 : 37		"7"		pshb
-F873 : D6 95		"  "		ldab	X0095
-F875 : D7 97		"  "		stab	X0097
-F877 : D6 92		"  "		ldab	X0092
-F879 : D7 98		"  "		stab	X0098
-F87B				LF87B:
-F87B : 43		"C"		coma
-F87C : D6 91		"  "		ldab	X0091
-F87E : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-F881				LF881:
-F881 : 5A		"Z"		decb
-F882 : 26 FD		"& "		bne	LF881
-F884 : 43		"C"		coma
-F885 : D6 91		"  "		ldab	X0091
-F887 : 20 00		"  "		bra	LF889
-				;
-F889				LF889:
-F889 : 08		" "		inx
-F88A : 09		" "		dex
-F88B : 08		" "		inx
-F88C : 09		" "		dex
-F88D : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-F890				LF890:
-F890 : 5A		"Z"		decb
-F891 : 26 FD		"& "		bne	LF890
-F893 : 7A 00 98		"z  "		dec	X0098
-F896 : 27 16		"' "		beq	LF8AE
-F898 : 7A 00 97		"z  "		dec	X0097
-F89B : 26 DE		"& "		bne	LF87B
-F89D : 43		"C"		coma
-F89E : D6 95		"  "		ldab	X0095
-F8A0 : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-F8A3 : D7 97		"  "		stab	X0097
-F8A5 : D6 91		"  "		ldab	X0091
-F8A7 : 9B 96		"  "		adda	X0096
-F8A9 : 2B 1E		"+ "		bmi	LF8C9
-F8AB : 01		" "		nop
-F8AC : 20 15		"  "		bra	LF8C3
+F870 : 96 89      ldaa	$89     ;load A with value in addr 89 
+F872 : 37				  pshb          ;push B into stack then SP - 1
+F873 : D6 95      ldab	$95     ;load B with value in addr 95
+F875 : D7 97      stab	$97     ;store B in addr 97
+F877 : D6 92      ldab	$92     ;load B with value in addr 92
+F879 : D7 98      stab	$98     ;store B in addr 98
+;LF87B:
+F87B : 43				  coma          ;complement 1s A
+F87C : D6 91      ldab	$91     ;load B with value in addr 91
+F87E : B7 20 02   staa	$2002   ;store A in DAC output SOUND
+;LF881:
+F881 : 5A				  decb          ;decr B
+F882 : 26 FD      bne	LF881     ;branch Z=0
+F884 : 43				  coma          ;complement 1s A
+F885 : D6 91      ldab	$91     ;load B with value in addr 91
+F887 : 20 00      bra	LF889     ;branch always
+;LF889:
+F889 : 08				  inx           ;incr X
+F88A : 09				  dex           ;decr X
+F88B : 08				  inx           ;incr X
+F88C : 09				  dex           ;decr X
+F88D : B7 20 02   staa	$2002   ;store A in DAC output SOUND
+;LF890:
+F890 : 5A				  decb          ;decr B
+F891 : 26 FD      bne	LF890     ;branch Z=0
+F893 : 7A 00 98   dec	$0098     ;decr value in addr 0098
+F896 : 27 16      beq	LF8AE     ;branch Z=1
+F898 : 7A 00 97   dec	$0097     ;decr value in addr 0097
+F89B : 26 DE      bne	LF87B     ;branch Z=0
+F89D : 43				  coma          ;complement 1s A
+F89E : D6 95      ldab	$95     ;load B with value in addr 95
+F8A0 : B7 20 02   staa	$2002   ;store A in DAC output SOUND
+F8A3 : D7 97      stab	$97     ;store B in addr 97
+F8A5 : D6 91      ldab	$91     ;load B with value in addr 91
+F8A7 : 9B 96      adda	$96     ;add A with value in addr 96
+F8A9 : 2B 1E      bmi	LF8C9     ;branch N=1
+F8AB : 01         nop           ;
+F8AC : 20 15      bra	LF8C3     ;branch always
 ;LF8AE:
-F8AE : 08		" "		inx
-F8AF : 09		" "		dex
-F8B0 : 01		" "		nop
-F8B1 : 43		"C"		coma
-F8B2 : D6 92		"  "		ldab	X0092
-F8B4 : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-F8B7 : D7 98		"  "		stab	X0098
-F8B9 : D6 91		"  "		ldab	X0091
-F8BB : D0 93		"  "		subb	X0093
-F8BD : D1 94		"  "		cmpb	X0094
-F8BF : D1 94		"  "		cmpb	X0094
-F8C1 : 27 06		"' "		beq	LF8C9
-F8C3				LF8C3:
-F8C3 : D7 91		"  "		stab	X0091
-F8C5 : C0 05		"  "		subb	#$05
-F8C7 : 20 B8		"  "		bra	LF881
-				;
-F8C9				LF8C9:
-F8C9 : 33		"3"		pulb
+F8AE : 08				  inx           ;incr X
+F8AF : 09				  dex           ;decr X
+F8B0 : 01				  nop           ;
+F8B1 : 43				  coma          ;complement 1s A
+F8B2 : D6 92      ldab	$92     ;load B with value in addr 92
+F8B4 : B7 20 02   staa	$2002   ;store A in DAC output SOUND
+F8B7 : D7 98      stab	$98     ;store B in addr 98
+F8B9 : D6 91      ldab	$91     ;load B with value in addr 91
+F8BB : D0 93      subb	$93     ;subtract B with value in addr 93
+F8BD : D1 94      cmpb	$94     ;compare B with value in addr 94
+F8BF : D1 94      cmpb	$94     ;compare B with value in addr 94
+F8C1 : 27 06      beq	LF8C9     ;branch Z=1
+;LF8C3:
+F8C3 : D7 91      stab	$91     ;store B in addr 91
+F8C5 : C0 05      subb	#$05    ;subtract B with value 05h
+F8C7 : 20 B8      bra	LF881     ;branch always
+;LF8C9:
+F8C9 : 33				  pulb          ;SP + 1 pull stack into B
 F8CA : 39				  rts           ;return subroutine
 ;*************************************;
 ;SYNTH
 ;*************************************;
-F8CB : 86 01		"  "		ldaa	#$01
-F8CD : 97 97		"  "		staa	X0097
-F8CF : C6 03		"  "		ldab	#$03
-F8D1 : 97 96		"  "		staa	X0096
-F8D3 : 86 FF		"  "		ldaa	#$FF
-F8D5 : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-F8D8 : D7 92		"  "		stab	X0092
-F8DA				LF8DA:
-F8DA : D6 92		"  "		ldab	X0092
-F8DC				LF8DC:
-F8DC : 96 81		"  "		ldaa	X0081
-F8DE : 44		"D"		lsra
-F8DF : 44		"D"		lsra
-F8E0 : 44		"D"		lsra
-F8E1 : 98 81		"  "		eora	X0081
-F8E3 : 44		"D"		lsra
-F8E4 : 76 00 80		"v  "		ror	X0080
-F8E7 : 76 00 81		"v  "		ror	X0081
-F8EA : 24 03		"$ "		bcc	LF8EF
-F8EC : 73 20 02		"s  "		com	X2002   ;complement 1s in DAC output SOUND
-F8EF				LF8EF:
-F8EF : 96 96		"  "		ldaa	X0096
-F8F1				LF8F1:
-F8F1 : 4A		"J"		deca
-F8F2 : 26 FD		"& "		bne	LF8F1
-F8F4 : 5A		"Z"		decb
-F8F5 : 26 E5		"& "		bne	LF8DC
-F8F7 : 96 96		"  "		ldaa	X0096
-F8F9 : 9B 97		"  "		adda	X0097
-F8FB : 97 96		"  "		staa	X0096
-F8FD : 26 DB		"& "		bne	LF8DA
+F8CB : 86 01      ldaa	#$01
+F8CD : 97 97      staa	$97
+F8CF : C6 03      ldab	#$03
+F8D1 : 97 96      staa	$96
+F8D3 : 86 FF      ldaa	#$FF
+F8D5 : B7 20 02   staa	$2002   ;store A in DAC output SOUND
+F8D8 : D7 92      stab	$92
+;LF8DA:
+F8DA : D6 92      ldab	$92
+;LF8DC:
+F8DC : 96 81      ldaa	$81
+F8DE : 44				  lsra
+F8DF : 44				  lsra
+F8E0 : 44				  lsra
+F8E1 : 98 81      eora	$81
+F8E3 : 44				  lsra
+F8E4 : 76 00 80   ror	$0080
+F8E7 : 76 00 81   ror	$0081
+F8EA : 24 03      bcc	LF8EF
+F8EC : 73 20 02   com	$2002     ;complement 1s in DAC output SOUND
+;LF8EF:
+F8EF : 96 96      ldaa	$96
+;LF8F1:
+F8F1 : 4A				  deca
+F8F2 : 26 FD      bne	LF8F1
+F8F4 : 5A				  decb
+F8F5 : 26 E5      bne	LF8DC
+F8F7 : 96 96      ldaa	$96
+F8F9 : 9B 97      adda	$97
+F8FB : 97 96      staa	$96
+F8FD : 26 DB      bne	LF8DA
 F8FF : 39				  rts           ;return subroutine
 ;*************************************;
 ;PARAM
 ;*************************************;
-F900 : 86 00		"  "		ldaa	#$00
-F902 : 20 29		" )"		bra	LF92D
+F900 : 86 00      ldaa	#$00
+F902 : 20 29      bra	LF92D
 ;LF904
-F904 : 86 01		"  "		ldaa	#$01
-F906 : 20 25		" %"		bra	LF92D
+F904 : 86 01      ldaa	#$01
+F906 : 20 25      bra	LF92D
 ;LF908
-F908 : 86 02		"  "		ldaa	#$02
-F90A : 20 21		" !"		bra	LF92D
+F908 : 86 02      ldaa	#$02
+F90A : 20 21      bra	LF92D
 ;LF90C
-F90C : 86 03		"  "		ldaa	#$03
-F90E : 8D 1D		"  "		bsr	LF92D
-F910 : 86 04		"  "		ldaa	#$04
-F912 : 20 19		"  "		bra	LF92D
-				;
-F914 : 0D		" "		sec
-F915 : 40		"@"		nega
-F916 : F0 FF 12		"   "		subb	XFF12
-F919 : 08		" "		inx
-F91A : A8 18		"  "		eora	$18,x
-F91C : 01		" "		nop
-F91D : 08		" "		inx
-				;
-F91E				LF91E:
-F91E : 04		" "		db	$04
-				;
-F91F : A8 18		"  "		eora	$18,x
-F921 : 01		" "		nop
-F922 : 10		" "		sba
-				;
-F923 : 04		" "		db	$04
-				;
-F924 : 20 F8		"  "		bra	LF91E
-				;
-F926 : FF 20 10		"   "		stx	X2010
-F929 : F0 10 01		"   "		subb	X1001
-F92C : 01		" "		nop
-F92D				LF92D:
-F92D : CE D9 39		"  9"		ldx	#$D939
-F930 : DF 80		"  "		stx	X0080
-F932 : 16		" "		tab
-F933 : 48		"H"		asla
-F934 : 48		"H"		asla
-F935 : 1B		" "		aba
-F936 : CE F9 14		"   "		ldx	#$F914
-F939 : BD E1 89		"   "		jsr	LE189
-F93C : 7E F9 A6		"~  "		jmp	LF9A6
+F90C : 86 03      ldaa	#$03
+F90E : 8D 1D      bsr	LF92D
+F910 : 86 04      ldaa	#$04
+F912 : 20 19      bra	LF92D
+;*************************************;
+;FDB data
+;*************************************;
+F914 : 0D	40 F0 FF 12	08 A8 18
+F91C : 01 08 04	A8 18	01 10	04
+F924 : 20 F8 FF 20 10	F0 10 01
+F92C : 01
+;*************************************;
+;PARAM
+;*************************************;
+;LF92D:
+F92D : CE D9 39   ldx	#$D939     ;load X with value D939h
+F930 : DF 80      stx	X0080
+F932 : 16         tab
+F933 : 48         asla
+F934 : 48         asla
+F935 : 1B         aba
+F936 : CE F9 14   ldx	#$F914     ;load X with value F914h (FDB data)
+F939 : BD E1 89   jsr	LE189      ;jump sub CALCOS top mem
+F93C : 7E F9 A6   jmp	LF9A6
 ;*************************************;
 ;PRMJSR
 ;*************************************;
@@ -3573,44 +3492,12 @@ F95B : 7E FA 39   jmp	LFA39      ;jump PRMBSR
 ;*************************************;
 ;FDB data
 ;*************************************;
-F95E : 90 10		"  "		suba	X0010
-				;
-F960 : 02 14		"  "		db	$02, $14
-				;
-F962 : 40		"@"		nega
-F963 : B4 40 FF		" @ "		anda	X40FF
-				;
-F966 : 14		" "		db	$14
-				;
-F967 : 30		"0"		tsx
-F968 : D0 32		" 2"		subb	X0032
-				;
-F96A : 02		" "		db	$02
-				;
-F96B : 10		" "		sba
-F96C : 60 EE		"` "		neg	$EE,x
-F96E : 20 02		"  "		bra	LF972
-				;
-F970 : 08		" "		inx
-F971 : 54		"T"		lsrb
-F972				LF972:
-F972 : E9 54		" T"		adcb	$54,x
-F974 : FF 20 28		"  ("		stx	X2028
-F977 : C0 30		" 0"		subb	#$30
-				;
-F979 : 02 14		"  "		db	$02, $14
-				;
-F97B : 58		"X"		aslb
-F97C : AC 20		"  "		cpx	$20,x
-				;
-F97E : 02		" "		db	$02
-				;
-F97F : 08		" "		inx
-F980 : 58		"X"		aslb
-F981 : A6 58		" X"		ldaa	$58,x
-F983 : FF 18 22		"  ""		stx	X1822
-				;
-F986 : 00		" "		db	$00
+F95E : 90 10 02 14 40 B4 40 FF
+F966 : 14 30 D0 32 02 10 60 EE
+F96E : 20 02 08 54 E9 54 FF 20 
+F976 : 28 C0 30 02 14 58 AC 20
+F97E : 02	08 58	A6 58 FF 18 22
+F986 : 00
 ;*************************************;
 ;FDB data
 ;*************************************;
@@ -3621,266 +3508,269 @@ F98C : 30 FC 01	00 01
 ;PRMLDXx4 jsr dest
 ;*************************************;
 ;LF991:
-F991 : A6 00		"  "		ldaa	$00,x
-F993 : 97 A8		"  "		staa	X00A8
-F995 : A6 01		"  "		ldaa	$01,x
-F997 : 97 91		"  "		staa	X0091
-F999 : A6 02		"  "		ldaa	$02,x
-F99B : 97 90		"  "		staa	X0090
-F99D : A6 03		"  "		ldaa	$03,x
-F99F : 97 95		"  "		staa	X0095
-F9A1 : A6 04		"  "		ldaa	$04,x
-F9A3 : 97 AD		"  "		staa	X00AD
+F991 : A6 00      ldaa	$00,x
+F993 : 97 A8      staa	X00A8
+F995 : A6 01      ldaa	$01,x
+F997 : 97 91      staa	X0091
+F999 : A6 02      ldaa	$02,x
+F99B : 97 90      staa	X0090
+F99D : A6 03      ldaa	$03,x
+F99F : 97 95      staa	X0095
+F9A1 : A6 04      ldaa	$04,x
+F9A3 : 97 AD      staa	X00AD
 ;LF9A5:
 F9A5 : 39				  rts           ;return subroutine
 ;*************************************;
-;
+;SYNTH
 ;*************************************;
 ;LF9A6:
-F9A6 : 8D E9		"  "		bsr	LF991
-F9A8 : 8D 30		" 0"		bsr	LF9DA
-F9AA				LF9AA:
-F9AA : 8D 58		" X"		bsr	LFA04
-F9AC : 96 AC		"  "		ldaa	X00AC
-F9AE : 91 AD		"  "		cmpa	X00AD
-F9B0 : 26 F8		"& "		bne	LF9AA
-F9B2 : 59		"Y"		rolb
-F9B3 : F7 20 02		"   "		stab	X2002   ;store B in DAC output SOUND
-F9B6 : 8D 2D		" -"		bsr	LF9E5
-F9B8 : 8D 38		" 8"		bsr	LF9F2
-F9BA : 8D 5C		" \"		bsr	LFA18
-F9BC : 7D 00 91		"}  "		tst	X0091
-F9BF : 27 E4		"' "		beq	LF9A5
-F9C1 : 7D 00 92		"}  "		tst	X0092
-F9C4 : 26 E4		"& "		bne	LF9AA
-F9C6 : 7D 00 95		"}  "		tst	X0095
-F9C9 : 27 DF		"' "		beq	LF9AA
-F9CB : 2B 05		"+ "		bmi	LF9D2
-F9CD : 7C 00 AD		"|  "		inc	X00AD
-F9D0 : 20 D8		"  "		bra	LF9AA
-				;
-F9D2				LF9D2:
-F9D2 : 7A 00 AD		"z  "		dec	X00AD
-F9D5 : 7A 00 AC		"z  "		dec	X00AC
-F9D8 : 20 D0		"  "		bra	LF9AA
-				;
-F9DA				LF9DA:
-F9DA : 7F 00 92		"   "		clr	X0092
-F9DD : 96 AD		"  "		ldaa	X00AD
-F9DF : 97 AC		"  "		staa	X00AC
-F9E1 : 7F 00 AB		"   "		clr	X00AB
-F9E4 : 39		"9"		rts
-				;
-F9E5				LF9E5:
-F9E5 : 96 81		"  "		ldaa	X0081
-F9E7 : 44		"D"		lsra
-F9E8 : 44		"D"		lsra
-F9E9 : 44		"D"		lsra
-F9EA : 98 81		"  "		eora	X0081
-F9EC : 97 A6		"  "		staa	X00A6
-F9EE : 08		" "		inx
-F9EF : 84 07		"  "		anda	#$07
-F9F1 : 39		"9"		rts
-				;
-F9F2				LF9F2:
-F9F2 : 96 A6		"  "		ldaa	X00A6
-F9F4 : 44		"D"		lsra
-F9F5 : 76 00 80		"v  "		ror	X0080
-F9F8 : 76 00 81		"v  "		ror	X0081
-F9FB : 86 00		"  "		ldaa	#$00
-F9FD : 24 02		"$ "		bcc	LFA01
-F9FF : 96 91		"  "		ldaa	X0091
-FA01				LFA01:
-FA01 : 97 AB		"  "		staa	X00AB
-FA03 : 39		"9"		rts
-				;
-FA04				LFA04:
-FA04 : 96 AD		"  "		ldaa	X00AD
-FA06 : 7A 00 AC		"z  "		dec	X00AC
-FA09 : 27 04		"' "		beq	LFA0F
-FA0B : 08		" "		inx
-FA0C : 09		" "		dex
-FA0D : 20 08		"  "		bra	LFA17
-				;
-FA0F				LFA0F:
-FA0F : 97 AC		"  "		staa	X00AC
-FA11 : D6 AB		"  "		ldab	X00AB
-FA13 : 54		"T"		lsrb
-FA14 : 7C 00 92		"|  "		inc	X0092
-FA17				LFA17:
-FA17 : 39		"9"		rts
-				;
-FA18				LFA18:
-FA18 : 96 A8		"  "		ldaa	X00A8
-FA1A : 91 92		"  "		cmpa	X0092
-FA1C : 27 04		"' "		beq	LFA22
-FA1E : 08		" "		inx
-FA1F : 09		" "		dex
-FA20 : 20 09		"  "		bra	LFA2B
-				;
-FA22				LFA22:
-FA22 : 7F 00 92		"   "		clr	X0092
-FA25 : 96 91		"  "		ldaa	X0091
-FA27 : 90 90		"  "		suba	X0090
-FA29 : 97 91		"  "		staa	X0091
-FA2B				LFA2B:
-FA2B : 39		"9"		rts
+F9A6 : 8D E9      bsr	LF991     ;branch sub PRMLDXx4
+F9A8 : 8D 30      bsr	LF9DA     ;branch sub PARAM below
+;LF9AA:
+F9AA : 8D 58      bsr	LFA04     ;branch sub PARAM below
+F9AC : 96 AC      ldaa	$AC
+F9AE : 91 AD      cmpa	$AD
+F9B0 : 26 F8      bne	LF9AA     ;branch Z=0
+F9B2 : 59				  rolb          ;rotate left B (C to bit0, bit7 to C)
+F9B3 : F7 20 02   stab	X2002   ;store B in DAC output SOUND
+F9B6 : 8D 2D      bsr	LF9E5     ;branch sub PARAM below
+F9B8 : 8D 38      bsr	LF9F2     ;branch sub PARAM below
+F9BA : 8D 5C      bsr	LFA18     ;branch sub PARAM below
+F9BC : 7D 00 91   tst	X0091
+F9BF : 27 E4      beq	LF9A5     ;branch Z=1 PRMLDXx4 rts
+F9C1 : 7D 00 92   tst	X0092
+F9C4 : 26 E4      bne	LF9AA     ;branch Z=0 
+F9C6 : 7D 00 95   tst	X0095
+F9C9 : 27 DF      beq	LF9AA     ;branch Z=1
+F9CB : 2B 05      bmi	LF9D2     ;branch N=1
+F9CD : 7C 00 AD   inc	X00AD
+F9D0 : 20 D8      bra	LF9AA     ;branch always
+;LF9D2:
+F9D2 : 7A 00 AD   dec	X00AD
+F9D5 : 7A 00 AC   dec	X00AC
+F9D8 : 20 D0      bra	LF9AA     ;branch always
+;*************************************;
+;PRMSYNBSRx1
+;*************************************;
+F9DA : 7F 00 92   clr	X0092
+F9DD : 96 AD      ldaa	X00AD
+F9DF : 97 AC      staa	X00AC
+F9E1 : 7F 00 AB   clr	X00AB
+F9E4 : 39				  rts           ;return subroutine
+;*************************************;
+;PRMSYNBSRx2
+;*************************************;
+F9E5 : 96 81      ldaa	X0081
+F9E7 : 44				  lsra
+F9E8 : 44				  lsra
+F9E9 : 44				  lsra
+F9EA : 98 81      eora	X0081
+F9EC : 97 A6      staa	X00A6
+F9EE : 08				  inx
+F9EF : 84 07      anda	#$07
+F9F1 : 39				  rts           ;return subroutine
+;*************************************;
+;PRMSYNBSRx3
+;*************************************;
+	;LF9F2:
+F9F2 : 96 A6      ldaa	X00A6
+F9F4 : 44				  lsra
+F9F5 : 76 00 80   ror	X0080
+F9F8 : 76 00 81   ror	X0081
+F9FB : 86 00      ldaa	#$00
+F9FD : 24 02      bcc	LFA01
+F9FF : 96 91      ldaa	X0091
+;LFA01:
+FA01 : 97 AB      staa	X00AB
+FA03 : 39				  rts           ;return subroutine
+;*************************************;
+;PRMSYNBSRx4
+;*************************************;
+;LFA04:
+FA04 : 96 AD      ldaa	X00AD
+FA06 : 7A 00 AC   dec	X00AC
+FA09 : 27 04      beq	LFA0F
+FA0B : 08				  inx
+FA0C : 09				  dex
+FA0D : 20 08      bra	LFA17
+;LFA0F:
+FA0F : 97 AC      staa	X00AC
+FA11 : D6 AB      ldab	X00AB
+FA13 : 54				  lsrb
+FA14 : 7C 00 92   inc	X0092
+;LFA17:
+FA17 : 39				  rts           ;return subroutine
+;*************************************;
+;PRMSYNBSRx5
+;*************************************;
+;LFA18:
+FA18 : 96 A8      ldaa	X00A8
+FA1A : 91 92      cmpa	X0092
+FA1C : 27 04      beq	LFA22
+FA1E : 08				  inx
+FA1F : 09				  dex
+FA20 : 20 09      bra	LFA2B
+;LFA22:
+FA22 : 7F 00 92   clr	X0092
+FA25 : 96 91      ldaa	X0091
+FA27 : 90 90      suba	X0090
+FA29 : 97 91      staa	X0091
+;LFA2B:
+FA2B : 39				  rts           ;return subroutine
 ;*************************************;
 ;PRMCLRx1 jump dest
 ;*************************************;
 ;LFA2C:
-FA2C : 7F 00 9F		"   "		clr	X009F
-FA2F : 7F 00 A9		"   "		clr	X00A9
-FA32 : 86 0E		"  "		ldaa	#$0E
-FA34 : 97 A0		"  "		staa	X00A0
-FA36 : 7F 00 A5		"   "		clr	X00A5
+FA2C : 7F 00 9F   clr	X009F
+FA2F : 7F 00 A9   clr	X00A9
+FA32 : 86 0E      ldaa	#$0E
+FA34 : 97 A0      staa	X00A0
+FA36 : 7F 00 A5   clr	X00A5
 ;*************************************;
 ;PRMBSR jump dest
 ;*************************************;
-;LFA39:
-FA39 : 8D 9F		"  "		bsr	LF9DA
+FA39 : 8D 9F      bsr	LF9DA     ;branch sub PRMSYNBSRx1
 ;LFA3B:
-FA3B : 8D A8		"  "		bsr	LF9E5
-FA3D : BD FA C2		"   "		jsr	LFAC2
-FA40 : 8D B0		"  "		bsr	LF9F2
-FA42 : BD FA C2		"   "		jsr	LFAC2
-FA45 : 8D BD		"  "		bsr	LFA04
-FA47 : 8D 79		" y"		bsr	LFAC2
-FA49 : 8D CD		"  "		bsr	LFA18
-FA4B : 8D 75		" u"		bsr	LFAC2
-FA4D : 8D 0A		"  "		bsr	LFA59
-FA4F : 8D 71		" q"		bsr	LFAC2
-FA51 : 8D 1D		"  "		bsr	LFA70
-FA53 : 8D 6D		" m"		bsr	LFAC2
-FA55 : 8D 52		" R"		bsr	LFAA9
-FA57 : 20 E2		"  "		bra	LFA3B
-				;
-FA59				LFA59:
-FA59 : 96 A4		"  "		ldaa	X00A4
-FA5B : 7A 00 A0		"z  "		dec	X00A0
-FA5E : 27 07		"' "		beq	LFA67
-FA60 : B6 00 91		"   "		ldaa	X0091
-FA63 : 26 0A		"& "		bne	LFA6F
-FA65 : 20 68		" h"		bra	LFACF
-				;
-FA67				LFA67:
-FA67 : 97 A0		"  "		staa	X00A0
-FA69 : 96 9F		"  "		ldaa	X009F
-FA6B : 9B A9		"  "		adda	X00A9
-FA6D : 97 9F		"  "		staa	X009F
-FA6F				LFA6F:
-FA6F : 39		"9"		rts
-				;
-FA70				LFA70:
-FA70 : 96 9F		"  "		ldaa	X009F
-FA72 : 91 A7		"  "		cmpa	X00A7
-FA74 : 27 07		"' "		beq	LFA7D
-FA76 : 08		" "		inx
-FA77 : 96 91		"  "		ldaa	X0091
-FA79 : 26 2A		"&*"		bne	LFAA5
-FA7B : 20 29		" )"		bra	LFAA6
-				;
-FA7D				LFA7D:
-FA7D : 7F 00 9F		"   "		clr	X009F
-FA80 : 7F 00 A9		"   "		clr	X00A9
-FA83 : 7F 00 A5		"   "		clr	X00A5
-FA86 : DE A1		"  "		ldx	X00A1
+FA3B : 8D A8      bsr	LF9E5     ;branch sub PRMSYNBSRx2
+FA3D : BD FA C2   jsr	LFAC2     ;jump sub SYNTH BSR
+FA40 : 8D B0      bsr	LF9F2     ;branch sub PRMSYNBSRx1
+FA42 : BD FA C2   jsr	LFAC2     ;jump sub SYNTH BSR
+FA45 : 8D BD      bsr	LFA04     ;branch sub PRMSYNBSRx1
+FA47 : 8D 79      bsr	LFAC2     ;jump sub SYNTH BSR
+FA49 : 8D CD      bsr	LFA18     ;branch sub PRMSYNBSRx5 
+FA4B : 8D 75      bsr	LFAC2     ;jump sub SYNTH BSR
+FA4D : 8D 0A      bsr	LFA59     ;branch sub PRMSYNBSRx6
+FA4F : 8D 71      bsr	LFAC2     ;jump sub SYNTH BSR
+FA51 : 8D 1D      bsr	LFA70     ;branch sub PRMSYNBSRx7
+FA53 : 8D 6D      bsr	LFAC2     ;jump sub SYNTH BSR
+FA55 : 8D 52      bsr	LFAA9     ;branch sub PRMSYNBSRx8
+FA57 : 20 E2      bra	LFA3B     ;branch always LFA3B
+;*************************************;
+;PRMSYNBSRx6
+;*************************************;
+;LFA59:
+FA59 : 96 A4      ldaa	X00A4
+FA5B : 7A 00 A0   dec	X00A0
+FA5E : 27 07      beq	LFA67
+FA60 : B6 00 91   ldaa	X0091
+FA63 : 26 0A      bne	LFA6F
+FA65 : 20 68      bra	LFACF
+;LFA67:
+FA67 : 97 A0      staa	X00A0
+FA69 : 96 9F      ldaa	X009F
+FA6B : 9B A9      adda	X00A9
+FA6D : 97 9F      staa	X009F
+;LFA6F:
+FA6F : 39         rts
+;*************************************;
+;PRMSYNBSRx7
+;*************************************;
+;LFA70:
+FA70 : 96 9F      ldaa	X009F
+FA72 : 91 A7      cmpa	X00A7
+FA74 : 27 07      beq	LFA7D
+FA76 : 08         inx
+FA77 : 96 91      ldaa	X0091
+FA79 : 26 2A      bne	LFAA5
+FA7B : 20 29      bra	LFAA6
+;LFA7D:
+FA7D : 7F 00 9F   clr	X009F
+FA80 : 7F 00 A9   clr	X00A9
+FA83 : 7F 00 A5   clr	X00A5
+FA86 : DE A1      ldx	X00A1
 ;*************************************;
 ;PRMLDXx5 jsr dest
 ;*************************************;
 ;LFA88:
-FA88 : A6 00		"  "		ldaa	$00,x
-FA8A : 97 9E		"  "		staa	X009E
-FA8C : 27 17		"' "		beq	LFAA5
-FA8E : A6 01		"  "		ldaa	$01,x
-FA90 : 97 A3		"  "		staa	X00A3
-FA92 : A6 02		"  "		ldaa	$02,x
-FA94 : 97 AA		"  "		staa	X00AA
-FA96 : A6 03		"  "		ldaa	$03,x
-FA98 : 97 A4		"  "		staa	X00A4
-FA9A : A6 04		"  "		ldaa	$04,x
-FA9C : 97 A7		"  "		staa	X00A7
-FA9E : 86 05		"  "		ldaa	#$05
-FAA0 : BD E1 89		"   "		jsr	LE189
-FAA3 : DF A1		"  "		stx	X00A1
+FA88 : A6 00      ldaa	$00,x
+FA8A : 97 9E      staa	X009E
+FA8C : 27 17      beq	LFAA5
+FA8E : A6 01      ldaa	$01,x
+FA90 : 97 A3      staa	X00A3
+FA92 : A6 02      ldaa	$02,x
+FA94 : 97 AA      staa	X00AA
+FA96 : A6 03      ldaa	$03,x
+FA98 : 97 A4      staa	X00A4
+FA9A : A6 04      ldaa	$04,x
+FA9C : 97 A7      staa	X00A7
+FA9E : 86 05      ldaa	#$05
+FAA0 : BD E1 89   jsr	LE189     ;jump sub CALCOS top mem
+FAA3 : DF A1      stx	X00A1
 ;LFAA5:
 FAA5 : 39				  rts           ;return subroutine
-;
+;*************************************;
+;PARAM
+;*************************************;
 ;LFAA6:
-FAA6 : 32		"2"		pula
-FAA7 : 32		"2"		pula
+FAA6 : 32         pula          ;SP + 1 pull stack into A
+FAA7 : 32         pula          ;SP + 1 pull stack into A
 FAA8 : 39				  rts           ;return subroutine
 ;*************************************;
-;
+;PRMSYNBSRx8
 ;*************************************;
 ;LFAA9:
-FAA9 : 96 9E		"  "		ldaa	X009E
-FAAB : 27 06		"' "		beq	LFAB3
-FAAD : 91 91		"  "		cmpa	X0091
-FAAF : 26 04		"& "		bne	LFAB5
-FAB1 : 20 03		"  "		bra	LFAB6
+FAA9 : 96 9E      ldaa	X009E
+FAAB : 27 06      beq	LFAB3
+FAAD : 91 91      cmpa	X0091
+FAAF : 26 04      bne	LFAB5
+FAB1 : 20 03      bra	LFAB6
 ;LFAB3:
-FAB3 : 08		" "		inx
-FAB4 : 09		" "		dex
-FAB5				LFAB5:
+FAB3 : 08				  inx
+FAB4 : 09				  dex
+;LFAB5:
 FAB5 : 39				  rts           ;return subroutine
 ;*************************************;
-;
+;PARAM
 ;*************************************;
 ;LFAB6:
-FAB6 : 7F 00 9E		"   "		clr	X009E
-FAB9 : 96 A3		"  "		ldaa	X00A3
-FABB : 97 9F		"  "		staa	X009F
-FABD : 96 AA		"  "		ldaa	X00AA
-FABF : 97 A9		"  "		staa	X00A9
+FAB6 : 7F 00 9E   clr	X009E
+FAB9 : 96 A3      ldaa	X00A3
+FABB : 97 9F      staa	X009F
+FABD : 96 AA      ldaa	X00AA
+FABF : 97 A9      staa	X00A9
 FAC1 : 39				  rts           ;return subroutine
 ;*************************************;
-;
+;SYNTH BSR
 ;*************************************;
 ;LFAC2:
-FAC2 : 96 A5		"  "		ldaa	X00A5
-FAC4 : 9B 9F		"  "		adda	X009F
-FAC6 : 97 A5		"  "		staa	X00A5
-FAC8 : 2A 01		"* "		bpl	LFACB
-FACA : 43		"C"		coma
+FAC2 : 96 A5      ldaa	X00A5
+FAC4 : 9B 9F      adda	X009F
+FAC6 : 97 A5      staa	X00A5
+FAC8 : 2A 01      bpl	LFACB
+FACA : 43         coma
 ;LFACB:
-FACB : 1B		" "		aba
-FACC : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
+FACB : 1B         aba
+FACC : B7 20 02   staa	X2002   ;store A in DAC output SOUND
 ;LFACF:
 FACF : 39				  rts           ;return subroutine
 ;*************************************;
-;
+;FDB data ??
 ;*************************************;
-;LFAD0:
-FAD0 : C0 0D		"  "		subb	#$0D
+FAD0 : C0 0D      subb	#$0D
 FAD2 : 37		"7"		pshb
-FAD3 : BD 00 AC		"   "		jsr	L00AC
+FAD3 : BD 00 AC   jsr	L00AC
 FAD6 : 33		"3"		pulb
-FAD7				LFAD7:
-FAD7 : C1 14		"  "		cmpb	#$14
-FAD9 : 22 F5		"" "		bhi	LFAD0
+FAD7 : C1 14      cmpb	#$14
+FAD9 : 22 F5      bhi	LFAD0
 FADB : 01		" "		nop
-FADC : 96 A4		"  "		ldaa	X00A4
-FADE : 9B A1		"  "		adda	X00A1
-FAE0 : 97 A4		"  "		staa	X00A4
-FAE2 : C9 F6		"  "		adcb	#$F6
-FAE4				LFAE4:
+FADC : 96 A4      ldaa	X00A4
+FADE : 9B A1      adda	X00A1
+FAE0 : 97 A4      staa	X00A4
+FAE2 : C9 F6      adcb	#$F6
+;LFAE4:
 FAE4 : 5A		"Z"		decb
-FAE5 : 2A FD		"* "		bpl	LFAE4
-FAE7 : 96 A8		"  "		ldaa	X00A8
+FAE5 : 2A FD      bpl	LFAE4
+FAE7 : 96 A8      ldaa	X00A8
 FAE9 : 4C		"L"		inca
-FAEA : 84 0F		"  "		anda	#$0F
-FAEC : 8A 90		"  "		oraa	#$90
-FAEE : 97 A8		"  "		staa	X00A8
-FAF0 : DE A7		"  "		ldx	X00A7
-FAF2 : E6 00		"  "		ldab	$00,x
-FAF4 : F7 20 02		"   "		stab	X2002   ;store B in DAC output SOUND
-FAF7 : 84 0F		"  "		anda	#$0F
-FAF9 : 39		"9"		rts
-;*************************************;
+FAEA : 84 0F      anda	#$0F
+FAEC : 8A 90      oraa	#$90
+FAEE : 97 A8      staa	X00A8
+FAF0 : DE A7      ldx	X00A7
+FAF2 : E6 00      ldab	$00,x
+FAF4 : F7 20 02   stab	X2002
+FAF7 : 84 0F      anda	#$0F
+FAF9 : 39         rts
 ;
-;*************************************;
-				;
 FAFA : 4F		"O"		clra
 FAFB : CE 00 90		"   "		ldx	#$0090
 FAFE : C6 61		" a"		ldab	#$61
@@ -3936,8 +3826,6 @@ FB55 : 2A 06		"* "		bpl	LFB5D
 FB57 : 7C 00 A5		"|  "		inc	X00A5
 FB5A : 01		" "		nop
 FB5B : 20 BE		"  "		bra	LFB1B
-				;
-FB5D				LFB5D:
 FB5D : 5A		"Z"		decb
 FB5E : BD FA D7		"   "		jsr	LFAD7
 FB61 : DE 8A		"  "		ldx	X008A
@@ -4002,7 +3890,6 @@ FBBD : 10		" "		sba
 FBBE : 9B A2		"  "		adda	X00A2
 FBC0 : 97 A2		"  "		staa	X00A2
 FBC2 : 20 EA		"  "		bra	LFBAE
-				;
 FBC4 : 32		"2"		pula
 FBC5 : DE 8A		"  "		ldx	X008A
 FBC7 : 09		" "		dex
@@ -4485,265 +4372,100 @@ FEB7 : A6 00		"  "		ldaa	$00,x
 FEB9 : 08		" "		inx
 FEBA : DF 88		"  "		stx	X0088
 FEBC : 97 B8		"  "		staa	X00B8
-FEBE : CE FE 83		"   "		ldx	#$FE83
-FEC1 : DF AD		"  "		stx	X00AD
-FEC3 : 39		"9"		rts
-				;
-FEC4 : 00 00 55 55	"  UU"		db	$00, $00, $55, $55
-				;
-FEC8 : 33		"3"		pulb
-FEC9 : 33		"3"		pulb
-FECA : 25 DA		"% "		bcs	LFEA6
-FECC : DA 25		" %"		orab	X0025
-				;
-FECE : C7		" "		db	$C7
-				;
-FECF : 31		"1"		ins
-				;
-FED0 : 00 00		"  "		db	$00, $00
-				;
-FED2 : FF FF 01		"   "		stx	XFF01
-FED5 : FE 53 00		" S "		ldx	X5300
-FED8 : 66 16		"f "		ror	$16,x
-FEDA : 66 1A		"f "		ror	$1A,x
-FEDC : 66 1E		"f "		ror	$1E,x
-FEDE : 66 21		"f!"		ror	$21,x
-FEE0 : 66 24		"f$"		ror	$24,x
-FEE2 : 08		" "		inx
-FEE3 : FF E2 66		"  f"		stx	XE266
-				;
-FEE6 : 1F		" "		db	$1F
-				;
-FEE7 : 66 18		"f "		ror	$18,x
-FEE9 : 66 11		"f "		ror	$11,x
-FEEB : 66 09		"f "		ror	$09,x
-FEED : 66 01		"f "		ror	$01,x
-FEEF : 40		"@"		nega
-FEF0 : 08		" "		inx
-FEF1 : 5A		"Z"		decb
-FEF2 : 08		" "		inx
-				;
-FEF3 : 00		" "		db	$00
-				;
-FEF4 : FF 40 08		" @ "		stx	X4008
-FEF7 : 96 08		"  "		ldaa	X0008
-				;
-FEF9 : 00		" "		db	$00
-				;
-FEFA : FF 40 08		" @ "		stx	X4008
-FEFD : C8 08		"  "		eorb	#$08
-				;
-FEFF : 00		" "		db	$00
-				;
-FF00 : 40		"@"		nega
-FF01				XFF01:
-FF01 : 08		" "		inx
-FF02 : E6 08		"  "		ldab	$08,x
-				;
-FF04 : 00		" "		db	$00
-				;
-FF05 : 40		"@"		nega
-FF06 : 08		" "		inx
-FF07 : FF 08 00		"   "		stx	X0800
-FF0A : 40		"@"		nega
-FF0B : 10		" "		sba
-FF0C : 20 80		"  "		bra	LFE8E
-				;
-FF0E : CC CC		"  "		db	$CC, $CC
-				;
-FF10 : 2F 80		"/ "		ble	LFE92
-FF12				XFF12:
-FF12 : E2 20		"  "		sbcb	$20,x
-FF14 : 80 EC		"  "		suba	#$EC
-FF16				XFF16:
-FF16 : 2F 80		"/ "		ble	LFE98
-FF18 : E2 20		"  "		sbcb	$20,x
-FF1A : 80 EC		"  "		suba	#$EC
-FF1C : 2F 80		"/ "		ble	LFE9E
-FF1E : E2 80		"  "		sbcb	$80,x
-FF20 : 64 C4		"d "		lsr	$C4,x
-FF22 : 80 53		" S"		suba	#$53
-				;
-FF24 : 00		" "		db	$00
-				;
-FF25 : 08		" "		inx
-				;
-FF26 : 05		" "		db	$05
-				;
-FF27 : 0E		" "		cli
-				;
-FF28 : 00		" "		db	$00
-				;
-FF29 : 0D		" "		sec
-				;
-FF2A : 05 FD		"  "		db	$05, $FD
-				;
-FF2C : 0D		" "		sec
-				;
-FF2D : 00		" "		db	$00
-				;
-FF2E : 0E		" "		cli
-				;
-FF2F : 05 FD		"  "		db	$05, $FD
-				;
-FF31 : 70 F4 28		"p ("		neg	XF428
-FF34 : 20 40		" @"		bra	LFF76
-				;
-FF36 : CE 20 00		"   "		ldx	#$2000
-FF39 : 80 10		"  "		suba	#$10
-FF3B : 07		" "		tpa
-				;
-FF3C : 02 02 02 02	"    "		db	$02, $02, $02, $02
-FF40 : 02 02		"  "		db	$02, $02
-				;
-FF42 : 2F 50		"/P"		ble	LFF94
-FF44 : 10		" "		sba
-				;
-FF45 : 05		" "		db	$05
-				;
-FF46 : FE 27 10		" ' "		ldx	X2710
-				;
-FF49 : 04		" "		db	$04
-				;
-FF4A : FE 27 10		" ' "		ldx	X2710
-FF4D : 07		" "		tpa
-				;
-FF4E : 00		" "		db	$00
-				;
-FF4F : FE 27 10		" ' "		ldx	X2710
-FF52 : 06		" "		tap
-				;
-FF53 : 00		" "		db	$00
-				;
-FF54 : FE 27 10		" ' "		ldx	X2710
-FF57 : 07		" "		tpa
-				;
-FF58 : 00		" "		db	$00
-				;
-FF59 : FE 27 10		" ' "		ldx	X2710
-FF5C : 06		" "		tap
-				;
-FF5D : 00		" "		db	$00
-				;
-FF5E : FE 27 10		" ' "		ldx	X2710
-FF61 : 01		" "		nop
-				;
-FF62 : 00		" "		db	$00
-				;
-FF63 : 27 10		"' "		beq	LFF75
-				;
-FF65 : 02 00		"  "		db	$02, $00
-				;
-FF67 : 70 D1 3C		"p <"		neg	XD13C
-FF6A : 20 78		" x"		bra	LFFE4
-				;
-FF6C : 60 01		"` "		neg	$01,x
-FF6E : 80 00		"  "		suba	#$00
-FF70 : 01		" "		nop
-				;
-FF71 : 00		" "		db	$00
-				;
-FF72 : FF 00 FF		"   "		stx	X00FF
-				;
-FF75				LFF75:
-FF75 : 00		" "		db	$00
-				;
-FF76				LFF76:
-FF76 : 01		" "		nop
-FF77 : 80 53		" S"		suba	#$53
-				;
-FF79 : 00		" "		db	$00
-				;
-FF7A : 0C		" "		clc
-				;
-FF7B : 1E		" "		db	$1E
-				;
-FF7C : 0B		" "		sev
-				;
-FF7D : 00		" "		db	$00
-				;
-FF7E : 0A		" "		clv
-				;
-FF7F : 1E		" "		db	$1E
-				;
-FF80 : FE 0A 00		"   "		ldx	X0A00
-FF83 : 0B		" "		sev
-				;
-FF84 : 1E		" "		db	$1E
-				;
-FF85 : FE 70 F4		" p "		ldx	X70F4
-FF88 : 96 2F		" /"		ldaa	X002F
-FF8A : D0 D0		"  "		subb	X00D0
-FF8C : 20 00		"  "		bra	LFF8E
-				;
-FF8E				LFF8E:
-FF8E : EC EC EC		"   "		db	$EC, $EC, $EC
-				;
-FF91 : 70 FB 80		"p  "		neg	XFB80
+FEBE : CE FE 
+;*************************************;
+;FDB data
+;*************************************;
+FEC0 : 83 DF AD	39 00 00 55 55
+FEC8 : 33	33 25 DA DA 25 C7	31
+FED0 : 00 00 FF FF 01	FE 53 00
+FED8 : 66 16 66 1A 66 1E 66 21
+FEE0 : 66 24 08	FF E2 66 1F 66 
+FEE8 : 18	66 11 66 09	66 01	40
+FEF0 : 08	5A 08	00 FF 40 08	96 
+FEF8 : 08 00 FF 40 08 C8 08	00
+FF00 : 40 08 E6 08 00	40 08 FF 
+FF08 : 08 00 40 10 20 80 CC CC
+FF10 : 2F 80 E2 20 80 EC 2F 80
+FF18 : E2 20 80 EC 2F 80 E2 80
+FF20 : 64 C4 80 53 00 08 05	0E
+FF28 : 00	0D 05 FD 0D 00 0E 05 
+FF30 : FD	70 F4 28 20 40 CE 20 
+FF38 : 00	80 10	07 02 02 02 02
+FF40 : 02 02 2F 50 10	05 FE 27 
+FF48 : 10 04 FE 27 10	07 00 FE 
+FF50 : 27 10 06 00 FE 27 10	07
+FF58 : 00	FE 27 10 06	00 FE 27 
+FF60 : 10 01 00	27 10	02 00 70 
+FF68 : D1 3C 20 78 60 01 80 00
+FF70 : 01	00 FF 00 FF	00 01	80 
+FF78 : 53	00 0C	1E 0B	00 0A	1E
+FF80 : FE 0A 00	0B 1E	FE 70 F4
+FF88 : 96 2F D0 D0 20 00 EC EC 
+FF90 : EC	70 FB 80
 ;*************************************;
 ;PARAM
 ;*************************************;
 ;LFF94:
-FF94 : 86 FF		"  "		ldaa	#$FF
-FF96 : 97 90		"  "		staa	X0090
-FF98 : CE FE C0		"   "		ldx	#$FEC0
-FF9B : DF 92		"  "		stx	X0092
-FF9D : 86 20		"  "		ldaa	#$20
-FF9F : CE FF E0		"   "		ldx	#$FFE0
-FFA2 : 8D 05		"  "		bsr	LFFA9
-FFA4 : 86 01		"  "		ldaa	#$01
-FFA6 : CE 00 44		"  D"		ldx	#$0044
+FF94 : 86 FF      ldaa	#$FF    ;load A with value FFh
+FF96 : 97 90      staa	$90
+FF98 : CE FE C0   ldx	#$FEC0    ;load X with value FEC0h (FDB data above)
+FF9B : DF 92      stx	$92
+FF9D : 86 20      ldaa	#$20
+FF9F : CE FF E0   ldx	#$FFE0    ;load X with value FFE0h (20 02, within SYNTH below)
+FFA2 : 8D 05      bsr	LFFA9     ;branch sub 
+FFA4 : 86 01      ldaa	#$01
+FFA6 : CE 00 44   ldx	#$0044
 ;LFFA9:
-FFA9 : 97 94		"  "		staa	X0094
-FFAB : DF 95		"  "		stx	X0095
+FFA9 : 97 94      staa	$94
+FFAB : DF 95      stx	$95
 ;LFFAD:
-FFAD : CE 00 10		"   "		ldx	#$0010
+FFAD : CE 00 10   ldx	#$0010
 ;LFFB0:
-FFB0 : 8D 21		" !"		bsr	LFFD3
-FFB2 : 96 91		"  "		ldaa	X0091
-FFB4 : 9B 93		"  "		adda	X0093
-FFB6 : 97 91		"  "		staa	X0091
+FFB0 : 8D 21      bsr	LFFD3     ;branch sub SYNTH below
+FFB2 : 96 91      ldaa	$91
+FFB4 : 9B 93      adda	$93
+FFB6 : 97 91      staa	$91
 ;XFFB8:
-FFB8 : 96 90		"  "		ldaa	X0090
-FFBA : 99 92		"  "		adca	X0092
-FFBC : 97 90		"  "		staa	X0090
-FFBE : 09		" "		dex
-FFBF : 26 EF		"& "		bne	LFFB0
-FFC1 : 96 93		"  "		ldaa	X0093
-FFC3 : 9B 94		"  "		adda	X0094
-FFC5 : 97 93		"  "		staa	X0093
-FFC7 : 24 03		"$ "		bcc	LFFCC
-FFC9 : 7C 00 92		"|  "		inc	X0092
+FFB8 : 96 90      ldaa	$90
+FFBA : 99 92      adca	$92
+FFBC : 97 90      staa	$90
+FFBE : 09				  dex
+FFBF : 26 EF      bne	LFFB0     ;branch Z=0
+FFC1 : 96 93      ldaa	$93
+FFC3 : 9B 94      adda	$94
+FFC5 : 97 93      staa	$93
+FFC7 : 24 03      bcc	LFFCC     ;branch C=0
+FFC9 : 7C 00 92   inc	$0092
 ;LFFCC:
-FFCC : DE 92		"  "		ldx	X0092
-FFCE : 9C 95		"  "		cpx	X0095
-FFD0 : 26 DB		"& "		bne	LFFAD
+FFCC : DE 92      ldx	$92
+FFCE : 9C 95      cpx	X0095
+FFD0 : 26 DB      bne	LFFAD     ;branch Z=0
 FFD2 : 39				  rts           ;return subroutine
 ;*************************************;
 ;SYNTH 
 ;*************************************;
-;LFFD3:
-FFD3 : 4F		"O"		clra
+FFD3 : 4F         clra          ;clear A
 ;LFFD4:
-FFD4 : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-FFD7 : 8B 20		"  "		adda	#$20
-FFD9 : 24 F9		"$ "		bcc	LFFD4
-FFDB : 8D 09		"  "		bsr	LFFE6
-FFDD : 86 E0		"  "		ldaa	#$E0
+FFD4 : B7 20 02   staa	$2002   ;store A in DAC output SOUND
+FFD7 : 8B 20      adda	#$20    ;add A with value 20h
+FFD9 : 24 F9      bcc	LFFD4     ;branch C=0
+FFDB : 8D 09      bsr	LFFE6     ;branch sub
+FFDD : 86 E0      ldaa	#$E0    ;load A with value E0h
 ;LFFDF:
-FFDF : B7 20 02		"   "		staa	X2002   ;store A in DAC output SOUND
-FFE2 : 80 20		"  "		suba	#$20
+FFDF : B7 20 02   staa	$2002   ;store A in DAC output SOUND
+FFE2 : 80 20      suba	#$20    ;subtract A with value 20h
 ;LFFE4:
-FFE4 : 24 F9		"$ "		bcc	LFFDF
+FFE4 : 24 F9      bcc	LFFDF     ;branch C=0
 ;LFFE6:
-FFE6 : D6 90		"  "		ldab	X0090
+FFE6 : D6 90      ldab	$90     ;load B with value in addr 90
 ;LFFE8:
-FFE8 : 86 02		"  "		ldaa	#$02
+FFE8 : 86 02      ldaa	#$02    ;load A with value 02h
 ;LFFEA:
-FFEA : 4A		"J"		deca
-FFEB : 26 FD		"& "		bne	LFFEA
-FFED : 5A		"Z"		decb
-FFEE : 26 F8		"& "		bne	LFFE8
+FFEA : 4A         deca          ;decr A
+FFEB : 26 FD      bne	LFFEA     ;branch Z=0 
+FFED : 5A         decb          ;decr B
+FFEE : 26 F8      bne	LFFE8     ;branch Z=0 
 FFF0 : 39				  rts           ;return subroutine
 ;*************************************;
 ;
