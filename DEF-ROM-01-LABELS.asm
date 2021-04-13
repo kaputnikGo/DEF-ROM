@@ -1101,12 +1101,12 @@ RADSND  FCB $8C,$5B,$B6,$40,$BF,$49,$A4,$73 ;  - FD9A
 ;*OSCILLATOR MASK(1),DELAY(1),DURATION(2)
 ;*
 ;*PHANTOM
-ORGTAB  FCB 3*4                     ;FDAA
+ORGTAB  FCB 3*4                     ;notes * bytes - FDAA (3*4 = 12, 0Ch)
         FDB $7F1D,TD/PHANC/2*1      ;D2 1/4  NOTE  - FDAB
         FDB $7F23,TCS/PHANC/2*1     ;CS2 1/4 NOTE
         FDB $FE08,(TFS/PHANC/1*1)*2 ;FS1 1   NOTE
 ;*TACCATA                           ;JS Bach's Toccata and Fugue in D Minor
-        FCB 34*4
+        FCB 34*4                    ;notes * bytes - FDB7 (34*4 = 136, 88h)
         FDB $3E3F,TA/TACC/8*1       ;A3 1/16 NOTE  - FDB8
         FDB $7C04,TG/TACC/8*1       ;G2 1/16 NOTE
         FDB $3E3F,TA/TACC/2*5       ;A3 5/4 NOTE
