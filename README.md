@@ -11,6 +11,8 @@ Pinball Sound ROMs to examine: 3 (Laser Cue), 4 (Algar), 6 (Pharaoh), 7 (Solar F
 
 TODO comparison between Pinball Sound ROM 1 (Stellar Wars etc) and Sound ROM 6 (Pharaoh) to investigate asm routines and their changes over the lifespan of System 4-7 sound boards. 
 
+Examine the Rat Race ROM (messy) non-production game with 10 machines made
+
 Testing is done on this ET-3400 emulator fork : https://github.com/kaputnikGo/et3400-emu
 
 Disassembler archived here: https://www.oocities.org/pclareuk/DASMx/
