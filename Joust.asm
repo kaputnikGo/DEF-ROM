@@ -18,6 +18,8 @@
         ; Video Sound ROM 4 (System 7, 1983)(video and pinball)
         ; this pinball ROM code is different from video arcade game ROM version
         ;
+        ;TODO figure out the Walsh Function Sound Machine V2 source to 6800 machine code
+        ;
         ; 22 April 2021
         ;
 ;NAM  JOUST SOUND ROM STARTED 06/15/1982
@@ -1773,7 +1775,7 @@ FAEA : DB 22      addb  $22           ;(GLBPRO)
 FAEC : 86 19      ldaa  #$19          ;(#MINPER) AVOID SYNC ERROS BY LIMITING PITCH.
 FAEE : 11         cba                 ; MAX. PITCH ALLOWS AT LEAST 1 FILTER
 FAEF : 24 01      bcc  LFAF2          ;(*+3) CALL PER SAMPLE
-FAF1 : 81 16      cmpa  #$16          ;<- disasm error (FCB 81 TAB)
+;FAF1 : 81 16      cmpa  #$16          ;<- disasm error (FCB 81 TAB)
 FAF1 : 81                             ;FCB 129
 FAF2 : 16         tab                 ;
 FAF3 : D7 23      stab  $23           ;(TMPPER 41)
@@ -1810,7 +1812,7 @@ FB1D : 27 5F      beq  LFB7E          ;(STOPR 19) EXCEPT FOR END = 128
 FB1F : 4C         inca                ;
 FB20 : 97 25      staa  $25           ;(PWVCNT) OR A NEGATIVE NUMBER -N
 FB22 : 08         inx                 ; WHICH WAITS N WAVE PLAYS
-;FB23 : FF 00 0A   stx  $000A         ;<- disasm error (FCB -1,0,PCMDPT)
+;FB23 : FF 00 0A   stx  $000A          ;<- disasm error (FCB -1,0,PCMDPT)
 FB23 : FF                             ;-1  BEFORE FETCHING THE NEXT COMMAND
 FB24 : 00                             ;0
 FB25 : 0A                             ;PCMDPT
@@ -2541,95 +2543,107 @@ FE88 : 0FF0                           ;FDB %0000111111110000  1
 ;NLIST
 ;
 ;LBL SCREMW,<FPF>
-FE8A : 10 FF   subb  X10FF
-FE8C : 02 02 02 02  "    "    db  $02, $02, $02, $02
-FE90 : 02 02 02 02  "    "    db  $02, $02, $02, $02
-FE94 : 2F 2F    "//"    ble  LFEC5
+FE8A : 10 FF                          ;(LT 7)
+FE8C : 02 02 02 02                    ;<8,1>,<7,1>,<6,1>,<5,1>,
+FE90 : 02 02 02 02                    ;<4,1>,<3,1>,<2,1>,<1,1>
+FE94 : 2F                             ;(DT 16)
+FE95 : 2F                             ;(DT 16)
 FE96 : 50                             ;(ZT)
-FE97 : 10         sba
-FE98 : 80 FE                          ;(LT 0,<8,-1>)
-FE9A : 2F 10                          ;(DT 16)
-FE9C : 40 FE                          ;(LT 0,<7,-1>)
-FE9E : 2F 10                          ;(DT 16)
-FEA0 : A0 00 FE                       ;(LT 1,<8,0>,<6,-1>)
-FEA3 : 2F 10                          ;(DT 16)
-FEA5 : 50 00 FE                       ;(LT 1,<7,0>,<5,-1>)
-FEA8 : 2F 10                          ;(DT 16)
-FEAA : 28 00 FE                       ;(LT 1,<6,0>,<4,-1>)
-FEAD : 2F 10                          ;(DT 16)
-FEAF : 14 00 FE                       ;(LT 1,<5,0>,<3,-1>)
-FEB2 : 2F 10                          ;(DT 16)
-FEB4 : 0A 00 FE                       ;(LT 1,<4,0>,<2,-1>)
-FEB7 : 2F 10                          ;(DT 16)
-FEB9 : 05 00 FE                       ;(LT 1,<3,0>,<1,-1>)
-FEBC : 2F 10                          ;(DT 16)
-FEBE : 02 00                          ;(LT 0,<2,0>)
-FEC0 : 2F 10                          ;(DT 16)
-FEC2 : 01 00                          ;(LT 0,<1,0>)
-        ;
-FEC4 : 2F 70    "/p"    ble  LFF36
-FEC6 : C3 00      db  $C3, $00
-FEC8 : 01         nop
-FEC9 : 00         db  $00
-FECA : FF 00 FF   stx  X00FF
-FECD : 00         db  $00
-FECE : 01         nop
+FE97 : 10 80 FE                       ;(LT 0,<8,-1>)
+FE9A : 2F                             ;(DT 16)
+FE9B : 10 40 FE                       ;(LT 0,<7,-1>)
+FE9E : 2F                             ;(DT 16)
+FE9F : 10 A0 00 FE                    ;(LT 1,<8,0>,<6,-1>)
+FEA3 : 2F                             ;(DT 16)
+FEA4 : 10 50 00 FE                    ;(LT 1,<7,0>,<5,-1>)
+FEA8 : 2F                             ;(DT 16)
+FEA9 : 10 28 00 FE                    ;(LT 1,<6,0>,<4,-1>)
+FEAD : 2F                             ;(DT 16)
+FEAE : 10 14 00 FE                    ;(LT 1,<5,0>,<3,-1>)
+FEB2 : 2F                             ;(DT 16)
+FEB3 : 10 0A 00 FE                    ;(LT 1,<4,0>,<2,-1>)
+FEB7 : 2F                             ;(DT 16)
+FEB8 : 10 05 00 FE                    ;(LT 1,<3,0>,<1,-1>)
+FEBC : 2F                             ;(DT 16)
+FEBD : 10 02 00                       ;(LT 0,<2,0>)
+FEC0 : 2F                             ;(DT 16)
+FEC1 : 10 01 00                       ;(LT 0,<1,0>)
+FEC4 : 2F                             ;(DT 16)
+FEC5 : 70 C3                          ;(TO SCREMW)
+;
+;LBL PPLD
+FEC7 : 00 01                          ;(ADP 1)
+FEC9 : 00 FF                          ;(ADP -1)
+FECB : 00 FF                          ;(ADP -1)
+FECD : 00 01                          ;(ADP 1)
 FECF : 80                             ;(STOP)
-
-FED0 : 3C    " <"    suba  #$3C
-FED1 : 2E 00    ". "    bgt  LFED3
-FED3 : F0 20 00   subb  X2000
-FED6 : 9C 20      cpx  X0020
-FED8 : 50    "P"    negb
-FED9 : 6C EC    "l "    inc  $EC,x
-FEDB : 20 40    " @"    bra  LFF1D
-FEDD : 63 E8    "c "    com  $E8,x
+;LBL SCREMP
+FED0 : 3C                             ;(NOT 60)
+FED1 : 2E 00                          ;(LDV -512)
+FED3 : F0                             ;(WAIT 16)
+FED4 : 20 00                          ;(LDV 0)
+FED6 : 9C                             ;(WAIT 100)
+;LBL SCRMA
+FED7 : 20 50                          ;(LDV 80)
+FED9 : 6C EC                          ;(DO 13,PPLD)
+FEDB : 20 40                          ;(LDV 64)
+FEDD : 63 E8                          ;(DO 4,PPLP)
 FEDF : 80                             ;(STOP)
-
-FEE0 : 1C      suba  #$1C
-FEE1 : 70 F4 0D    "p  "    neg  XF40D
-FEE4 : 20 0C      bra  LFEF2
-FEE6 : 30    "0"    tsx
+;
+;LBL SCDNP
+FEE0 : 1C                             ;(NOT 28)
+FEE1 : 70 F4                          ;(TO SCRMA)
+;
+;LBL SKIDW
+FEE2 : 0D 20                          ;(LDH 3,32)
+FEE5 : 0C 30                          ;(LDH 4,48)
 FEE7 : 40                             ;(FIN)
 ;
-;SKIDW
-FEE8 : 00 02      db  $00, $02
-FEEA : FF 00 FE   stx  X00FE
-FEED : FE 
+;LBL PPVA
+FEE8 : 00 02                          ;(ADP 2)
+FEEA : FF                             ;(WAIT 1)
+FEEB : 00 FE                          ;(ADP -2)
+FEED : FE                             ;(WAIT 2)
 FEEE : 80                             ;(STOP)
 ;
-;SKIDP
-FEEF : 30    "  0"    ldx  X8030
-FEF0 : 63 05    "c "    com  $05,x
-FEF2        LFEF2:
-FEF2 : 2F E0    "/ "    ble  LFED4
-FEF4 : 67 F2    "g "    asr  $F2,x
+;LBL SKIDP
+FEEF : 30                             ;(NOT 48)
+FEF0 : 63 05                          ;(DO 4,PPVB)
+;LBL PPVC
+FEF2 : 2F E0                          ;(LDV -32)
+FEF4 : 67 F2                          ;(DO 8,PPVA)
 FEF6 : 80                             ;(STOP)
 ;
 ;LBL PPVB
-FEF7 : 30    " 0"    suba  #$30
-FEF8 : 02         db  $02
-FEF9 : FE 00 FE   ldx  X00FE
-FEFC : FE 00 02   ldx  X0002
-FEFF : FE 00 FE   ldx  X00FE
-FF02 : FE 00 02   ldx  X0002
-FF05 : FE 00 FE   ldx  X00FE
-FF08 : FE 00 06   ldx  X0006
-FF0B : FD         db  $FD
-FF0C : 3F    "?"    swi
-FF0D : 00         db  $00
-FF0E : FB 31 00    " 1 "    addb  X3100
-FF11 : 00         db  $00
-FF12 : 02         db  $02
+FEF7 : 30 02                          ;(ADV 2)
+FEF9 : FE                             ;(WAIT 2)
+FEFA : 00 FE                          ;(ADP -2)
+FEFC : FE                             ;(WAIT 2)
+FEFD : 00 02                          ;(ADP 2)
+FEFF : FE                             ;(WAIT 2)
+FF00 : 00 FE                          ;(ADP -2)
+FF02 : FE                             ;(WAIT 2)
+FF03 : 00 02                          ;(ADP 2)
+FF05 : FE                             ;(WAIT 2)
+FF06 : 00 FE                          ;(ADP -2)
+FF08 : FE                             ;(WAIT 2)
+FF09 : 00 06                          ;(ADP 6)
+FF0B : FD                             ;(WAIT 3)
+FF0C : 3F 00                          ;(ADV -256)
+FF0E : FB                             ;(WAIT 5)
+FF0F : 31 00                          ;(ADV 256)
+FF11 : 00 02                          ;(ADP 2)
 FF13 : 80                             ;(STOP)
-;LBL SKIDEP
 ;
+;LBL SKIDEP
 FF14 : 31                             ;(NOT 49)
 FF15 : 20 06                          ;(LDV 6)
 FF17 : 60 DE                          ;(DO 1,PPVB)
 FF19 : 70 D7                          ;(TO PPVC)
 ;
 ;LIST
+;
+;JNOIST
 FF1B : 0D 40 F0 FF 12                 ;$1F WING UP
 FF20 : 08 A8 18 01 08                 ; 20 CLIP
 FF25 : 04 A8 18 01 10                 ; 21 CLOP
@@ -2687,7 +2701,7 @@ FF7A : CE FE 78   ldx  #$FE78         ;(#ODDTBL)
 FF7D : DF 0E      stx  $0E            ;(HRMTBL)
 FF7F : 7E FA AE   jmp  LFAAE          ;(WSM)
 ;
-;
+; zero padding
 FF82 : 00 00 00 00  "    "    db  $00, $00, $00, $00
 FF86 : 00 00 00 00  "    "    db  $00, $00, $00, $00
 FF8A : 00 00 00 00  "    "    db  $00, $00, $00, $00
