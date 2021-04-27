@@ -6,10 +6,10 @@
 ; using PIA addr 8000, 4000 (DAC 8000 not 8400)
 ; mpu clock speed is default/low (quoted as 0.5 MHz), expecting ~894750 cycles per second
 ; using edited subroutines SYNTH16
-; working
+; working, a bit random with PIAs
 ;
-; SW demo :
-; [---- ---- ---- ----]
+; SW demo (inverted + reversed):
+; [1001 1100 | 0101 0101]
 ;
 ;*************************************;
 ; Scratch RAM (0000-0009)
@@ -45,14 +45,18 @@
 ;*************************************;
 ;SYNTH16 - 0030
 ;*************************************;
-0030 : C6 11      ldab #$11           ;load B with value 11h
+0030 : C6 11      ldab #$11           ;load B with value 11h <--
 0032 : D7 03      stab $03            ;store B in addr 03
-0034 : 86 FE      ldaa #$FE           ;load A with value FEh
+;0034 : 86 FE      ldaa #$FE           ;load A with value FEh <-- good param (7F tremolo like)
+0034 : 96 08      ldaa $08            ;load A with value in addr 08 (PIA1)
 0036 : 97 02      staa $02            ;store A in addr 02
 0038 : 86 9F      ldaa #$9F           ;load A with value 9Fh
-003A : D6 03      ldab $03            ;load B with value in addr 03
+;003A : D6 03      ldab $03            ;load B with value in addr 03
+003A : D6 09      ldab $09            ;load B with valu ein addr 09 (PIA2)
 ;SYN161
-003C : CE 01 C0   ldx #$01C0          ;load X with value 01C0h
+003C : CE 01 C0   ldx #$01C0          ;load X with value 01C0h <-- change (01FF) pitch, frequency
+;003C : DE 08      ldx $08             ;load X with value in addr 08 (both PIA reads) (start freq)
+;003E : 01         nop                 ;
 ;SYN162
 003F : 09         dex                 ;decr X
 0040 : 27 20      beq L0062           ;branch Z=1 SYN165
@@ -65,7 +69,7 @@
 004E : 26 F8      bne L0048           ;branch Z=0 SYN163
 0050 : 09         dex                 ;decr X
 0051 : 27 0F      beq L0062           ;branch Z=1 SYN165
-0053 : D7 90      stab $90            ;store B in addr 90
+0053 : D7 04      stab $04            ;store B in addr 04
 0055 : 73 80 00   com $8000           ;complement 1s in SOUND
 ;SYN164
 0058 : 09         dex                 ;decr X
@@ -77,7 +81,6 @@
 0062 : D0 02      subb $02            ;subtract B with value in addr 02
 0064 : C1 10      cmpb #$10           ;compare B with value 10h
 0066 : 22 D4      bhi L003C           ;branch C+Z=0 SYN161
-;0068 : 39         rts                 ;return subroutine
 0068 : 20 BC      bra L0026           ;branch always PIA
 ;006A : end
 
