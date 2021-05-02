@@ -1,17 +1,28 @@
 # DEF-ROM
 Sound board assembly project
 
-The DEF-ROM project is a place to archive sound code and audio samples.
+The DEF-ROM project is a place to archive sound code and audio samples from System 4-7 sound ROMs.
 
-Examining and experimenting with the 2716 ROM code from Williams Electronics sound boards for games from 1979 to early-mid 1980s
+Examining and experimenting with the 2716/2532 ROM code from Williams Electronics sound boards for games from 1979 to early-mid 1980s
+
+**ROM STATE**
+
+***source merged***
+- Pinball Sound ROM 1  : Flash. System 4-6. 1979. 3 Oscillator Sound, Single Oscillator Sound and Delta-F Delta-A Routine.
+- Pinball Sound ROM 15 : Defender. System 7. 1980. Organ, GWave and Vari synth routines
+
+***in progress***
+- Joust : Video ROM 4. 1982. Walsh Function Sound Machine
+- Blaster : ROM 18. 1983
+- Hyperball : ROM 8. 1981. Flipperless
+- Rat Race : 1983. 10 made, non-production
+- Thunderball : 1982. 10 made, non-production, with Speech ROMs
+
+
+
+**NOTES**
 
 Workspace for the WiLL-i-ROMS Heathkit mod project at https://akm.net.au/will-i-roms/mods.html including mp3 sound player.
-
-Pinball Sound ROMs to examine: 3 (Laser Cue), 4 (Algar), 6 (Pharaoh), 7 (Solar Fire)
-
-TODO comparison between Pinball Sound ROM 1 (Stellar Wars etc) and Sound ROM 6 (Pharaoh) to investigate asm routines and their changes over the lifespan of System 4-7 sound boards. 
-
-Examine the Rat Race ROM (messy) non-production game with 10 machines made
 
 Testing is done on this ET-3400 emulator fork : https://github.com/kaputnikGo/et3400-emu
 
