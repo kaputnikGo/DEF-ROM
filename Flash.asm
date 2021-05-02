@@ -17,7 +17,7 @@
         ; NOTE: PIA DAC addr 8400
         ;
         ; 
-        ; Stellar Wars dated 1979, using SoundROM 1
+        ; Stellar Wars dated 1979, SoundROM 1
         ; for System [4]-[6] sound boards (rectangular)
         ; for pinball games Flash[4][1979], Time Warp[6][1979], Stellar Wars[4][1979], Scorpion[6][1980], Tri Zone[6][1979] 
         ;
@@ -25,7 +25,7 @@
         ; 8x bell tones 
         ; possible WhiteNoise routine
         ;
-        ;update 19 April 2021
+        ;update 27 April 2021
         ;
 ;
 org $7800
@@ -128,7 +128,7 @@ org $7800
 7898 : 6A 18      dec $18,x      ;decr addr X+18h (24,X)(COUNT DOWN)
 789A : 26 0E      bne L78AA      ;branch Z=0 PRM1B (PLAY11)(NOT TIME TO CHANGE...)
 789C : E6 0C      ldab $0C,x     ;load B with value in addr X+0Ch (12,X)(LOAD CYCLES AT FREQUENCY)
-789E : E7 18      stab $18,x     ;store B in addr X+18h (24.x)(SAVE IN COUNTER)
+789E : E7 18      stab $18,x     ;store B in addr X+18h (24,X)(SAVE IN COUNTER)
 78A0 : E6 00      ldab $00,x     ;load B with value in X (GET CURRENT FREQUENCY)
 78A2 : EB 10      addb $10,x     ;add B with value in addr X+10h (16,X)(ADD DELTA)
 78A4 : E1 14      cmpb $14,x     ;compare B with value in addr X+14h (20,X)(COMPARE TO END)
@@ -185,7 +185,7 @@ org $7800
 78E4 : CE 7C 82   ldx #$7C82     ;load X with value 7C82h (#VEC05)(SOUND 5)(FDBTBL8)
 78E7 : 20 E3      bra L78CC      ;branch always PRM21(THNDR1)
 ;*************************************;
-;PARAM4 (additional PARAMS for 3 Oscillator Calling Routine)
+;PARAM4 called by JMPTBL (additional PARAMS for 3 Oscillator Calling Routine)
 ;*************************************;
 ;L78E9
 78E9 : 7C 00 20   inc $0020      ;incr addr 0020
@@ -200,7 +200,7 @@ org $7800
 7901 : CE 7C 9E   ldx #$7C9E     ;load X with value 7C9Eh (#VEC06)(FDBTBL9)
 7904 : 20 C6      bra L78CC      ;branch always PRM21 THNDR1
 ;*************************************;
-;PARAM5 (sets params only, no output)
+;PARAM5 called by JMPTBL (sets params only, no output)
 ;*************************************;
 ;L7906
 7906 : 7F 00 20   clr $0020      ;clear addr 0020
@@ -213,7 +213,7 @@ org $7800
 7917 : BD 7A 13   jsr L7A13      ;jump sub TRANS
 791A : 39         rts            ;return subroutine
 ;*************************************;
-;PARAM6 (after IRQ2 goes to Three Oscillator Sound Gen (PARAM1))
+;PARAM6 called by JMPTBL (after IRQ2 goes to Three Oscillator Sound Gen (PARAM1))
 ;*************************************;
 ;L791B
 791B : 96 1F      ldaa $1F       ;load A with value in addr 1F
@@ -249,7 +249,7 @@ org $7800
 794B : BD 7A 92   jsr L7A92      ;jump sub PARAM21 (MOVE)(SET UP FOR SING)
 794E : 7E 7A AB   jmp L7AAB      ;jump SYNTH5 (SING)(PLAY IT)
 ;*************************************;
-;Diving Plane Sound (SYNTH1) (sourced Robotron)
+;Diving Plane Sound (SYNTH1)
 ;*************************************;
 ;PLANE
 7951 : CE 00 01   ldx #$0001     ;load X with value 0001h (SET FOR SHORT HALF CYCLE)
@@ -378,16 +378,16 @@ org $7800
 7A04 : C1 10      cmpb #$10      ;compare B with value 10h
 7A06 : 22 D4      bhi L79DC      ;branch C+Z=0 SYN43 (SND1A)
 7A08 : 39         rts            ;return subroutine
-;L7A09 START
+;L7A09 START (PARAM9)
 7A09 : C6 11      ldab #$11      ;load B with value 11h
 7A0B : D7 21      stab $21       ;store B in addr 21 (SNDX1)
 7A0D : 86 FE      ldaa #$FE      ;load A with value FEh
 7A0F : 97 01      staa $01       ;store A in addr 01 (FREQ2)
 7A11 : 20 C5      bra L79D8      ;branch always SYN42 (SND1$$)
 ;*************************************;
-;TRANS - PARAMETER TRANSFER
+;Parameter Transfer
 ;*************************************;
-;L7A13:
+;L7A13 TRANS:
 7A13 : 36         psha           ;push A into stack then SP - 1
 ;TRNS1 L7A14:
 7A14 : A6 00      ldaa $00,x     ;load A with X
@@ -559,7 +559,7 @@ org $7800
 7B04 : 33         pulb           ;SP + 1 pull stack into B (RESTORE B)
 7B05 : 39         rts            ;return subroutine
 ;*************************************;
-;SYNTH6 (uses NOTTBL,SNDTBL,WAVFRM)
+;SYNTH6 (uses NOTTBL,SNDTBL,WAVFRM, 16 bytes each)
 ;*************************************;
 ;L7B06:
 7B06 : 84 1F      anda #$1F      ;and A with value 1Fh
@@ -661,7 +661,7 @@ org $7800
 ;*************************************;
 ;CALCOS - ADDX - ADD A TO INDEX REGISTER
 ;*************************************;
-;L7BB4:
+;ADDX L7BB4:
 7BB4 : DF 24      stx $24        ;store X in addr 24 (XPLAY)
 7BB6 : 9B 25      adda $25       ;add A with value in addr 25 (XPLAY+1)
 7BB8 : 97 25      staa $25       ;store A in addr 25 (XPLAY+1)
