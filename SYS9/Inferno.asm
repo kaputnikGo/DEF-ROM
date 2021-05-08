@@ -22,7 +22,7 @@
         ;
         ;yes I know LABELS should be 6 chars long...
         ;
-        ;updated 7 May 2021
+        ;updated 8 May 2021
         ;
         ;
           org  $E000
@@ -1313,13 +1313,13 @@ E772 : 39         rts
 ;ADD AB TO INDEX REGISTER
 ;*************************************;
 ;ADDX2 LE773:
-E773 : DF 69      stx  $69            ;(XPLAY)
-E775 : DB 6A      addb  $6A
-E777 : D7 6A      stab  $6A
-E779 : 99 69      adca  $69
-E77B : 97 69      staa  $69
-E77D : DE 69      ldx  $69
-E77F : 39         rts
+E773 : DF 69      stx  $69            ;store X in addr 69
+E775 : DB 6A      addb  $6A           ;add B with addr 6A
+E777 : D7 6A      stab  $6A           ;store B in addr 6A
+E779 : 99 69      adca  $69           ;add C + A + addr 69
+E77B : 97 69      staa  $69           ;store A addr 69
+E77D : DE 69      ldx  $69            ;load X addr 69
+E77F : 39         rts                 ;return subroutine
 ;*************************************;
 ;LE780 params, div 2, 2 loops
 ;*************************************;
@@ -1938,8 +1938,8 @@ EB31 : A6 06      ldaa  $06,x
 EB33 : 97 71      staa  X0071
 EB35 : A6 07      ldaa  $07,x
 EB37 : 97 72      staa  X0072
-EB39 : DE 6B      ldx  X006B
-EB3B : BD E7 F8   jsr  LE7F8          ;branch Z=1
+EB39 : DE 6B      ldx  $6B            ;load X with addr 6B (#FDBPTR1)
+EB3B : BD E7 F8   jsr  LE7F8          ;branch Z=1 TBLLD1
 EB3E : 7F 00 66   clr  X0066
 EB41 : 7F 00 65   clr  X0065
 EB44 : 7F 00 59   clr  X0059
@@ -2006,26 +2006,16 @@ EBAA : EA BA                          ;PRMDL2
 ;ldx call by TBLDJP2, no info yet
 ;*************************************;
 ;FDBTBL6
-EBAC : 00 00 00    "   "    db  $00, $00, $00
-        ;
+EBAC : 00 00 00 
 EBAF : 01    " "    nop
-        ;
 EBB0 : 00 02 00 03  "    "    db  $00, $02, $00, $03
 EBB4 : 00 04    "  "    db  $00, $04
         ;
 EBB6 : 01    " "    nop
         ;
 EBB7 : 00 04 00 05  "    "    db  $00, $04, $00, $05
-EBBB : 00    " "    db  $00
-        ;
-EBBC : 06    " "    tap
-        ;
-EBBD : 00    " "    db  $00
-        ;
-EBBE : 07    " "    tpa
-        ;
-EBBF : 00 02 00 02  "    "    db  $00, $02, $00, $02
-        ;
+EBBB : 00 06 00 07    " "    tpa
+EBBF : 00 02 00 02  "    "    db  $00, $02, $00, $02;
 EBC3 : 24 02    "$ "    bcc  LEBC7
 EBC5 : 01    " "    nop
         ;
@@ -2269,7 +2259,8 @@ ECA9 : 3E    ">"    wai
 ECAA : 03    " "    db  $03
         ;
 ECAB : 3F    "?"    swi
-        ;
+;*************************************;
+;
 ECAC : 03    " "    db  $03
         ;
 ECAD : 40    "@"    nega
@@ -2379,30 +2370,13 @@ ED04 : 0A    " "    clv
 ED05 : 03 04 03 02  "    "    db  $03, $04, $03, $02
         ;
 ED09        LED09:
-ED09 : 25 99    "% "    bcs  LECA4
-ED0B : B1 C8 DB    "   "    cmpa  XC8DB
-ED0E : EB F7    "  "    addb  $F7,x
-ED10 : FE FF FE    "   "    ldx  XFFFE
-ED13 : F7 EB DB    "   "    stab  XEBDB
-ED16 : C8 B1    "  "    eorb  #$B1
-ED18 : 99 81    "  "    adca  X0081
-ED1A : 68 50    "hP"    asl  $50,x
-ED1C : 39    "9"    rts
-        ;
-ED1D : 26 16    "& "    bne  LED35
-ED1F : 0A    " "    clv
-        ;
-ED20 : 03    " "    db  $03
-        ;
-ED21 : 01    " "    nop
-        ;
-ED22 : 03    " "    db  $03
-        ;
-ED23 : 0A    " "    clv
-ED24 : 16    " "    tab
-ED25 : 26 39    "&9"    bne  LED60
-ED27 : 50    "P"    negb
-ED28 : 68 81    "h "    asl  $81,x
+ED09 : 25 
+;*************************************;
+;called by FDBTBL, possibly
+ED0A : 99 B1 C8 DB EB F7 FE FF        ;
+ED12 : FE F7 EB DB C8 B1 99 81        ;
+ED1A : 68 50 39 26 16 0A 03 01        ;
+ED22 : 03 0A 16 26 39 50 68 81        ;
 ;*************************************;
 ; data, called by PRMDL3
 ;*************************************;
@@ -2412,313 +2386,81 @@ ED32 : FE F7 EB DB C8 B1 99 81        ;
 ED3A : 68 50 39 26 16 0A 03 01        ;
 ED42 : 03 0A 16 26 39 50 68 81        ;
 ;*************************************;
-;cpx call
-ED4A : B1 A8 B5    "   "    cmpa  XA8B5
-ED4D : E7 F2    "  "    stab  $F2,x
-        ;
-ED4F : EC FD    "  "    db  $EC, $FD
-        ;
-ED51 : FE FF FE    "   "    ldx  XFFFE
-ED54 : E2 CD    "  "    sbcb  $CD,x
-ED56 : D8 BA    "  "    eorb  X00BA
-ED58 : 81 81    "  "    cmpa  #$81
-ED5A : 80 47    " G"    suba  #$47
-ED5C : 29 34    ")4"    bvs  LED92
-        ;
-ED5E : 1F 03 02 03  "    "    db  $1F, $03, $02, $03
-ED62 : 04 15    "  "    db  $04, $15
-        ;
-ED64 : 0F    " "    sei
-        ;
-ED65 : 1A    " "    db  $1A
-        ;
-ED66 : 4C    "L"    inca
-ED67 : 59    "Y"    rolb
-ED68 : 50    "P"    negb
-ED69 : 81 DA    "  "    cmpa  #$DA
-ED6B : FA FC F4    "   "    orab  XFCF4
-        ;
-ED6E : ED    " "    db  $ED
-        ;
-ED6F : F6 FF FC    "   "    ldab  XFFFC
-ED72 : FB FF E0    "   "    addb  XFFE0
-ED75 : AA 9A    "  "    oraa  $9A,x
-ED77 : B8 DF F1    "   "    eora  XDFF1
-ED7A : EE E0    "  "    ldx  $E0,x
-ED7C : DB F4    "  "    addb  X00F4
-        ;
-ED7E : FD    " "    db  $FD
-        ;
-ED7F : BF 76 5E    " v^"    sts  X765E
-ED82 : 6E 84    "n "    jmp  $84,x            ;INFO: index jump
-        ;
-ED84 : 7D 56 2D    "}V-"    tst  X562D
-ED87 : 20 3B    " ;"    bra  LEDC4
-        ;
-ED89 : 81 C6    "  "    cmpa  #$C6
-ED8B : E1 D4    "  "    cmpb  $D4,x
-ED8D : AB 84    "  "    adda  $84,x
-ED8F : 7D 93 A3    "}  "    tst  X93A3
-ED92        LED92:
-ED92 : 8B 42    " B"    adda  #$42
-        ;
-ED94 : 04    " "    db  $04
-        ;
-ED95 : 0D    " "    sec
-ED96 : 26 21    "&!"    bne  LEDB9
-        ;
-ED98 : 13    " "    db  $13
-        ;
-ED99 : 10    " "    sba
-ED9A : 22 49    ""I"    bhi  LEDE5
-ED9C : 67 57    "gW"    asr  $57,x
-        ;
-ED9E : 21    "!"    db  $21
-        ;
-ED9F : 01    " "    nop
-EDA0 : 06    " "    tap
-        ;
-EDA1 : 05    " "    db  $05
-        ;
-EDA2 : 01    " "    nop
-EDA3 : 0B    " "    sev
-        ;
-EDA4 : 14    " "    db  $14
-        ;
-EDA5 : 0D    " "    sec
-        ;
-EDA6 : 05    " "    db  $05
-        ;
-EDA7 : 07    " "    tpa
-EDA8 : 27 81    "' "    beq  LED2B
-EDAA : FB FD C5    "   "    addb  XFDC5
-EDAD : A5 DF    "  "    bita  $DF,x
-        ;
-EDAF : FD FC    "  "    db  $FD, $FC
-        ;
-EDB1 : FB FF EE    "   "    addb  XFFEE
-EDB4 : F5 FB CA    "   "    bitb  XFBCA
-EDB7 : 3F    "?"    swi
-        ;
-EDB8 : 1E    " "    db  $1E
-        ;
-EDB9        LEDB9:
-EDB9 : 81 E3    "  "    cmpa  #$E3
-EDBB : C2 37    " 7"    sbcb  #$37
-EDBD : 06    " "    tap
-EDBE : 0C    " "    clc
-        ;
-EDBF : 13 02    "  "    db  $13, $02
-        ;
-EDC1 : 06    " "    tap
-        ;
-EDC2 : 05 04    "  "    db  $05, $04
-        ;
-EDC4        LEDC4:
-EDC4 : 22 5C    ""\"    bhi  LEE22
-        ;
-EDC6 : 3C 04    "< "    db  $3C, $04
-        ;
-EDC8 : 06    " "    tap
-EDC9 : 81 B9    "  "    cmpa  #$B9
-EDCB : B0 A4 94    "   "    suba  XA494
-EDCE : 80 6C    " l"    suba  #$6C
-EDD0 : 59    "Y"    rolb
-EDD1 : 49    "I"    rola
-EDD2 : 40    "@"    nega
-        ;
-EDD3 : 38 38 3A    "88:"    db  $38, $38, $3A
-        ;
-EDD6 : 3E    ">"    wai
-EDD7 : 40    "@"    nega
-        ;
-EDD8 : 41    "A"    db  $41
-        ;
-EDD9 : 43    "C"    coma
-        ;
-EDDA : 45 4B    "EK"    db  $45, $4B
-        ;
-EDDC : 53    "S"    comb
-EDDD : 5D    "]"    tstb
-        ;
-EDDE : 6B 7B 8F    "k{ "    db  $6B, $7B, $8F
-        ;
-EDE1 : 9F AF    "  "    sts  X00AF
-EDE3 : B8 C5 CF    "   "    eora  XC5CF
-EDE6 : DB E2    "  "    addb  X00E2
-EDE8 : E2 DA    "  "    sbcb  $DA,x
-EDEA : D0 C6    "  "    subb  X00C6
-        ;
-EDEC : 00 00    "  "    db  $00, $00
+;called by FDBTBL, possibly
+ED4A : B1 A8 B5 E7 F2 EC FD FE        ;
+ED52 : FF FE E2 CD D8 BA 81 81        ;
+ED5A : 80 47 29 34 1F 03 02 03        ;
+ED62 : 04 15 0F 1A 4C 59 50 81        ;
 ;*************************************;
-; FDBPTR1 - 6bytes
-EDEE : FF 00 ED    "   "    stx  X00ED
-EDF1 : EE 
-;*************************************;
-; FDBPTR1 - 6bytes
-EDF2 : 04    "  "    ldx  $04,x
-EDF3 : 04 04 1E 00  "    "    db  $04, $04, $1E, $00
-EDF7 : 00    " "    db  $00
-;*************************************;
-; FDBPTR1 - 6bytes
-EDF8 : 60 04    "` "    neg  $04,x
-EDFA : 60 08    "` "    neg  $08,x
-EDFC : 60 18    "` "    neg  $18,x
-        ;
-EDFE : 00 00    "  "    db  $00, $00
-;*************************************;
-; FDBPTR1 - 6bytes
-EE00 : 01    " "    nop
-EE01 : 20 02    "  "    bra  LEE05
-EE03 : 20 03    "  "    bra  LEE08
-        ;
-EE05        LEE05:
-EE05 : 1D 02    "  "    db  $1D, $02
-        ;
-EE07 : 20 04    "  "    bra  LEE0D
-        ;
-EE09 : 10    " "    sba
-        ;
-EE0A : 03    " "    db  $03
-        ;
-EE0B : 20 05    "  "    bra  LEE12
-        ;
-EE0D        LEE0D:
-EE0D : 0A    " "    clv
-EE0E : 01    " "    nop
-EE0F : 40    "@"    nega
-        ;
-EE10 : 00 00    "  "    db  $00, $00
-;*************************************;
-; FDBPTR1 - 6bytes
-EE12 : C0 07    "  "    subb  #$07
-EE14 : C0 20    "  "    subb  #$20
-EE16 : 80 20    "  "    suba  #$20
-EE18 : 70 40 50    "p@P"    neg  X4050
-EE1B : 60 40    "`@"    neg  $40,x
-EE1D : 80 30    " 0"    suba  #$30
-EE1F : A0 20    "  "    suba  $20,x
-EE21 : C0 10    "  "    subb  #$10
-EE23 : D0 FF    "  "    subb  X00FF
-        ;
-EE25 : 00    " "    db  $00
-        ;
-EE26 : EE 12    "  "    ldx  $12,x
-;*************************************;
-; FDBPTR1 - 6bytes
-EE28 : 09    " "    dex
-EE29 : C0 0A    "  "    subb  #$0A
-EE2B : BC 09 C0    "   "    cpx  X09C0
+;called by FDBTBL, possibly
+ED6A : DA FA FC F4 ED F6 FF FC        ;
+ED72 : FB FF E0 AA 9A B8 DF F1        ;
+ED7A : EE E0 DB F4 FD BF 76 5E        ;
+ED82 : 6E 84 7D 56 2D 20 3B 81        ;
 ;
-EE2E : 0A    " "    clv
-EE2F : BC 09 C0    "   "    cpx  X09C0
-EE32 : 00 00    "  "    db  $00, $00
-;*************************************;
-; FDBPTR1 - 6bytes
-EE34 : 01    " "    nop
-EE35 : 10    " "    sba
-EE36 : 02 03    "  "    db  $02, $03
-EE38 : 01    " "    nop
-EE39 : 72    "r"    db  $72
+ED8A : C6 E1 D4 AB 84 7D 93 A3        ;
+ED92 : 8B 42 04 0D 26 21 13 10        ;
+ED9A : 22 49 67 57 21 01 06 05        ;
+EDA2 : 01 0B 14 0D 05 07 27 81        ;
 ;
-EE3A : 01    " "    nop
-        ;
-EE3B : 00    " "    db  $00
+EDAA : FB FD C5 A5 DF FD FC FB        ;
+EDB2 : FF EE F5 FB CA 3F 1E 81        ;
+EDBA : E3 C2 37 06 0C 13 02 06        ;
+EDC2 : 05 04 22 5C 3C 04 06 81        ;
 ;*************************************;
-; FDBPTR1 - 6bytes
-EE3C : 50    "P"    negb
-EE3D : 60 40    "`@"    neg  $40,x
-EE3F : 80 20    "  "    suba  #$20
-EE41 : C0 10    "  "    subb  #$10
-EE43 : D0 FF    "  "    subb  X00FF
-        ;
-EE45 : 00    " "    db  $00
-        ;
-EE46 : EE 3C    " <"    ldx  $3C,x
+;36 byte table
+EDCA : B9 B0 A4 94 80 6C 59 49        ;
+EDD2 : 40 38 38 3A 3E 40 41 43        ;
+EDDA : 45 4B 53 5D 6B 7B 8F 9F        ;
+EDE2 : AF B8 C5 CF DB E2 E2 DA        ;
+EDEA : D0 C6 00 00                    ;
 ;*************************************;
-; FDBPTR1 - 6bytes
-EE48 : 01    " "    nop
-EE49 : 2E 02    ". "    bgt  LEE4D
-EE4B : 37    "7"    pshb
-        ;
-EE4C : 03    " "    db  $03
-        ;
-EE4D        LEE4D:
-EE4D : A1 04    "  "    cmpa  $04,x
-EE4F : EF 07    "  "    stx  $07,x
-EE51 : E6 00    "  "    ldab  $00,x
-        ;
-EE53 : 00 
+; FDBPTR1 - 4 bytes
+EDEE : FF 00 ED EE                    ;
 ;*************************************;
-; FDBPTR1 - 6bytes
-EE54 : 03    "  "    db  $00, $03
-        ;
-EE55 : 2E 01    ". "    bgt  LEE58
-EE57 : 37    "7"    pshb
-        ;
-EE58        LEE58:
-EE58 : 03    " "    db  $03
-        ;
-EE59 : 8B 04    "  "    adda  #$04
-EE5B : 8C 0B 72    "  r"    cpx  #$0B72
-EE5E : 10    " "    sba
-EE5F : FF 00 00    "   "    stx  X0000
+; FDBPTR1 - 6 bytes
+EDF2 : 04 04 04 1E 00 00              ;
 ;*************************************;
-; FDBPTR1 - 6bytes
-EE62 : 01    " "    nop
-        ;
-EE63 : 13 04    "  "    db  $13, $04
-        ;
-EE65 : 09    " "    dex
-        ;
-EE66 : 05    " "    db  $05
-        ;
-EE67 : 09    " "    dex
-        ;
-EE68 : 05    " "    db  $05
-        ;
-EE69 : 07    " "    tpa
-        ;
-EE6A : 04    " "    db  $04
-        ;
-EE6B : 09    " "    dex
-EE6C : 09    " "    dex
-EE6D : 0F    " "    sei
-EE6E : 09    " "    dex
-EE6F : 0F    " "    sei
-EE70 : 09    " "    dex
-EE71 : 0F    " "    sei
-EE72 : 01    " "    nop
-EE73 : 10    " "    sba
-        ;
-EE74 : 04    " "    db  $04
-        ;
-EE75 : 09    " "    dex
-        ;
-EE76 : 03    " "    db  $03
-        ;
-EE77 : 07    " "    tpa
-        ;
-EE78 : 05    " "    db  $05
-        ;
-EE79 : 09    " "    dex
-        ;
-EE7A : 04    " "    db  $04
-        ;
-EE7B : 09    " "    dex
-EE7C : 09    " "    dex
-EE7D : 0F    " "    sei
-EE7E : 09    " "    dex
-EE7F : 0F    " "    sei
-EE80 : 09    " "    dex
-EE81 : 0F    " "    sei
-EE82 : 09    " "    dex
-EE83 : 0F    " "    sei
-        ;
-EE84 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-EE88 : 00    " "    db  $00
+; FDBPTR1 - 8 bytes
+EDF8 : 60 04 60 08 60 18 00 00        ;
 ;*************************************;
-;ldx call E028 FDBTBL1 (6 byte blocks)
+; FDBPTR1 - 18 bytes
+EE00 : 01 20 02 20 03 1D 02 20        ;
+EE08 : 04 10 03 20 05 0A 01 40        ;
+EE10 : 00 00                          ;
+;*************************************;
+; FDBPTR1 - 22 bytes
+EE12 : C0 07 C0 20 80 20 70 40        ;
+EE1A : 50 60 40 80 30 A0 20 C0        ;
+EE22 : 10 D0 FF 00 EE 12              ;
+;*************************************;
+; FDBPTR1 - 12 bytes
+EE28 : 09 C0 0A BC 09 C0 0A BC        ;
+EE30 : 09 C0 00 00                    ;
+;*************************************;
+; FDBPTR1 - 8 bytes
+EE34 : 01 10 02 03 01 72 01 00        ;
+;*************************************;
+; FDBPTR1 - 12 bytes
+EE3C : 50 60 40 80 20 C0 10 D0        ;
+EE44 : FF 00 EE 3C                    ;
+;*************************************;
+; FDBPTR1 - 12 bytes
+EE48 : 01 2E 02 37 03 A1 04 EF        ;
+EE50 : 07 E6 00 00                    ;
+;*************************************;
+; FDBPTR1 - 14 bytes
+EE54 : 03 2E 01 37 03 8B 04 8C        ;
+EE5C : 0B 72 10 FF 00 00              ;
+;*************************************;
+; FDBPTR1 - 39 bytes
+EE62 : 01 13 04 09 05 09 05 07        ;
+EE6A : 04 09 09 0F 09 0F 09 0F        ;
+EE72 : 01 10 04 09 03 07 05 09        ;
+EE7A : 04 09 09 0F 09 0F 09 0F        ;
+EE82 : 09 0F 00 00 00 00 00           ;
+;*************************************;
+;ldx call from PARAM1 E028 FDBTBL1 (6 byte blocks)
 ;*************************************;
 ;FDBTBL1
 EE89 : FF 00 00 EE 89 02              ;
@@ -2755,7 +2497,7 @@ EF3D : 04 20 00 05 20 00              ;
 EF43 : 04 20 00 03 20 00              ;
 EF49 : EF 3D                          ;
 ;*************************************;
-;ldx call E028, FDBTBL2 14 byte blocks
+;ldx call from PARAM1 E028, FDBTBL2 14 byte blocks
 ;*************************************;
 ;FDBTBL2
 EF4B : 01 00 00 00 00 00 00 00        ;
@@ -2788,636 +2530,143 @@ EFC3 : EF B3 FE 04 50 01              ;
 EFC9 : 14 00 00 00 0D FA 6E 20        ;
 EFD1 : 0F 91 FF 00 05 00              ;
 ;
-EFD7 : 51  "   Q"    db  $00, $05, $00, $51
-        ;
-EFD8 : 19    " "    daa
-        ;
-EFD9 : DD 00 F3 00  "    "    db  $DD, $00, $F3, $00
-        ;
-EFDD : FF 01 00    "   "    stx  X0100
-EFE0 : 10    " "    sba
-EFE1 : 0F    " "    sei
-        ;
-EFE2 : 00    " "    db  $00
-        ;
-EFE3 : FF 00 02    "   "    stx  X0002
-        ;
-EFE6 : 00 00 00    "   "    db  $00, $00, $00
-        ;
-EFE9 : F4 00 0C    "   "    andb  X000C
-EFEC : 06    " "    tap
-EFED : 50    "P"    negb
-        ;
-EFEE : FC 00 21    "  !"    db  $FC, $00, $21
-        ;
-EFF1 : 0F    " "    sei
-EFF2 : 91 12    "  "    cmpa  X0012
-        ;
-EFF4 : 00    " "    db  $00
-        ;
-EFF5 : 0A    " "    clv
-EFF6 : 01    " "    nop
-        ;
-EFF7 : 00 00    "  "    db  $00, $00
-        ;
-EFF9 : 01    " "    nop
-EFFA : 07    " "    tpa
-        ;
-EFFB : 00 00 03    "   "    db  $00, $00, $03
-        ;
-EFFE : 09    " "    dex
-EFFF : FF 0F 0F    "   "    stx  X0F0F
-        ;
-F002 : 12    " "    db  $12
-        ;
-F003 : FF FF EF    "   "    stx  XFFEF
-F006 : F5 F9 00    "   "    bitb  XF900
-        ;
-F009 : 1C 12    "  "    db  $1C, $12
-        ;
-F00B : FF 00 E6    "   "    stx  X00E6
-F00E : 09    " "    dex
-F00F : 0D    " "    sec
-        ;
-F010 : 1C 55    " U"    db  $1C, $55
-        ;
-F012 : 16    " "    tab
-        ;
-F013 : 15 F3    "  "    db  $15, $F3
-        ;
-F015 : 09    " "    dex
-F016 : 80 F0    "  "    suba  #$F0
-F018 : 19    " "    daa
-F019 : 0A    " "    clv
-F01A : 10    " "    sba
-        ;
-F01B : 00 00    "  "    db  $00, $00
-        ;
-F01D : 01    " "    nop
-F01E : 07    " "    tpa
-        ;
-F01F : 00 00 03    "   "    db  $00, $00, $03
-        ;
-F022 : 09    " "    dex
-F023 : FF 0F 0F    "   "    stx  X0F0F
-        ;
-F026 : 12    " "    db  $12
-        ;
-F027 : FF 7F 05    "   "    stx  X7F05
-F02A : 01    " "    nop
-        ;
-F02B : 00 00    "  "    db  $00, $00
-        ;
-F02D : 01    " "    nop
-        ;
-F02E : 02 00 00    "   "    db  $02, $00, $00
-        ;
-F031 : 09    " "    dex
-        ;
-F032 : 1F    " "    db  $1F
-        ;
-F033 : FF 0F 0F    "   "    stx  X0F0F
-        ;
-F036 : 12    " "    db  $12
-        ;
-F037 : 7F 75 0A    " u "    clr  X750A
-F03A : 01    " "    nop
-        ;
-F03B : 00 00    "  "    db  $00, $00
-        ;
-F03D : 01    " "    nop
-F03E : 0F    " "    sei
-        ;
-F03F : 00 00    "  "    db  $00, $00
-        ;
-F041 : 09    " "    dex
-        ;
-F042 : 1F 03    "  "    db  $1F, $03
-        ;
-F044 : 0F    " "    sei
-F045 : 0F    " "    sei
-        ;
-F046 : 12    " "    db  $12
-        ;
-F047 : 01    " "    nop
-        ;
-F048 : 75 00 00    "u  "    db  $75, $00, $00
-        ;
-F04B : 50    "P"    negb
-F04C : 01    " "    nop
-F04D : 17    " "    tba
-F04E : 06    " "    tap
-        ;
-F04F : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F052 : FF 09 20    "   "    stx  X0920
-F055 : 0F    " "    sei
-F056 : 91 03    "  "    cmpa  X0003
-F058 : 10    " "    sba
-        ;
-F059 : 02 00 00 00  "    "    db  $02, $00, $00, $00
-        ;
-F05D : 01    " "    nop
-F05E : 09    " "    dex
-        ;
-F05F : 00 00    "  "    db  $00, $00
-        ;
-F061 : 08    " "    inx
-        ;
-F062 : 00 00    "  "    db  $00, $00
-        ;
-F064 : 20 0F    "  "    bra  LF075
-        ;
-F066 : 00    " "    db  $00
-        ;
-F067 : 10    " "    sba
-F068 : 81 02    "  "    cmpa  #$02
-        ;
-F06A : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F06D : 01    " "    nop
-        ;
-F06E : 05 00 00    "   "    db  $05, $00, $00
-        ;
-F071 : 08    " "    inx
-        ;
-F072 : 00 00    "  "    db  $00, $00
-        ;
-F074 : 20 0F    "  "    bra  LF085
-        ;
-F076 : 00    " "    db  $00
-        ;
-F077 : 10    " "    sba
-        ;
-F078 : 00    " "    db  $00
-        ;
-F079 : 01    " "    nop
-        ;
-F07A : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F07D : 01    " "    nop
-        ;
-F07E : 00 00 00 02  "    "    db  $00, $00, $00, $02
-        ;
-F082 : 01    " "    nop
-        ;
-F083 : 00    " "    db  $00
-        ;
-F084 : 0F    " "    sei
-F085        LF085:
-F085 : 0F    " "    sei
-F086 : 11    " "    cba
-F087 : FF 00 01    "   "    stx  X0001
-        ;
-F08A : 00    " "    db  $00
-        ;
-F08B : 80 09    "  "    suba  #$09
-        ;
-F08D : 00 00 00 00  "    "    db  $00, $00, $00, $00
-F091 : 02    " "    db  $02
-        ;
-F092 : 01    " "    nop
-        ;
-F093 : 00    " "    db  $00
-        ;
-F094 : 0F    " "    sei
-F095 : 0F    " "    sei
-F096 : 10    " "    sba
-F097 : FF FF F0    "   "    stx  XFFF0
-F09A : 89 08    "  "    adca  #$08
-F09C : 10    " "    sba
-        ;
-F09D : 00 00    "  "    db  $00, $00
-        ;
-F09F : 01    " "    nop
-F0A0 : 07    " "    tpa
-        ;
-F0A1 : 00 00    "  "    db  $00, $00
-        ;
-F0A3 : 09    " "    dex
-        ;
-F0A4 : 1F    " "    db  $1F
-        ;
-F0A5 : FF 0F 00    "   "    stx  X0F00
-        ;
-F0A8 : 12    " "    db  $12
-        ;
-F0A9 : FF 7F 12    "   "    stx  X7F12
-F0AC : 0C    " "    clc
-        ;
-F0AD : 00 00 02 04  "    "    db  $00, $00, $02, $04
-F0B1 : 00 00    "  "    db  $00, $00
-        ;
-F0B3 : 09    " "    dex
-        ;
-F0B4 : 1F    " "    db  $1F
-        ;
-F0B5 : FF 0F 0F    "   "    stx  X0F0F
-        ;
-F0B8 : 14    " "    db  $14
-        ;
-F0B9 : FF 7F F9    "   "    stx  X7FF9
-        ;
-F0BC : 00 1C 12    "   "    db  $00, $1C, $12
-        ;
-F0BF : FF 00 E6    "   "    stx  X00E6
-F0C2 : 09    " "    dex
-F0C3 : 0D    " "    sec
-        ;
-F0C4 : 1C 55    " U"    db  $1C, $55
-        ;
-F0C6 : 16    " "    tab
-        ;
-F0C7 : 15 F3 1C 00  "    "    db  $15, $F3, $1C, $00
-        ;
-F0CB : F9 00 1C    "   "    adcb  X001C
-        ;
-F0CE : 12    " "    db  $12
-        ;
-F0CF : FF 00 E6    "   "    stx  X00E6
-F0D2 : 09    " "    dex
-F0D3 : 0D    " "    sec
-        ;
-F0D4 : 1C 55    " U"    db  $1C, $55
-        ;
-F0D6 : 16    " "    tab
-        ;
-F0D7 : 15 F3 1A 00  "    "    db  $15, $F3, $1A, $00
-        ;
-F0DB : 01    " "    nop
-        ;
-F0DC : 00 1C 12    "   "    db  $00, $1C, $12
-        ;
-F0DF : F2 00 E8    "   "    sbcb  X00E8
-F0E2 : 08    " "    inx
-F0E3 : 0D    " "    sec
-        ;
-F0E4 : 1C 55    " U"    db  $1C, $55
-        ;
-F0E6 : 16    " "    tab
-        ;
-F0E7 : 15 13    "  "    db  $15, $13
-        ;
-F0E9 : 32    "2"    pula
-        ;
-F0EA : 00    " "    db  $00
-        ;
-F0EB : 01    " "    nop
-        ;
-F0EC : 00 1C 12    "   "    db  $00, $1C, $12
-        ;
-F0EF : F2 00 E8    "   "    sbcb  X00E8
-F0F2 : 08    " "    inx
-F0F3 : 0D    " "    sec
-        ;
-F0F4 : 1C 55    " U"    db  $1C, $55
-        ;
-F0F6 : 16    " "    tab
-        ;
-F0F7 : 15    " "    db  $15
-        ;
-F0F8 : 11    " "    cba
-        ;
-F0F9 : 38 00 00 00  "8   "    db  $38, $00, $00, $00
-F0FD : 1C 12    "  "    db  $1C, $12
-        ;
-F0FF : F2 00 E8    "   "    sbcb  X00E8
-F102 : 08    " "    inx
-F103 : 0D    " "    sec
-        ;
-F104 : 1C 55    " U"    db  $1C, $55
-        ;
-F106 : 16    " "    tab
-        ;
-F107 : 15    " "    db  $15
-        ;
-F108 : 11    " "    cba
-        ;
-F109 : 38 00 02 00  "8   "    db  $38, $00, $02, $00
-F10D : 00 00 02 02  "    "    db  $00, $00, $02, $02
-        ;
-F111 : 80 03    "  "    suba  #$03
-F113 : 0D    " "    sec
-F114 : 20 4A    " J"    bra  LF160
-        ;
-F116 : 13 13    "  "    db  $13, $13
-        ;
-F118 : 1B    " "    aba
-F119 : A9 00    "  "    adca  $00,x
-F11B : 01    " "    nop
-        ;
-F11C : 00 1C 12    "   "    db  $00, $1C, $12
-        ;
-F11F : F2 00 E8    "   "    sbcb  X00E8
-F122 : 08    " "    inx
-F123 : 0D    " "    sec
-        ;
-F124 : 1C 55    " U"    db  $1C, $55
-        ;
-F126 : 16    " "    tab
-        ;
-F127 : 15 1C    "  "    db  $15, $1C
-        ;
-F129 : 4F    "O"    clra
-        ;
-F12A : 00    " "    db  $00
-        ;
-F12B : 01    " "    nop
-        ;
-F12C : 00 1C 12    "   "    db  $00, $1C, $12
-        ;
-F12F : F2 00 E8    "   "    sbcb  X00E8
-F132 : 08    " "    inx
-F133 : 0D    " "    sec
-        ;
-F134 : 1C 55    " U"    db  $1C, $55
-        ;
-F136 : 16    " "    tab
-        ;
-F137 : 15 1A    "  "    db  $15, $1A
-        ;
-F139 : 63 00    "c "    com  $00,x
-F13B : 01    " "    nop
-        ;
-F13C : 00 1C 12    "   "    db  $00, $1C, $12
-        ;
-F13F : F2 00 E8    "   "    sbcb  X00E8
-F142 : 08    " "    inx
-F143 : 0D    " "    sec
-        ;
-F144 : 1C 55    " U"    db  $1C, $55
-        ;
-F146 : 16    " "    tab
-        ;
-F147 : 15 18    "  "    db  $15, $18
-        ;
-F149 : 73 00 01    "s  "    com  X0001
-        ;
-F14C : 00 1C 12    "   "    db  $00, $1C, $12
-        ;
-F14F : F2 00 E8    "   "    sbcb  X00E8
-F152 : 08    " "    inx
-F153 : 0D    " "    sec
-        ;
-F154 : 1C 55    " U"    db  $1C, $55
-        ;
-F156 : 16    " "    tab
-        ;
-F157 : 15    " "    db  $15
-        ;
-F158 : 17    " "    tba
-F159 : 4D    "M"    tsta
-        ;
-F15A        LF15A:
-F15A : 00 00 02 1C  "    "    db  $00, $00, $02, $1C
-F15E : 12 CD 13    "   "    db  $12, $CD, $13
-        ;
-F161 : DF F4    "  "    stx  X00F4
-F163 : 35    "5"    txs
-F164 : 0F    " "    sei
-F165 : 48    "H"    asla
-F166 : 11    " "    cba
-F167 : 23 F1    "# "    bls  LF15A
-F169 : 9B 00    "  "    adda  X0000
-F16B : 01    " "    nop
-        ;
-F16C : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F16F : FF 08 26    "  &"    stx  X0826
-        ;
-F172 : 13    " "    db  $13
-        ;
-F173 : 0D    " "    sec
-        ;
-F174 : 21    "!"    db  $21
-        ;
-F175 : 4A    "J"    deca
-        ;
-F176 : 14 15 13    "   "    db  $14, $15, $13
-        ;
-F179 : 2E 00    ". "    bgt  LF17B
-F17B        LF17B:
-F17B : 01    " "    nop
-        ;
-F17C : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F17F : FF 06 26    "  &"    stx  X0626
-        ;
-F182 : 13    " "    db  $13
-        ;
-F183 : 0D    " "    sec
-        ;
-F184 : 21    "!"    db  $21
-        ;
-F185 : 4A    "J"    deca
-        ;
-F186 : 14    " "    db  $14
-        ;
-F187 : 0C    " "    clc
-F188 : F1 3A 00    " : "    cmpb  X3A00
-        ;
-F18B : 00    " "    db  $00
-        ;
-F18C : 07    " "    tpa
-        ;
-F18D : 00 00    "  "    db  $00, $00
-        ;
-F18F : 07    " "    tpa
-F190 : 16    " "    tab
-F191 : DF F4    "  "    stx  X00F4
-F193 : 35    "5"    txs
-F194 : 0F    " "    sei
-F195 : 48    "H"    asla
-F196 : 11    " "    cba
-F197 : 23 F1    "# "    bls  LF18A
-F199 : 30    "0"    tsx
-        ;
-F19A        LF19A:
-F19A : 00 00    "  "    db  $00, $00
-        ;
-F19C : 07    " "    tpa
-        ;
-F19D : 00 00    "  "    db  $00, $00
-        ;
-F19F : 06    " "    tap
-F1A0 : 16    " "    tab
-F1A1 : DF F4    "  "    stx  X00F4
-F1A3 : 35    "5"    txs
-F1A4 : 0F    " "    sei
-F1A5 : 48    "H"    asla
-F1A6 : 11    " "    cba
-F1A7 : 23 F1    "# "    bls  LF19A
-F1A9 : 2E 00    ". "    bgt  LF1AB
-F1AB        LF1AB:
-F1AB : 01    " "    nop
-F1AC : 07    " "    tpa
-        ;
-F1AD : 00 00    "  "    db  $00, $00
-        ;
-F1AF : 3E    ">"    wai
-        ;
-F1B0 : 05    " "    db  $05
-        ;
-F1B1 : BA 10 34    "  4"    oraa  X1034
-F1B4 : 0D    " "    sec
-        ;
-F1B5 : 45    "E"    db  $45
-        ;
-F1B6 : 0F    " "    sei
-F1B7 : 19    " "    daa
-F1B8 : F1 21 00    " ! "    cmpb  X2100
-F1BB : 01    " "    nop
-F1BC : 07    " "    tpa
-        ;
-F1BD : 00 00 3C    "  <"    db  $00, $00, $3C
-        ;
-F1C0 : 0E    " "    cli
-F1C1 : BA F3 34    "  4"    oraa  XF334
-F1C4 : 0D    " "    sec
-        ;
-F1C5 : 45    "E"    db  $45
-        ;
-F1C6 : 0F    " "    sei
-F1C7 : 19    " "    daa
-F1C8 : F1 1A 00    "   "    cmpb  X1A00
-        ;
-F1CB : 03 00 00 00  "    "    db  $03, $00, $00, $00
-        ;
-F1CF : 01    " "    nop
-F1D0 : 0E    " "    cli
-        ;
-F1D1 : 00 00 04 1F  "    "    db  $00, $00, $04, $1F
-        ;
-F1D5 : FF 20 0F    "   "    stx  X200F
-        ;
-F1D8 : 12    " "    db  $12
-        ;
-F1D9 : 7F 7F 03    "   "    clr  X7F03
-        ;
-F1DC : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F1DF : 01    " "    nop
-        ;
-F1E0 : 13 00 00 04  "    "    db  $13, $00, $00, $04
-F1E4 : 1F    " "    db  $1F
-        ;
-F1E5 : FF 20 0F    "   "    stx  X200F
-        ;
-F1E8 : 12    " "    db  $12
-        ;
-F1E9 : 7F 7F 01    "   "    clr  X7F01
-        ;
-F1EC : 00    " "    db  $00
-        ;
-F1ED : 0A    " "    clv
-        ;
-F1EE : 1D 12    "  "    db  $1D, $12
-        ;
-F1F0 : 23 00    "# "    bls  LF1F2
-        ;
-F1F2        LF1F2:
-F1F2 : 00    " "    db  $00
-        ;
-F1F3 : FF 01 FF    "   "    stx  X01FF
-F1F6 : 20 0F    "  "    bra  LF207
-        ;
-F1F8 : 10    " "    sba
-F1F9 : 88 01    "  "    eora  #$01
-F1FB : 01    " "    nop
-        ;
-F1FC : 00    " "    db  $00
-        ;
-F1FD : 0A    " "    clv
-        ;
-F1FE : 1D FC    "  "    db  $1D, $FC
-        ;
-F200 : 23 00    "# "    bls  LF202
-        ;
-F202        LF202:
-F202 : 00    " "    db  $00
-        ;
-F203 : FF 01 FF    "   "    stx  X01FF
-F206 : 20 0F    "  "    bra  LF217
-        ;
-F208 : 10    " "    sba
-F209 : 92 02    "  "    sbca  X0002
-        ;
-F20B : 00    " "    db  $00
-        ;
-F20C : 01    " "    nop
-F20D : 0A    " "    clv
-F20E : 0A    " "    clv
-        ;
-F20F : F3    " "    db  $F3
-        ;
-F210 : 08    " "    inx
-F211 : 10    " "    sba
-F212 : FB E5 31    "  1"    addb  XE531
-        ;
-F215 : 03    " "    db  $03
-        ;
-F216 : 20 0B    "  "    bra  LF223
-        ;
-F218 : 11    " "    cba
-F219 : 78 00 01    "x  "    asl  X0001
-        ;
-F21C : 00 1C 12    "   "    db  $00, $1C, $12
-        ;
-F21F : F2 03 E8    "   "    sbcb  X03E8
-F222 : 08    " "    inx
-F223        LF223:
-F223 : 0D    " "    sec
-        ;
-F224 : 1C 55    " U"    db  $1C, $55
-        ;
-F226 : 16    " "    tab
-        ;
-F227 : 15 1C    "  "    db  $15, $1C
-        ;
-F229 : 4F    "O"    clra
-        ;
-F22A : 00    " "    db  $00
-        ;
-F22B : 01    " "    nop
-        ;
-F22C : 00 1C 12    "   "    db  $00, $1C, $12
-        ;
-F22F : F2 0C E8    "   "    sbcb  X0CE8
-F232 : 08    " "    inx
-F233 : 0D    " "    sec
-        ;
-F234 : 1C 55 21 15  " U! "    db  $1C, $55, $21, $15
-F238 : 1A 4B 00 03  " K  "    db  $1A, $4B, $00, $03
-F23C : 00 1C 12 F3  "    "    db  $00, $1C, $12, $F3
-        ;
-F240 : 01    " "    nop
-F241 : E8 08    "  "    eorb  $08,x
-F243 : 0D    " "    sec
-        ;
-F244 : 1C 55    " U"    db  $1C, $55
-        ;
-F246 : 16    " "    tab
-        ;
-F247 : 15 1C    "  "    db  $15, $1C
-        ;
-F249 : 32    "2"    pula
-        ;
-F24A : 00 02 00 00  "    "    db  $00, $02, $00, $00
-F24E : 00    " "    db  $00
-        ;
-F24F        LF24F:
-F24F : E0 06    "  "    subb  $06,x
-F251 : 0C    " "    clc
-F252 : 08    " "    inx
-F253 : 57    "W"    asrb
-F254 : 01    " "    nop
-        ;
-F255 : 03    " "    db  $03
-        ;
-F256 : 26 F7    "& "    bne  LF24F
-F258 : 91 1B    "  "    cmpa  X001B
-        ;
-F25A : 00    " "    db  $00
+EFD7 : 51 19 DD 00 F3 00 FF 01        ;
+EFDF : 00 10 0F 00 FF 00              ;
+;
+EFE5 : 02 00 00 00 F4 00 0C 06        ;
+EFED : 50 FC 00 21 0F 91              ;
+;
+EFF3 : 12 00 0A 01 00 00 01 07        ;
+EFFB : 00 00 03 09 FF 0F              ;
+;
+F001 : 0F 12 FF FF EF F5 F9 00        ;
+F009 : 1C 12 FF 00 E6 09              ;
+;
+F00F : 0D 1C 55 16 15 F3 09 80        ;
+F017 : F0 19 0A 10 00 00              ;
+;
+F01D : 01 07 00 00 03  09 FF 0F       ;
+F025 : 0F 12 FF 7F 05 01              ;
+;
+F02B : 00 00 01 02 00 00 09 1F        ;
+F033 : FF 0F 0F 12 7F 75              ;
+;
+F039 : 0A 01 00 00 01 0F 00 00        ;
+F041 : 09 1F 03 0F 0F 12              ;
+;
+F047 : 01 75 00 00 50 01 17 06        ;
+F04F : 00 00 00 FF 09 20              ;
+;
+F055 : 0F 91 03 10 02 00 00 00        ;
+F05D : 01 09 00 00 08 00              ;
+;
+F063 : 00 20 0F 00 10 81 02 00        ;
+F06B : 00 00 01 05 00 00              ;
+;
+F071 : 08 00 00 20 0F 00 10 00        ;
+F079 : 01 00 00 00 01 00              ;
+;
+F07F : 00 00 02 01 00 0F 0F 11        ;
+F087 : FF 00 01 00 80 09              ;
+;
+F08D : 00 00 00 00 02 01 00 0F        ;
+F095 : 0F 10 FF FF F0 89              ;
+;
+F09B : 08 10 00 00 01 07 00 00        ;
+F0A3 : 09 1F FF 0F 00 12              ;
+;
+F0A9 : FF 7F 12 0C 00 00 02 04        ;
+F0B1 : 00 00 09 1F FF 0F              ;
+;
+F0B7 : 0F 14 FF 7F F9 00 1C 12        ;
+F0BF : FF 00 E6 09 0D 1C              ;
+;
+F0C5 : 55 16 15 F3 1C 00 F9 00        ;
+F0CD : 1C 12 FF 00 E6 09              ;
+;
+F0D3 : 0D 1C 55 16 15 F3 1A 00        ;
+F0DB : 01 00 1C 12 F2 00              ;
+;
+F0E1 : E8 08 0D 1C 55 16 15 13        ;
+F0E9 : 32 00 01 00 1C 12              ;
+;
+F0EF : F2 00 E8 08 0D 1C 55 16        ;
+F0F7 : 15 11 38 00 00 00              ;
+;
+F0FD : 1C 12 F2 00 E8 08 0D 1C        ;
+F105 : 55 16 15 11 38 00              ;
+;
+F10B : 02 00 00 00 02 02 80 03        ;
+F113 : 0D 20 4A 13 13 1B              ;
+;
+F119 : A9 00 01 00 1C 12 F2 00        ;
+F121 : E8 08 0D 1C 55 16              ;
+;
+F127 : 15 1C 4F 00 01 00 1C 12        ;
+F12F : F2 00 E8 08 0D 1C              ;
+;
+F135 : 55 16 15 1A 63 00 01 00        ;
+F13D : 1C 12 F2 00 E8 08              ;
+;
+F143 : 0D 1C 55 16 15 18 73 00        ;
+F14B : 01 00 1C 12 F2 00              ;
+;
+F151 : E8 08 0D 1C 55 16 15 17        ;
+F159 : 4D 00 00 02 1C 12              ;
+;
+F15F : CD 13 DF F4 35 0F 48 11        ;
+F167 : 23 F1 9B 00 01 00              ;
+;
+F16D : 00 00 FF 08 26 13 0D 21        ;
+F175 : 4A 14 15 13 2E 00              ;
+;
+F17B : 01: 00 00 00 FF 06 26 13       ;
+F183 : 0D 21 4A 14 0C F1              ;
+;
+F189 : 3A 00 00 07 00 00 07 16        ;
+F191 : DF F4 35 0F 48 11              ;
+;
+F197 : 23 F1 30 00 00 07 00 00        ;
+F19F : 06 16 DF F4 35 0F              ;
+;
+F1A5 : 48 11 23 F1 2E 00 01 07        ;
+F1AD : 00 00 3E 05 BA 10              ;
+;
+F1B3 : 34 0D 45 0F 19 F1 21 00        ;
+F1BB : 01 07 00 00 3C 0E              ;
+;
+F1C1 : BA F3 34 0D 45 0F 19 F1        ;
+F1C9 : 1A 00 03 00 00 00              ;
+;
+F1CF : 01 0E 00 00 04 1F FF 20        ;
+F1D7 : 0F 12 7F 7F 03 00              ;
+;
+F1DD : 00 00 01 13 00 00 04 1F        ;
+F1E5 : FF 20 0F 12 7F 7F              ;
+;
+F1EB : 01 00 0A 1D 12 23 00 00        ;
+F1F3 : FF 01 FF 20 0F 10              ;
+;
+F1F9 : 88 01 01 00 0A 1D FC 23        ;
+F201 : 00 00 FF 01 FF 20              ;
+;
+F207 : 0F 10 92 02 00 01 0A 0A        ;
+F20F : F3 08 10 FB E5 31              ;
+;
+F215 : 03 20 0B 11 78 00 01 00        ;
+F21D : 1C 12 F2 03 E8 08              ;
+;
+F223 : 0D 1C 55 16 15 1C 4F 00        ;
+F22B : 01 00 1C 12 F2 0C              ;
+;
+F230 : E8 08 0D 1C 55 21 15 1A        ;
+F239 : 4B 00 03 00 1C 12              ;
+;
+F23F : F3 01 E8 08 0D 1C 55 16        ;
+F247 : 15 1C 32 00 02 00              ;
+;
+F24D : 00 00 E0 06 0C 08 57 01        ;
+F255 : 03 26 F7 91 1B  00             ;
 ;*************************************;
 ;called by PRMCAL2 - 32 bytes
 ;*************************************;
@@ -3487,977 +2736,210 @@ F3DB : EE 89 EF C5 ED 0A 00 1F        ;
 F3E3 : EE 89 F1 0B ED 4A 00 1F        ;
 ;*************************************;
 ; FDBPTR2 - 14bytes
-F3EB : 01    " "    nop
-F3EC : 09    " "    dex
-        ;
-F3ED : 00 00    "  "    db  $00, $00
-        ;
-F3EF : FF 00 00    "   "    stx  X0000
-        ;
-F3F2 : 00 00 13 00  "    "    db  $00, $00, $13, $00
-        ;
-F3F6 : FF 7F 
+F3EB : 01 09 00 00 FF 00 00 00        ;
+F3F3 : 00 13 00 FF 7F                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F3F8 : 0D    "   "    stx  X7F0D
-        ;
-F3F9 : 1E 00 00    "   "    db  $1E, $00, $00
-        ;
-F3FC : FF 00 00    "   "    stx  X0000
-        ;
-F3FF : 04 02    "  "    db  $04, $02
-        ;
-F401 : 10    " "    sba
-        ;
-F402 : 00    " "    db  $00
-        ;
-F403 : FF 7F 
+; FDBPTR2 - 13 bytes
+F3F8 : 0D 1E 00 00 FF 00 00 04        ;
+F400 : 02 10 00 FF 7F                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F405 : 0D    "   "    stx  X7F0D
-F406 : 24 00    "$ "    bcc  LF408
-        ;
-F408        LF408:
-F408 : 00    " "    db  $00
-        ;
-F409 : FF 00 00    "   "    stx  X0000
-        ;
-F40C : 04 02    "  "    db  $04, $02
-        ;
-F40E : 10    " "    sba
-        ;
-F40F : 00    " "    db  $00
-        ;
-F410 : FF 7F 
+; FDBPTR2 - 13 bytes
+F405 : 0D 24 00 00 FF 00 00 04        ;
+F40D : 02 10 00 FF 7F                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F412 : 0D    "   "    stx  X7F0D
-F413 : 32    "2"    pula
-        ;
-F414 : 00 00    "  "    db  $00, $00
-        ;
-F416 : FF 00 00    "   "    stx  X0000
-        ;
-F419 : 04 02    "  "    db  $04, $02
-        ;
-F41B : 10    " "    sba
-        ;
-F41C : 00    " "    db  $00
-        ;
-F41D : FF 7F 
+; FDBPTR2 - 13 bytes
+F412 : 0D 32 00 00 FF 00 00 04        ;
+F41A : 02 10 00 FF 7F                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F41F : 0D    "   "    stx  X7F0D
-        ;
-F420 : 3C 00 00    "<  "    db  $3C, $00, $00
-        ;
-F423 : FF 00 00    "   "    stx  X0000
-        ;
-F426 : 04 02    "  "    db  $04, $02
-        ;
-F428 : 10    " "    sba
-        ;
-F429 : 00 1E 00    "   "    db  $00, $1E, $00
+; FDBPTR2 - 13 bytes
+F41F : 0D 3C 00 00 FF 00 00 04        ;
+F427 : 02 10 00 1E 00                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F42C : 0D    " "    sec
-F42D : 76 00 00    "v  "    ror  X0000
-F430 : FF 00 00    "   "    stx  X0000
-        ;
-F433 : 04 02    "  "    db  $04, $02
-        ;
-F435 : 10    " "    sba
-        ;
-F436 : 00    " "    db  $00
-        ;
-F437 : 07    " "    tpa
-        ;
-F438 : 00    " "    db  $00
+; FDBPTR2 - 13 bytes
+F42C : 0D 76 00 00 FF 00 00 04        ;
+F434 : 02 10 00 07 00                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F439 : 04    " "    db  $04
-        ;
-F43A : 7C 08 C9    "|  "    inc  X08C9
-F43D : FF FE FC    "   "    stx  XFEFC
-        ;
-F440 : 04 02 00    "   "    db  $04, $02, $00
-        ;
-F443 : 20 1E    "  "    bra  LF463
-        ;
-F445 : 00    " "    db  $00
-        ;
-F446 : 0F    " "    sei
-F447 : 06    " "    tap
-        ;
-F448 : 02    " "    db  $02
-        ;
-F449 : F7 09 66    "  f"    stab  X0966
-F44C : 34    "4"    des
-F44D : 01    " "    nop
-        ;
-F44E : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F451 : F9 42 0F    " B "    adcb  X420F
-F454 : 06    " "    tap
-        ;
-F455 : 02    " "    db  $02
-        ;
-F456 : F7 09 DF    "   "    stab  X09DF
-F459 : D9 01    "  "    adcb  X0001
-        ;
-F45B : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F45E : F9 42 
+; FDBPTR2 - 39 bytes
+F439 : 04 7C 08 C9 FF FE FC 04        ;
+F441 : 02 00 20 1E 00 0F 06 02        ;
+F449 : F7 09 66 34 01 00 00 00        ;
+F451 : F9 42 0F 06 02 F7 09 DF        ;
+F459 : D9 01 00 00 00 F9 42           ;
 ;*************************************;
-; FDBPTR2 14 bytes
-F$60 : 14    " B "    adcb  X4214
-F461 : 08    " "    inx
-        ;
-F462 : 02    " "    db  $02
-        ;
-F463        LF463:
-F463 : F7 FF DF    "   "    stab  XFFDF
-F466 : D9 00    "  "    adcb  X0000
-        ;
-F468 : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F46B : FF 8F                          ;+1 byte
+; FDBPTR2 13 bytes
+F$60 : 14 08 02 F7 FF DF D9 00        ;
+F468 : 00 00 00 FF 8F                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F46D : 15    "   "    stx  X8F15
-F46E : 08    " "    inx
-        ;
-F46F : 02    " "    db  $02
-        ;
-F470 : F7 FF DF    "   "    stab  XFFDF
-F473 : D9 00    "  "    adcb  X0000
-        ;
-F475 : 00    " "    db  $00
-        ;
-F476 : 10    " "    sba
-        ;
-F477 : 00    " "    db  $00
-        ;
-F478 : FF 8F F4    "   "    stx  X8FF4
-F47B : 6D 14    "m "    tst  $14,x
-F47D : 09    " "    dex
-        ;
-F47E : 02    " "    db  $02
-        ;
-F47F : F7 FF DF    "   "    stab  XFFDF
-F482 : D9 00    "  "    adcb  X0000
-        ;
-F484 : 00    " "    db  $00
-        ;
-F485 : 10    " "    sba
-        ;
-F486 : 00    " "    db  $00
-        ;
-F487 : FF 8F F4    "   "    stx  X8FF4
-F48A : 8B 14    "  "    adda  #$14
-F48C : 0A    " "    clv
-        ;
-F48D : 02    " "    db  $02
-        ;
-F48E : F7 FF DF    "   "    stab  XFFDF
-F491 : D9 00    "  "    adcb  X0000
-        ;
-F493 : 00    " "    db  $00
-        ;
-F494 : 10    " "    sba
-        ;
-F495 : 00    " "    db  $00
-        ;
-F496 : FF 8F F4    "   "    stx  X8FF4
-F499 : 9A 14    "  "    oraa  X0014
-F49B : 08    " "    inx
-        ;
-F49C : 02    " "    db  $02
-        ;
-F49D : F7 FF DF    "   "    stab  XFFDF
-F4A0 : D9 00    "  "    adcb  X0000
-        ;
-F4A2 : 00    " "    db  $00
-        ;
-F4A3 : 10    " "    sba
-        ;
-F4A4 : 00    " "    db  $00
-        ;
-F4A5 : FF 8F F4    "   "    stx  X8FF4
-F4A8 : 6D 
+; FDBPTR2 - 60 bytes
+F46D : 15 08 02 F7 FF DF D9 00        ;
+F475 : 00 10 00 FF 8F F4 6D 14        ;
+F47D : 09 02 F7 FF DF D9 00 00        ;
+F485 : 10 00 FF 8F F4 8B 14 0A        ;
+F48D : 02 F7 FF DF D9 00 00 10        ;
+F495 : 00 FF 8F F4 9A 14 08 02        ;
+F49D : F7 FF DF D9 00 00 10 00        ;
+F4A5 : FF 8F F4 6D                    ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F4A9 : 08    "m "    tst  $08,x
-F4AA : 08    " "    inx
-        ;
-F4AB : 02    " "    db  $02
-        ;
-F4AC : F7 FF DF    "   "    stab  XFFDF
-F4AF : D9 00    "  "    adcb  X0000
-        ;
-F4B1 : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F4B4 : 80 04    "  "    suba  #$04
-        ;
-F4B6 : 14    " "    db  $14
-        ;
-F4B7 : 09    " "    dex
-        ;
-F4B8 : 02    " "    db  $02
-        ;
-F4B9 : F7 FF DF    "   "    stab  XFFDF
-F4BC : D9 00    "  "    adcb  X0000
-        ;
-F4BE : 00 00 00 FD  "    "    db  $00, $00, $00, $FD
-F4C2 : 8F    " "    db  $8F
-        ;
-F4C3 : F4 C5 14    "   "    andb  XC514
-F4C6 : 0A    " "    clv
-        ;
-F4C7 : 02    " "    db  $02
-        ;
-F4C8 : F7 FF DF    "   "    stab  XFFDF
-F4CB : D9 00    "  "    adcb  X0000
-        ;
-F4CD : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F4D0 : F8 88 F4    "   "    eorb  X88F4
-F4D3 : D4 14    "  "    andb  X0014
-F4D5 : 09    " "    dex
-        ;
-F4D6 : 02    " "    db  $02
-        ;
-F4D7 : F7 FF DF    "   "    stab  XFFDF
-F4DA : D9 00    "  "    adcb  X0000
-        ;
-F4DC : 00 00 00 FD  "    "    db  $00, $00, $00, $FD
-        ;
-F4E0 : 88 F4    "  "    eora  #$F4
-        ;
-F4E2 : E3 14    "  "    db  $E3, $14
-        ;
-F4E4 : 08    " "    inx
-        ;
-F4E5 : 02    " "    db  $02
-        ;
-F4E6 : F7 FF DF    "   "    stab  XFFDF
-F4E9 : D9 00    "  "    adcb  X0000
-        ;
-F4EB : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F4EE : FF 8A F4    "   "    stx  X8AF4
-F4F1 : A9 01    "  "    adca  $01,x
-        ;
-F4F3 : 02 04    "  "    db  $02, $04
-        ;
-F4F5 : FF 40 FF    " @ "    stx  X40FF
-F4F8 : 3F    "?"    swi
-        ;
-F4F9 : 00 00    "  "    db  $00, $00
-        ;
-F4FB : 10    " "    sba
-        ;
-F4FC : 00    " "    db  $00
-        ;
-F4FD : FF FF F4    "   "    stx  XFFF4
-F500 : F2 01 02    "   "    sbcb  X0102
-        ;
-F503 : 00 00    "  "    db  $00, $00
-        ;
-F505 : FF 00 00    "   "    stx  X0000
-        ;
-F508 : 00 02    "  "    db  $00, $02
-        ;
-F50A : 10    " "    sba
-        ;
-F50B : 00    " "    db  $00
-        ;
-F50C : FF FF F5    "   "    stx  XFFF5
-F50F : 01    " "    nop
+; FDBPTR2 - 103 bytes
+F4A9 : 08 08 02 F7 FF DF D9 00        ;
+F4B1 : 00 00 00 80 04 14 09 02        ;
+F4B9 : F7 FF DF D9 00 00 00 00        ;
+F4C1 : FD 8F F4 C5 14 0A 02 F7        ;
+F4C9 : FF DF D9 00 00 00 00 F8        ;
+F4D1 : 88 F4 D4 14 09 02 F7 FF        ;
+F4D9 : DF D9 00 00 00 00 FD 88        ;
+F4E1 : F4 E3 14 08 02 F7 FF DF        ;
+F4E9 : D9 00 00 00 00 FF 8A F4        ;
+F4F1 : A9 01 02 04 FF 40 FF 3F        ;
+F4F9 : 00 00 10 00 FF FF F4 F2        ;
+F501 : 01 02 00 00 FF 00 00 00        ;
+F509 : 02 10 00 FF FF F5 01           ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F510 : 01    " "    nop
-        ;
-F511 : 04 00 00 00  "    "    db  $04, $00, $00, $00
-        ;
-F515 : FF 00 01    "   "    stx  X0001
-        ;
-F518 : 03    " "    db  $03
-        ;
-F519 : 11    " "    cba
-        ;
-F51A : 00    " "    db  $00
-        ;
-F51B : FF FF F5    "   "    stx  XFFF5
-F51E : 10    " "    sba
+; FDBPTR2 - 15 bytes
+F510 : 01 04 00 00 00 FF 00 01        ;
+F518 : 03 11 00 FF FF F5 10           ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F51F : 08    " "    inx
-        ;
-F520 : 13 02    "  "    db  $13, $02
-        ;
-F522 : F9 FF E3    "   "    adcb  XFFE3
-F525 : E0 05    "  "    subb  $05,x
-F527 : 08    " "    inx
-        ;
-F528 : 14 00    "  "    db  $14, $00
-        ;
-F52A : C0 05    "  "    subb  #$05
-F52C : 01    " "    nop
-        ;
-F52D : 00    " "    db  $00
-        ;
-F52E : 01    " "    nop
-F52F : 01    " "    nop
-F530 : FF D9 55    "  U"    stx  XD955
-        ;
-F533 : 00 00    "  "    db  $00, $00
-        ;
-F535 : 10    " "    sba
-        ;
-F536 : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F539 : 01    " "    nop
-        ;
-F53A : 00    " "    db  $00
-        ;
-F53B : 01    " "    nop
-F53C : 01    " "    nop
-F53D : FF D9 55    "  U"    stx  XD955
-        ;
-F540 : 00 00    "  "    db  $00, $00
-        ;
-F542 : 11    " "    cba
-        ;
-F543 : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F546 : 01    " "    nop
-        ;
-F547 : 00    " "    db  $00
-        ;
-F548 : 01    " "    nop
-F549 : 01    " "    nop
-F54A : FF D9 55    "  U"    stx  XD955
-        ;
-F54D : 00 00 12 00  "    "    db  $00, $00, $12, $00
-F551 : 00 00    "  "    db  $00, $00
-        ;
-F553 : 01    " "    nop
-        ;
-F554 : 00    " "    db  $00
-        ;
-F555 : 01    " "    nop
-F556 : 01    " "    nop
-F557 : FF D9 55    "  U"    stx  XD955
-        ;
-F55A : 00 00 13 00  "    "    db  $00, $00, $13, $00
-F55E : 00 00    "  "    db  $00, $00
-        ;
-F560 : 01    " "    nop
-        ;
-F561 : 00    " "    db  $00
-        ;
-F562 : 01    " "    nop
-F563 : 01    " "    nop
-F564 : FF D9 55    "  U"    stx  XD955
-        ;
-F567 : 00 00 14 00  "    "    db  $00, $00, $14, $00
-F56B : 00 00 
+; FDBPTR2 - 78 bytes
+F51F : 08 13 02 F9 FF E3 E0 05        ;
+F527 : 08 14 00 C0 05 01 00 01        ;
+F52F : 01 FF D9 55 00 00 10 00        ;
+F537 : 00 00 01 00 01 01 FF D9        ;
+F53F : 55 00 00 11 00 00 00 01        ;
+F547 : 00 01 01 FF D9 55 00 00        ;
+F54F : 12 00 00 00 01 00 01 01        ;
+F557 : FF D9 55 00 00 13 00 00        ;
+F55F : 00 01 00 01 01 FF D9 55        ;
+F567 : 00 00 14 00 00 00              ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F56D : 02    "   "    db  $00, $00, $02
-        ;
-F56E : 06    " "    tap
-        ;
-F56F : 04 02    "  "    db  $04, $02
-        ;
-F571 : FF 00 00    "   "    stx  X0000
-        ;
-F574 : 00 00    "  "    db  $00, $00
-        ;
-F576 : 10    " "    sba
-        ;
-F577 : 00    " "    db  $00
-        ;
-F578 : FF 7F 37    "  7"    stx  X7F37
-F57B : 01    " "    nop
-        ;
-F57C : 00 00    "  "    db  $00, $00
-        ;
-F57E : FF 00 00    "   "    stx  X0000
-        ;
-F581 : 02    " "    db  $02
-        ;
-F582 : 01    " "    nop
-F583 : 11    " "    cba
-        ;
-F584 : 00    " "    db  $00
-        ;
-F585 : FF 7F 
+; FDBPTR2 - 26 bytes
+F56D : 02 06 04 02 FF 00 00 00        ;
+F575 : 00 10 00 FF 7F 37 01 00        ;
+F57D : 00 FF 00 00 02 01 11 00        ;
+F585 : FF 7F                          ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F587 : 0A    "   "    stx  X7F0A
-        ;
-F588 : 05 00    "  "    db  $05, $00
-        ;
-F58A : 09    " "    dex
-F58B : FF 83 DE    "   "    stx  X83DE
-        ;
-F58E : 00 00    "  "    db  $00, $00
-        ;
-F590 : 10    " "    sba
-        ;
-F591 : 00    " "    db  $00
-        ;
-F592 : FF FF F5    "   "    stx  XFFF5
-        ;
-F595 : 87    " "    db  $87
-        ;
-F596 : 01    " "    nop
-        ;
-F597 : 04 02 13    "   "    db  $04, $02, $13
-        ;
-F59A : FF 1E 63    "  c"    stx  X1E63
-        ;
-F59D : 00 00    "  "    db  $00, $00
-        ;
-F59F : 10    " "    sba
-        ;
-F5A0 : 00    " "    db  $00
-        ;
-F5A1 : FF 03 F0    "   "    stx  X03F0
-        ;
-F5A4 : 05 02    "  "    db  $05, $02
-        ;
-F5A6 : 16    " "    tab
-F5A7 : FF 82 94    "   "    stx  X8294
-        ;
-F5AA : 00 00    "  "    db  $00, $00
-        ;
-F5AC : 10    " "    sba
-        ;
-F5AD : 00    " "    db  $00
-        ;
-F5AE : FF 7F 02    "   "    stx  X7F02
-F5B1 : 0F    " "    sei
-        ;
-F5B2 : 00 00    "  "    db  $00, $00
-        ;
-F5B4 : FF 00 00    "   "    stx  X0000
-        ;
-F5B7 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-        ;
-F5BB : FF 7F 02    "   "    stx  X7F02
-        ;
-F5BE : 18 00 00    "   "    db  $18, $00, $00
-        ;
-F5C1 : FF 00 00    "   "    stx  X0000
-        ;
-F5C4 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-        ;
-F5C8 : FF 7F 04    "   "    stx  X7F04
-        ;
-F5CB : 14 00 00    "   "    db  $14, $00, $00
-        ;
-F5CE : FF 00 00    "   "    stx  X0000
-        ;
-F5D1 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-        ;
-F5D5 : FF 7F FB    "   "    stx  X7FFB
-        ;
-F5D8 : 00    " "    db  $00
-        ;
-F5D9 : 01    " "    nop
-F5DA : 07    " "    tpa
-F5DB : 06    " "    tap
-F5DC : DF F2    "  "    stx  X00F2
-        ;
-F5DE : 05 03 14 00  "    "    db  $05, $03, $14, $00
-        ;
-F5E2 : FF 00 F5    "   "    stx  X00F5
-F5E5 : E6 FB    "  "    ldab  $FB,x
-        ;
-F5E7 : 00    " "    db  $00
-        ;
-F5E8 : 01    " "    nop
-F5E9 : 07    " "    tpa
-F5EA : 06    " "    tap
-F5EB : DF F2    "  "    stx  X00F2
-        ;
-F5ED : 05 03 14    "   "    db  $05, $03, $14
-        ;
-F5F0 : 01    " "    nop
-F5F1 : FF 00 F5    "   "    stx  X00F5
-F5F4 : F5 FB 00    "   "    bitb  XFB00
-F5F7 : 01    " "    nop
-F5F8 : 07    " "    tpa
-F5F9 : 06    " "    tap
-F5FA : DF F2    "  "    stx  X00F2
-        ;
-F5FC : 05 03 14 02  "    "    db  $05, $03, $14, $02
-        ;
-F600 : FF 00 F6    "   "    stx  X00F6
-        ;
-F603 : 04    " "    db  $04
-        ;
-F604 : FB 00 01    "   "    addb  X0001
-F607 : 07    " "    tpa
-F608 : 06    " "    tap
-F609 : DF F2    "  "    stx  X00F2
-        ;
-F60B : 05 03 14 03  "    "    db  $05, $03, $14, $03
-        ;
-F60F : FF 00 F6    "   "    stx  X00F6
-        ;
-F612 : 13    " "    db  $13
-        ;
-F613 : FB 00 01    "   "    addb  X0001
-F616 : 07    " "    tpa
-F617 : 06    " "    tap
-F618 : DF F2    "  "    stx  X00F2
-        ;
-F61A : 05 03 14 04  "    "    db  $05, $03, $14, $04
-        ;
-F61E : FF 00 F5    "   "    stx  X00F5
-F621 : D7 01    "  "    stab  X0001
-        ;
-F623 : 02    " "    db  $02
-        ;
-F624 : 01    " "    nop
-F625 : 01    " "    nop
-F626 : FF D9 55    "  U"    stx  XD955
-F629 : F7 01 11    "   "    stab  X0111
-        ;
-F62C : 00    " "    db  $00
-        ;
-F62D : FF 7F 
+; FDBPTR2 - 168 bytes
+F587 : 0A 05 00 09 FF 83 DE 00        ;
+F58F : 00 10 00 FF FF F5 87 01        ;
+F597 : 04 02 13 FF 1E 63 00 00        ;
+F59F : 10 00 FF 03 F0 05 02 16        ;
+F5A7 : FF 82 94 00 00 10 00 FF        ;
+F5AF : 7F 02 0F 00 00 FF 00 00        ;
+F5B7 : 00 00 00 00 FF 7F 02 18        ;
+F5BF : 00 00 FF 00 00 00 00 00        ;
+F5C7 : 00 FF 7F 04 14 00 00 FF        ;
+F5CF : 00 00 00 00 00 00 FF 7F        ;
+F5D6 : FB 00 01 07 06 DF F2 05        ;
+F5DF : 03 14 00 FF 00 F5 E6 FB        ;
+F5E7 : 00 01 07 06 DF F2 05 03        ;
+F5EF : 14 01 FF 00 F5 F5 FB 00        ;
+F5F7 : 01 07 06 DF F2 05 03 14        ;
+F5FF : 02 FF 00 F6 04 FB 00 01        ;
+F607 : 07 06 DF F2 05 03 14 03        ;
+F60F : FF 00 F6 13 FB 00 01 07        ;
+F617 : 06 DF F2 05 03 14 04 FF        ;
+F61F : 00 F5 D7 01 02 01 01 FF        ;
+F627 : D9 55 F7 01 11 00 FF 7F        ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F62F : 21    "  !"    stx  X7F21
-        ;
-F630 : 02    " "    db  $02
-        ;
-F631 : FF 0E 00    "   "    stx  X0E00
-F634 : 01    " "    nop
-F635 : 01    " "    nop
-        ;
-F636 : 00 C7    "  "    db  $00, $C7
-        ;
-F638 : 11    " "    cba
-        ;
-F639 : 00    " "    db  $00
-        ;
-F63A : FF 7F                          ;+1
+; FDBPTR2 - 13 bytes
+F62F : 21 02 FF 0E 00 01 01 00        ;
+F637 : C7 11 00 FF 7F                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F63C : 21    "  !"    stx  X7F21
-        ;
-F63D : 02    " "    db  $02
-        ;
-F63E : FF 0E 00    "   "    stx  X0E00
-F641 : 01    " "    nop
-F642 : 01    " "    nop
-        ;
-F643 : 00 D3    "  "    db  $00, $D3
-        ;
-F645 : 11    " "    cba
-        ;
-F646 : 00 93    "  "    db  $00, $93
-        ;
-F648 : 80 F6    "  "    suba  #$F6
-        ;
-F64A : 4B    "K"    db  $4B           ;-1
+; FDBPTR2 - 15 bytes
+F63C : 21 02 FF 0E 00 01 01 00        ;
+F644 : D3 11 00 93 80 F6 4B           ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F64B : 4A    "J"    deca
-        ;
-F64C : 03 00 00    "   "    db  $03, $00, $00
-        ;
-F64F : F0 00 00    "   "    subb  X0000
-        ;
-F652 : 00 00    "  "    db  $00, $00
-        ;
-F654 : 11    " "    cba
-        ;
-F655 : 00    " "    db  $00
-        ;
-F656 : 0F    " "    sei
-F657 : 80 F6    "  "    suba  #$F6
-        ;
-F659 : 4B                             ;-1
+; FDBPTR2 - 15 bytes
+F64B : 4A 03 00 00 F0 00 00 00        ;
+F653 : 00 11 00 0F 80 F6 4B           ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F65A : 02 02 00  "K   "    db  $4B, $02, $02, $00
-F65D : 00    " "    db  $00
-        ;
-F65E : FF 00 00    "   "    stx  X0000
-        ;
-F661 : 00 15    "  "    db  $00, $15
-        ;
-F663 : 11    " "    cba
-        ;
-F664 : 00    " "    db  $00
-        ;
-F665 : FF 7F 
+; FDBPTR2 - 13 bytes
+F65A : 02 02 00 00 FF 00 00 00        ;
+F662 : 15 11 00 FF 7F                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F667 : 04    "   "    stx  X7F04
-F668 : 01    " "    nop
-        ;
-F669 : 00 00    "  "    db  $00, $00
-        ;
-F66B : FF 00 00    "   "    stx  X0000
-F66E : 01    " "    nop
-F66F : 01    " "    nop
-F670 : 11    " "    cba
-        ;
-F671 : 00    " "    db  $00
-        ;
-F672 : FF 7F 
+; FDBPTR2 - 13 bytes
+F667 : 04 01 00 00 FF 00 00 01        ;
+F66F : 01 11 00 FF 7F                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F674 : 01    "   "    stx  X7F01
-F675 : 01    " "    nop
-        ;
-F676 : 00 00    "  "    db  $00, $00
-        ;
-F678 : FF 00 00    "   "    stx  X0000
-        ;
-F67B : 00 E3    "  "    db  $00, $E3
-        ;
-F67D : 11    " "    cba
-        ;
-F67E : 00    " "    db  $00
-        ;
-F67F : FF 7F                          ;+1
+; FDBPTR2 - 13 bytes
+F674 : 01 01 00 00 FF 00 00 00        ;
+F67C : E3 11 00 FF 7F                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F681 : 01    "   "    stx  X7F01
-F682 : 06    " "    tap
-        ;
-F683 : 00 00    "  "    db  $00, $00
-        ;
-F685 : FF 00 00    "   "    stx  X0000
-F688 : 01    " "    nop
-F689 : 35    "5"    txs
-F68A : 11    " "    cba
-        ;
-F68B : 00    " "    db  $00
-        ;
-F68C : FF 7F                          ;+1
+; FDBPTR2 - 13 bytes
+F681 : 01 06 00 00 FF 00 00 01        ;
+F689 : 35 11 00 FF 7F                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F68E : 01    "   "    stx  X7F01
-F68F : 0B    " "    sev
-        ;
-F690 : 00 02 00 00  "    "    db  $00, $02, $00, $00
-F694 : 00    " "    db  $00
-        ;
-F695 : 01    " "    nop
-F696 : FA 01 00    "   "    orab  X0100
-F699 : FF 7F 
+; FDBPTR2 - 13 bytes
+F68E : 01 0B 00 02 00 00 00 01        ;
+F696 : FA 01 00 FF 7F                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F69B : 01    "   "    stx  X7F01
-F69C : 0B    " "    sev
-        ;
-F69D : 00 02    "  "    db  $00, $02
-        ;
-F69F : FF 00 00    "   "    stx  X0000
-F6A2 : 01    " "    nop
-        ;
-F6A3 : ED    " "    db  $ED
-        ;
-F6A4 : 11    " "    cba
-        ;
-F6A5 : 00    " "    db  $00
-        ;
-F6A6 : FF 7F 
+; FDBPTR2 - 13 bytes
+F69B : 01 0B 00 02 FF 00 00 01        ;
+F6A3 : ED 11 00 FF 7F                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F6A8 : 01    "   "    stx  X7F01
-F6A9 : 0B    " "    sev
-        ;
-F6AA : 00 02    "  "    db  $00, $02
-        ;
-F6AC : FF 00 00    "   "    stx  X0000
-F6AF : 01    " "    nop
-F6B0 : EB 11    "  "    addb  $11,x
-        ;
-F6B2 : 00    " "    db  $00
-        ;
-F6B3 : FF 7F 01    "   "    stx  X7F01
-F6B6 : 0B    " "    sev
-        ;
-F6B7 : 00 02    "  "    db  $00, $02
-        ;
-F6B9 : FF 00 00    "   "    stx  X0000
-F6BC : 01    " "    nop
-F6BD : DE 11    "  "    ldx  X0011
-        ;
-F6BF : 00    " "    db  $00
-        ;
-F6C0 : FF 7F 
+; FDBPTR2 - 26 bytes
+F6A8 : 01 0B 00 02 FF 00 00 01        ;
+F6B0 : EB 11 00 FF 7F 01 0B 00        ;
+F6B8 : 02 FF 00 00 01 DE 11 00        ;
+F6C0 : FF 7F                          ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F6C2 : 01    "   "    stx  X7F01
-F6C3 : 0B    " "    sev
-        ;
-F6C4 : 00 02    "  "    db  $00, $02
-        ;
-F6C6 : FF 00 00    "   "    stx  X0000
-F6C9 : 01    " "    nop
-        ;
-F6CA : C7    " "    db  $C7
-        ;
-F6CB : 11    " "    cba
-        ;
-F6CC : 00    " "    db  $00
-        ;
-F6CD : FF 7F 
+; FDBPTR2 - 13 bytes
+F6C2 : 01 0B 00 02 FF 00 00 01        ;
+F6CA : C7 11 00 FF 7F                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F6CF : 01    "   "    stx  X7F01
-F6D0 : 0B    " "    sev
-        ;
-F6D1 : 00 02 00 00  "    "    db  $00, $02, $00, $00
-F6D5 : 00 00    "  "    db  $00, $00
-        ;
-F6D7 : F0 11 00    "   "    subb  X1100
-F6DA : 40    "@"    nega
-        ;
-F6DB : 00    " "    db  $00
+; FDBPTR2 - 13 bytes
+F6CF : 01 0B 00 02 00 00 00 00        ;
+F6D7 : F0 11 00 40 00                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F6DC : 01    " "    nop
-F6DD : 0B    " "    sev
-F6DE : 01    " "    nop
-        ;
-F6DF : 03    " "    db  $03
-        ;
-F6E0 : 01    " "    nop
-F6E1 : 01    " "    nop
-        ;
-F6E2 : 02    " "    db  $02
-        ;
-F6E3 : 01    " "    nop
-F6E4 : EE 11    "  "    ldx  $11,x
-        ;
-F6E6 : 00    " "    db  $00
-        ;
-F6E7 : 40    "@"    nega
-        ;
-F6E8 : 00 
+; FDBPTR2 - 13 bytes
+F6DC : 01 0B 01 03 01 01 02 01        ;
+F6E4 : EE 11 00 40 00                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F6E9 : 3C 02    " < "    db  $00, $3C, $02
-        ;
-F6EB : 01    " "    nop
-        ;
-F6EC : 03    " "    db  $03
-        ;
-F6ED : 01    " "    nop
-F6EE : 01    " "    nop
-        ;
-F6EF : 02    " "    db  $02
-        ;
-F6F0 : 01    " "    nop
-F6F1 : FF 12 DD    "   "    stx  X12DD
-F6F4 : 40    "@"    nega
-        ;
-F6F5 : 00    " "    db  $00
+; FDBPTR2 - 13 bytes
+F6E9 : 3C 02 01 03 01 01 02 01        ;
+F6F1 : FF 12 DD 40 00                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F6F6 : 01    " "    nop
-F6F7 : 0B    " "    sev
-F6F8 : 01    " "    nop
-        ;
-F6F9 : 03    " "    db  $03
-        ;
-F6FA : 01    " "    nop
-F6FB : 01    " "    nop
-        ;
-F6FC : 02    " "    db  $02
-        ;
-F6FD : 01    " "    nop
-F6FE : EE 11    "  "    ldx  $11,x
-        ;
-F700 : 00    " "    db  $00
-        ;
-F701 : 10    " "    sba
-F702 : 80 F7    "  "    suba  #$F7
-        ;
-F704 : 05    " "    db  $05
-        ;
-F705 : 01    " "    nop
-F706 : 0B    " "    sev
-        ;
-F707 : 00 02 00 00  "    "    db  $00, $02, $00, $00
-F70B : 00 00    "  "    db  $00, $00
-        ;
-F70D : F0 11 00    "   "    subb  X1100
-F710 : 40    "@"    nega
-        ;
-F711 : 00    " "    db  $00
+; FDBPTR2 - 28 bytes
+F6F6 : 01 0B 01 03 01 01 02 01        ;
+F6FE : EE 11 00 10 80 F7 05 01        ;
+F706 : 0B 00 02 00 00 00 00 F0        ;
+F70E : 11 00 40 00                    ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F712 : 01    " "    nop
-F713 : 0B    " "    sev
-F714 : 01    " "    nop
-        ;
-F715 : 03    " "    db  $03
-        ;
-F716 : 01    " "    nop
-F717 : 01    " "    nop
-        ;
-F718 : 02    " "    db  $02
-        ;
-F719 : 01    " "    nop
-F71A : EE 11    "  "    ldx  $11,x
-        ;
-F71C : 00    " "    db  $00
-        ;
-F71D : 10    " "    sba
-F71E : 80 F7    "  "    suba  #$F7
-        ;
-F720 : 21    "!"    db  $21
-        ;
-F721 : 01    " "    nop
-F722 : 0B    " "    sev
-        ;
-F723 : 00 02    "  "    db  $00, $02
-        ;
-F725 : FF 00 00    "   "    stx  X0000
-F728 : 01    " "    nop
-        ;
-F729 : C7    " "    db  $C7
-        ;
-F72A : 11    " "    cba
-        ;
-F72B : 00    " "    db  $00
-        ;
-F72C : FF 7F 07    "   "    stx  X7F07
-        ;
-F72F : 04 00 02 00  "    "    db  $04, $00, $02, $00
-F733 : 04    " "    db  $04
-        ;
-F734 : 07    " "    tpa
-F735 : 7F FF 13    "   "    clr  XFF13
-F738 : 01    " "    nop
-        ;
-F739 : 13 00    "  "    db  $13, $00
-        ;
-F73B : FF 7F 
+; FDBPTR2 - 43 bytes
+F712 : 01 0B 01 03 01 01 02 01        ;
+F71A : EE 11 00 10 80 F7 21 01        ;
+F722 : 0B 00 02 FF 00 00 01 C7        ;
+F72A : 11 00 FF 7F 07 04 00 02        ;
+F732 : 00 04 07 7F FF 13 01 13        ;
+F73A : 00 FF 7F                       ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F73D : 0C    "   "    stx  X7F0C
-        ;
-F73E : 02    " "    db  $02
-        ;
-F73F : 01    " "    nop
-F740 : 0B    " "    sev
-F741 : FF 00 00    "   "    stx  X0000
-        ;
-F744 : 00    " "    db  $00
-        ;
-F745 : BE 11 00    "   "    lds  X1100
-F748 : FF 7F                          ;+1
+; FDBPTR2 - 13 bytes
+F73D : 0C 02 01 0B FF 00 00 00        ;
+F745 : BE 11 00 FF 7F                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F74A : 0C    "   "    stx  X7F0C
-        ;
-F74B : 05    " "    db  $05
-        ;
-F74C : 01    " "    nop
-F74D : 0B    " "    sev
-F74E : FF 00 00    "   "    stx  X0000
-        ;
-F751 : 00    " "    db  $00
-        ;
-F752 : BE 01 00    "   "    lds  X0100
-F755 : FF 7F                          ;needs +1 byte
+; FDBPTR2 - 13 bytes
+F74A : 0C 05 01 0B FF 00 00 00        ;
+F752 : BE 01 00 FF 7F                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F757 : 08    "   "    stx  X7F08
-        ;
-F758 : 02 00 00    "   "    db  $02, $00, $00
-        ;
-F75B : D4 00    "  "    andb  X0000
-        ;
-F75D : 00    " "    db  $00
-        ;
-F75E : 01    " "    nop
-F75F : EF 11    "  "    stx  $11,x
-        ;
-F761 : 00    " "    db  $00
-        ;
-F762 : 81 00    "  "    cmpa  #$00    ; needs +1 byte
+; FDBPTR2 - 13 bytes
+F757 : 08 02 00 00 D4 00 00 01        ;
+F75F : EF 11 00 81 00                 ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F764 : 02    " "    db  $02
-        ;
-F765 : 01    " "    nop
-        ;
-F766 : 00    " "    db  $00
-        ;
-F767 : 01    " "    nop
-F768 : D7 01    "  "    stab  X0001
-F76A : 01    " "    nop
-F76B : 01    " "    nop
-F76C : F4 13 03    "   "    andb  X1303
-F76F : 2D 00    "- "    blt  LF771
-F771        LF771:
-F771 : 01    " "    nop
-F772 : 09    " "    dex
-        ;
-F773 : 00 00    "  "    db  $00, $00
-        ;
-F775 : FF 00 00    "   "    stx  X0000
-        ;
-F778 : 00 00 03 00  "    "    db  $00, $00, $03, $00
-        ;
-F77C : FF 00 02    "   "    stx  X0002
-F77F : 01    " "    nop
-        ;
-F780 : 00 00    "  "    db  $00, $00
-        ;
-F782 : 20 00    "  "    bra  LF784
-        ;
-F784        LF784:
-F784 : 00 00    "  "    db  $00, $00
-        ;
-F786 : 35    "5"    txs
-F787 : 01    " "    nop
-        ;
-F788 : 00    " "    db  $00
-        ;
-F789 : 81 01    "  "    cmpa  #$01
+; FDBPTR2 - 39 bytes
+F764 : 02 01 00 01 D7 01 01 01        ;
+F76C : F4 13 03 2D 00 01 09 00        ;
+F774 : 00 FF 00 00 00 00 03 00        ;
+F77C : FF 00 02 01 00 00 20 00        ;
+F784 : 00 00 35 01 00 81 01           ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F78B : 01    " "    nop
-        ;
-F78C : 02 05 00    "   "    db  $02, $05, $00
-        ;
-F78F : FF 00 00    "   "    stx  X0000
-F792 : F9 FA 11    "   "    adcb  XFA11
-        ;
-F795 : 00    " "    db  $00
-        ;
-F796 : FF FF F7    "   "    stx  XFFF7
-F799 : 9A 
+; FDBPTR2 - 15 bytes
+F78B : 01 02 05 00 FF 00 00 F9        ;
+F793 : FA 11 00 FF FF F7 9A           ;
 ;*************************************;
-; FDBPTR2 - 14bytes
-F79A : 02    "  "    oraa  X0002
-        ;
-F79B : 02 00 00    "   "    db  $02, $00, $00
-        ;
-F79E : FF 00 00    "   "    stx  X0000
-F7A1 : 46    "F"    rora
-F7A2 : 7D 11 00    "}  "    tst  X1100
-F7A5 : FF FF F7    "   "    stx  XFFF7
-F7A8 : 8B 
+; FDBPTR2 - 15 bytes
+F79A : 02 02 00 00 FF 00 00 46        ;
+F7A2 : 7D 11 00 FF FF F7 8B           ;
 ;*************************************;
-; FDBPTR2 - 14bytes
+; FDBPTR2 - 13 bytes
 F7A9 : 03 74 02 04 04 DC DB FB        ;
 F7B1 : 08 14 FB FF 0F                 ;
 ;*************************************;
