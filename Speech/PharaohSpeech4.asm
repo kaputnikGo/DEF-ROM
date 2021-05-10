@@ -16,7 +16,7 @@
         ;
         ;Pharaoh Speech ROM IC4
         ; 
-        ;update 09/May/2021
+        ;update 10/May/2021
         ;
 ;*
 ;* TALKING EQUATES
@@ -2642,7 +2642,10 @@ ECBE        LECBE:
 ECBE : 05    " "    db  $05
         ;
 ECBF : 08    " "    inx
-ECC0 : 9C 96    "  "    cpx  X0096
+ECC0 : 9C 
+;*************************************;
+; jmp call
+ECC1 : 96    "  "    cpx  X0096
 ECC2 : 90 26    " &"    suba  X0026
 ECC4        LECC4:
 ECC4 : 91 9C    "  "    cmpa  X009C
@@ -2656,6 +2659,8 @@ ECD0 : 8F    " "    db  $8F
         ;
 ECD1 : 9B 89    "  "    adda  X0089
 ECD3 : 07    " "    tpa
+;*************************************;
+; jmp call
 ECD4 : 92 9C    "  "    sbca  X009C
 ECD6 : 30    "0"    tsx
 ECD7 : 96 90    "  "    ldaa  X0090
@@ -2675,6 +2680,8 @@ ECE4 : 9F 9F    "  "    sts  X009F
 ECE6 : 9B 93    "  "    adda  X0093
 ECE8 : 97 30    " 0"    staa  X0030
 ECEA : 8C A4 1F    "   "    cpx  #$A41F
+;*************************************;
+; jmp call  11 bytes
 ECED : 91 9C    "  "    cmpa  X009C
 ECEF : 96 8E    "  "    ldaa  X008E
 ECF1 : A1 26    " &"    cmpa  $26,x
@@ -2682,7 +2689,8 @@ ECF3 : 81 26    " &"    cmpa  #$26
 ECF5 : 82 30    " 0"    sbca  #$30
         ;
 ECF7 : 03    " "    db  $03
-        ;
+;*************************************;
+; jmp call 13 bytes
 ECF8 : A2 84    "  "    sbca  $84,x
 ECFA : 8B 82    "  "    adda  #$82
 ECFC : 9B 89    "  "    adda  X0089
@@ -2692,6 +2700,8 @@ ECFE : 87    " "    db  $87
 ECFF : 9F 9F    "  "    sts  X009F
 ED01 : 30    "0"    tsx
 ED02 : 8C A4 1F    "   "    cpx  #$A41F
+;*************************************;
+; jmp call 14 bytes
 ED05 : 91 9C    "  "    cmpa  X009C
 ED07 : 26 96    "& "    bne  LEC9F
 ED09 : 90 26    " &"    suba  X0026
@@ -2699,10 +2709,13 @@ ED0B : 81 9B    "  "    cmpa  #$9B
 ED0D : 89 87    "  "    adca  #$87
 ED0F : 9F 9F    "  "    sts  X009F
 ED11 : 26 03    "& "    bne  LED16
+;*************************************;
+; jmp call 6 bytes
 ED13 : 8D A3    "  "    bsr  LECB8
 ED15 : 26 86    "& "    bne  LEC9D
 ED17 : 60 08    "` "    neg  $08,x
-ED19        XED19:
+;*************************************;
+; jmp call 8 bytes
 ED19 : 81 26    " &"    cmpa  #$26
 ED1B : 82 9B    "  "    sbca  #$9B
         ;
@@ -2711,19 +2724,23 @@ ED1D : 93    " "    db  $93
 ED1E : 97 26    " &"    staa  X0026
         ;
 ED20 : 03    " "    db  $03
-        ;
+;*************************************;
+; jmp call 9 bytes
 ED21 : A2 84    "  "    sbca  $84,x
 ED23 : 8B 82    "  "    adda  #$82
 ED25 : 9B 93    "  "    adda  X0093
 ED27 : 97 26    " &"    staa  X0026
         ;
 ED29 : 03    " "    db  $03
-        ;
+;*************************************;
+; jmp call 10 bytes
 ED2A : 81 9B    "  "    cmpa  #$9B
 ED2C : 89 87    "  "    adca  #$87
 ED2E : 9F 9F    "  "    sts  X009F
 ED30 : 26 8C    "& "    bne  LECBE
 ED32 : A4 1F    "  "    anda  $1F,x
+;*************************************;
+; jmp call 13 bytes
 ED34 : A2 84    "  "    sbca  $84,x
 ED36 : 8B 82    "  "    adda  #$82
 ED38 : 9B 89    "  "    adda  X0089
@@ -2733,13 +2750,23 @@ ED3A : 87    " "    db  $87
 ED3B : 9F 9F    "  "    sts  X009F
 ED3D : 26 85    "& "    bne  LECC4
 ED3F : 9E 1F    "  "    lds  X001F
+;*************************************;
+; jmp call 1 byte
 ED41 : 0A    " "    clv
+;*************************************;
+; jmp call 1 byte
 ED42 : 08    " "    inx
+;*************************************;
+; jmp call 3 bytes
 ED43 : 96 9D    "  "    ldaa  X009D
 ED45 : 0B    " "    sev
+;*************************************;
+; jmp call 6 bytes
 ED46 : 91 9C    "  "    cmpa  X009C
 ED48 : 9B 89    "  "    adda  X0089
 ED4A : A0 0B    "  "    suba  $0B,x
+;*************************************;
+; jmp call 20 bytes
 ED4C : 91 9C    "  "    cmpa  X009C
 ED4E : 96 8E    "  "    ldaa  X008E
 ED50 : A1 96    "  "    cmpa  $96,x
@@ -2750,6 +2777,8 @@ ED58 : 89 87    "  "    adca  #$87
 ED5A : 9F 9F    "  "    sts  X009F
 ED5C : 26 85    "& "    bne  LECE3
 ED5E : 9E 1F    "  "    lds  X001F
+;*************************************;
+; jmp call 8 bytes
 ED60 : 8A 26    " &"    oraa  #$26
 ED62 : 9A 26    " &"    oraa  X0026
         ;
@@ -2758,7 +2787,8 @@ ED64 : 8F    " "    db  $8F
 ED65 : 9B 89    "  "    adda  X0089
 ED67        LED67:
 ED67 : 07    " "    tpa
-ED68        XED68:
+;*************************************;
+; jmp call 20 bytes
 ED68 : 96 90    "  "    ldaa  X0090
 ED6A : 26 91    "& "    bne  LECFD
 ED6C : 9C 96    "  "    cpx  X0096
@@ -2774,6 +2804,8 @@ ED77 : 87    " "    db  $87
         ;
 ED78 : 9F 9F    "  "    sts  X009F
 ED7A : 26 03    "& "    bne  LED7F
+;*************************************;
+; jmp call 18 bytes
 ED7C : 91 9C    "  "    cmpa  X009C
 ED7E : 96 8E    "  "    ldaa  X008E
 ED80 : A1 96    "  "    cmpa  $96,x
@@ -2783,6 +2815,8 @@ ED86 : 9A 9B    "  "    oraa  X009B
 ED88 : 89 87    "  "    adca  #$87
 ED8A : 9F 9F    "  "    sts  X009F
 ED8C : 26 03    "& "    bne  LED91
+;*************************************;
+; jmp call 12 bytes
 ED8E : 91 9C    "  "    cmpa  X009C
 ED90 : 26 84    "& "    bne  LED16
 ED92 : 8B 89    "  "    adda  #$89
@@ -2792,6 +2826,8 @@ ED94 : 87    " "    db  $87
 ED95 : 9F 9F    "  "    sts  X009F
 ED97 : 50    "P"    negb
 ED98 : 85 1E    "  "    bita  #$1E
+;*************************************;
+; jmp call 10 bytes
 ED9A : 8A 60    " `"    oraa  #$60
 ED9C : 8A 60    " `"    oraa  #$60
 ED9E : 95 50    " P"    bita  X0050
@@ -2799,7 +2835,7 @@ EDA0 : 95 50    " P"    bita  X0050
         ;
 EDA2 : 15 15    "  "    db  $15, $15
 ;*************************************;
-;LEDA4:
+;LEDA4 called by TALKD
 EDA4 : A5 FF    "  "    bita  $FF,x
 EDA6 : 96 90    "  "    ldaa  X0090
 EDA8 : 91 9C    "  "    cmpa  X009C
@@ -2940,49 +2976,30 @@ EE64 : AF B0    "  "    sts  $B0,x
         ;
 EE66 : 00 
 ;*************************************;
-;LEE67
-EE67 : EC    "  "    db  $00, $EC
-        ;
-EE68 : C1 EC    "  "    cmpb  #$EC
-EE6A : C1 EC    "  "    cmpb  #$EC
-EE6C : D4 EC    "  "    andb  X00EC
-        ;
-EE6E : ED ED 13 ED  "    "    db  $ED, $ED, $13, $ED
-EE72 : 05 EC    "  "    db  $05, $EC
-        ;
-EE74 : F8 ED 19    "   "    eorb  XED19
-        ;
-EE77 : ED 21 ED    " ! "    db  $ED, $21, $ED
-        ;
-EE7A : 2A ED    "* "    bpl  LEE69
-EE7C : 34    "4"    des
-        ;
-EE7D : ED    " "    db  $ED
-        ;
-EE7E : 60 ED    "` "    neg  $ED,x
-        ;
-EE80 : 42 ED    "B "    db  $42, $ED
-        ;
-EE82 : 43    "C"    coma
-        ;
-EE83 : ED    " "    db  $ED
-        ;
-EE84 : 46    "F"    rora
-        ;
-EE85 : ED    " "    db  $ED
-        ;
-EE86 : 4C    "L"    inca
-        ;
-EE87 : ED    " "    db  $ED
-        ;
-EE88 : 7C ED 68    "| h"    inc  XED68
-        ;
-EE8B : ED    " "    db  $ED
-        ;
-EE8C : 9A ED    "  "    oraa  X00ED
-EE8E : 8E ED 41    "  A"    lds  #$ED41
+;LEE67 called by TP11 (possible jumps?)
+EE67 : EC C1 
+EE69 : EC C1 
+EE6B : EC D4 
+EE6D : EC ED 
+EE6F : ED 13 
+EE71 : ED 05 
+EE73 : EC F8 
+EE75 : ED 19 
+EE77 : ED 21 
+EE79 : ED 2A 
+EE7B : ED 34
+EE7D : ED 60 
+EE7F : ED 42 
+EE81 : ED 43 
+EE83 : ED 46 
+EE85 : ED 4C 
+EE87 : ED 7C 
+EE89 : ED 68 
+EE8B : ED 9A 
+EE8D : ED 8E 
+EE8F : ED 41 
 ;*************************************;
-;
+;called by TKIRQ
 EE91 : ED A3 00    "   "    db  $ED, $A3, $00
         ;
 EE94 : 01    " "    nop
@@ -3038,7 +3055,7 @@ EEBE : 16    " "    tab
 EEBF : 00    " "    db  $00
         ;
 EEC0 : 17    " "    tba
-        ;
+
 EEC1 : 00 18 00    "   "    db  $00, $18, $00
         ;
 EEC4 : 19    " "    daa
@@ -3095,176 +3112,189 @@ EEFA : 2D    "-"                      ;-
 ;TALKD
 EEFB : CE ED A4   ldx #$EDA4          ;load X with EDA4h
 EEFE : 7F 00 04   clr $0004           ;clear addr 0004
-EF01 : 20 65      bra  LEF68          ;branch always 
+EF01 : 20 65      bra  LEF68          ;branch always TP1LP4
 ;*************************************;
-; TALKING Param
+; TALKING IRQ processing
 ;*************************************;
-;TLKPRM
+;TKIRQ
 EF03 : CE EE 91   ldx  #$EE91         ;load X with EE91h
-EF06 : 97 01      staa  X0001
-EF08 : 97 05      staa  X0005
-EF0A : 84 1F      anda  #$1F
-EF0C : 27 0A      beq  LEF18          ;branch Z=0 TLKLD1
-EF0E : 48         asla
+EF06 : 97 01      staa  $01           ;store A in addr 01
+EF08 : 97 05      staa  $05           ;store A in addr 05
+EF0A : 84 1F      anda  #$1F          ;and A with 1Fh
+EF0C : 27 0A      beq  LEF18          ;branch Z=0 TKIRQ1
+EF0E : 48         asla                ;arith shift left A
 EF0F : BD FF F3   jsr  LFFF3          ;jump sub Sound ROM (jmp to ADDX)
-EF12 : E6 01      ldab  $01,x
-EF14 : D7 04      stab  X0004
-EF16 : A6 00      ldaa  $00,x
-;TLKLD1 LEF18:
-EF18 : 27 79      beq  LEF93          ;branch Z=1 
+EF12 : E6 01      ldab  $01,x         ;load B with addr X+01h
+EF14 : D7 04      stab  $04           ;store B with addr 04
+EF16 : A6 00      ldaa  $00,x         ;load A with addr X+00h
+;TKIRQ1 LEF18:
+EF18 : 27 79      beq  LEF93          ;branch Z=1 TP12
 EF1A : 0E         cli                 ;clear interrputs I=0
-EF1B : 81 01      cmpa  #$01
-EF1D : 27 0C      beq  LEF2B          ;branch Z=1 TLKLD2
-EF1F : 81 0A      cmpa  #$0A
-EF21 : 27 08      beq  LEF2B          ;branch Z=1 TLKLD2
-EF23 : 81 0F      cmpa  #$0F
-EF25 : 27 04      beq  LEF2B          ;branch Z=1 TLKLD2
-EF27 : 81 14      cmpa  #$14
-EF29 : 26 08      bne  LEF33          ;branch Z=0 
-;TLKLD2 LEF2B:
-EF2B : 73 00 03   com  X0003
-EF2E : 2B 21      bmi  LEF51          ;branch N=1
-EF30 : 4C         inca
-EF31 : 20 1E      bra  LEF51          ;branch always
-;TLKLD3 LEF33:
-EF33 : 81 03      cmpa  #$03
-EF35 : 27 04      beq  LEF3B          ;branch Z=1
-EF37 : 81 06      cmpa  #$06
-EF39 : 26 16      bne  LEF51          ;branch Z=0
+EF1B : 81 01      cmpa  #$01          ;compare A with 01h
+EF1D : 27 0C      beq  LEF2B          ;branch Z=1 TKIRQ2
+EF1F : 81 0A      cmpa  #$0A          ;compare A with 0Ah
+EF21 : 27 08      beq  LEF2B          ;branch Z=1 TKIRQ2
+EF23 : 81 0F      cmpa  #$0F          ;compare A with 0Fh
+EF25 : 27 04      beq  LEF2B          ;branch Z=1 TKIRQ2
+EF27 : 81 14      cmpa  #$14          ;compare A with 14h
+EF29 : 26 08      bne  LEF33          ;branch Z=0 TKIRQ3
+;TKIRQ2 LEF2B:
+EF2B : 73 00 03   com  $0003          ;complement 1s in 0003
+EF2E : 2B 21      bmi  LEF51          ;branch N=1 TP11
+EF30 : 4C         inca                ;incr A
+EF31 : 20 1E      bra  LEF51          ;branch always TP11
+;TKIRQ3 LEF33:
+EF33 : 81 03      cmpa  #$03          ;compare A with 03h
+EF35 : 27 04      beq  LEF3B          ;branch Z=1 TKPRM1
+EF37 : 81 06      cmpa  #$06          ;compare A with 06h
+EF39 : 26 16      bne  LEF51          ;branch Z=0 TP11
 ;*************************************;
-;LEF3B:
+; TALKING param 1
+;*************************************;
+;TKPRM1 LEF3B:
 EF3B : CE B0 00   ldx  #$B000         ;load X B000h (Speech ROM IC7)
 EF3E : 36         psha                ;push A into stack then SP-1
-EF3F : 96 15      ldaa  X0015
-;LEF41:
-EF41 : 08         inx
-EF42 : BD FF F3   jsr  LFFF3          ;jump sub Sound ROM (jmp to ADDX)
-EF45 : E6 00      ldab  $00,x
-EF47 : C4 03      andb  #$03
-EF49 : D1 02      cmpb  X0002
-EF4B : 27 F4      beq  LEF41          ;branch Z=1 
+EF3F : 96 15      ldaa  $15           ;load A with addr 15
+;TP1LP1 LEF41:
+EF41 : 08         inx                 ;incr X
+EF42 : BD FF F3   jsr  LFFF3          ;jump sub Sound ROM (jmps to ADDX)
+EF45 : E6 00      ldab  $00,x         ;load B with addr X+00h
+EF47 : C4 03      andb  #$03          ;and B with 03h
+EF49 : D1 02      cmpb  $02           ;compare B with addr 02
+EF4B : 27 F4      beq  LEF41          ;branch Z=1 TP1LP1
 EF4D : 32         pula                ;SP+1 pull stack into A
-EF4E : D7 02      stab  X0002
-EF50 : 1B         aba
-;LEF51:
-EF51 : 48         asla
+EF4E : D7 02      stab  $02           ;store B with addr 02
+EF50 : 1B         aba                 ;add A with B
+;TP11 LEF51:
+EF51 : 48         asla                ;arith shift left A
 EF52 : CE EE 67   ldx  #$EE67         ;load X with EE67h
 EF55 : BD FF F3   jsr  LFFF3          ;jump sub Sound ROM (jmp to ADDX)
-EF58 : EE 00      ldx  $00,x
-EF5A : 86 C8      ldaa  #$C8
-;LEF5C:
-EF5C : 8D 5D      bsr  LEFBB          ;branch sub
-EF5E : 4A         deca
-EF5F : 26 FB      bne  LEF5C          ;branch Z=0
-EF61 : 86 C8      ldaa  #$C8
-;LEF63:
-EF63 : 8D 56      bsr  LEFBB          ;branch sub
-EF65 : 4A         deca
-EF66 : 26 FB      bne  LEF63          ;branch Z=0
-;LEF68:
-EF68 : DF 0A      stx  X000A
-EF6A : A6 00      ldaa  $00,x
-EF6C : 84 7F      anda  #$7F
-EF6E : 81 25      cmpa  #$25
-EF70 : 22 23      bhi  LEF95          ;branch C+Z=0
-EF72 : 48         asla
-EF73 : 48         asla
+EF58 : EE 00      ldx  $00,x          ;load X with addr X+00h
+EF5A : 86 C8      ldaa  #$C8          ;load A with C8h
+;TP1LP2 LEF5C:
+EF5C : 8D 5D      bsr  LEFBB          ;branch sub TKCD
+EF5E : 4A         deca                ;decr A
+EF5F : 26 FB      bne  LEF5C          ;branch Z=0 TP1LP2
+EF61 : 86 C8      ldaa  #$C8          ;load A with C8h
+;TP1LP3 LEF63:
+EF63 : 8D 56      bsr  LEFBB          ;branch sub TKCD
+EF65 : 4A         deca                ;decr A
+EF66 : 26 FB      bne  LEF63          ;branch Z=0 TP1LP3
+;TP1LP4 LEF68:
+EF68 : DF 0A      stx  $0A            ;store X in addr 0A
+EF6A : A6 00      ldaa  $00,x         ;load A with addr X+00h
+EF6C : 84 7F      anda  #$7F          ;and A with 7Fh
+EF6E : 81 25      cmpa  #$25          ;compare A with 25h
+EF70 : 22 23      bhi  LEF95          ;branch C+Z=0 TP13
+EF72 : 48         asla                ;arith shift left A
+EF73 : 48         asla                ;arith shift left A
 EF74 : CE ED D1   ldx  #$EDD1         ;load X with EDD1h
 EF77 : BD FF F3   jsr  LFFF3          ;jump sub Sound ROM (jmp to ADDX)
-EF7A : DF 0C      stx  X000C
-EF7C : EE 00      ldx  $00,x
-EF7E : DF 06      stx  X0006
-EF80 : DE 0C      ldx  X000C
-EF82 : EE 02      ldx  $02,x
-EF84 : DF 08      stx  X0008
-EF86 : 8D 39      bsr  LEFC1          ;branch sub
-;LEF88:
-EF88 : DE 0A      ldx  X000A
-EF8A : A6 00      ldaa  $00,x
-EF8C : 81 25      cmpa  #$25
-EF8E : 23 10      bls  LEFA0          ;branch C+Z=1
-EF90 : 08         inx
-EF91 : 20 D5      bra  LEF68          ;branch always
-;LEF93:
-EF93 : 20 12      bra  LEFA7          ;branch always
-;*************************************;
-;LEF95:
-EF95 : A6 00      ldaa  $00,x
-LEF97:
-EF97 : 8D 22      bsr  LEFBB          ;branch sub
-EF99 : 4A         deca
-EF9A : 26 FB      bne  LEF97          ;branch Z=0
-EF9C : 97 01      staa  X0001
-EF9E : 20 E8      bra  LEF88          ;branch always
+EF7A : DF 0C      stx  $0C            ;store X in addr 0C
+EF7C : EE 00      ldx  $00,x          ;load X with addr X+00h
+EF7E : DF 06      stx  $06            ;store X in addr 06
+EF80 : DE 0C      ldx  $0C            ;load X with addr 0C
+EF82 : EE 02      ldx  $02,x          ;load X with addr X+02h
+EF84 : DF 08      stx  $08            ;store X in addr 08
+EF86 : 8D 39      bsr  LEFC1          ;branch sub TKSC
 ;
-;LEFA0:
-EFA0 : 86 64      ldaa  #$64
-;LEFA2:
-EFA2 : 8D 17      bsr  LEFBB          ;branch sub
-EFA4 : 4A         deca
-EFA5 : 26 FB      bne  LEFA2          ;branch Z=0
-;LEFA7:
-EFA7 : 96 01      ldaa  X0001
-EFA9 : 7D 00 05   tst  X0005
-EFAC : 26 02      bne  LEFB0          ;branch Z=0
-EFAE : 96 04      ldaa  X0004
-;LEFB0:
+;TP1LP5 LEF88 main loop
+EF88 : DE 0A      ldx  $0A            ;load X with addr 0A
+EF8A : A6 00      ldaa  $00,x         ;load A with X+00h
+EF8C : 81 25      cmpa  #$25          ;compare A with 25h
+EF8E : 23 10      bls  LEFA0          ;branch C+Z=1 TKPRM2
+EF90 : 08         inx                 ;incr X
+EF91 : 20 D5      bra  LEF68          ;branch always TP1LP4
+;
+;TP12 LEF93:
+EF93 : 20 12      bra  LEFA7          ;branch always TP21
+;
+;TP13 LEF95:
+EF95 : A6 00      ldaa  $00,x         ;load A with X+00h
+;TP1LP6 LEF97 count down A loop
+EF97 : 8D 22      bsr  LEFBB          ;branch sub TKCD
+EF99 : 4A         deca                ;decr A
+EF9A : 26 FB      bne  LEF97          ;branch Z=0 TP1LP6
+;
+EF9C : 97 01      staa  $01           ;store A in addr 01
+EF9E : 20 E8      bra  LEF88          ;branch always TP1LP5
+;*************************************;
+;TALKING param 2
+;*************************************;
+;TKPRM2 LEFA0:
+EFA0 : 86 64      ldaa  #$64          ;load A with 64h
+;TP2LP1 LEFA2 count down A loop
+EFA2 : 8D 17      bsr  LEFBB          ;branch sub TKCD
+EFA4 : 4A         deca                ;decr A
+EFA5 : 26 FB      bne  LEFA2          ;branch Z=0 TP2LP1
+;TP21 LEFA7:
+EFA7 : 96 01      ldaa  $01           ;load A with addr 01
+EFA9 : 7D 00 05   tst  $0005          ;test addr 0005
+EFAC : 26 02      bne  LEFB0          ;branch Z=0 TP22
+EFAE : 96 04      ldaa  $04           ;load A with addr 04
+;TP22 LEFB0:
 EFB0 : F6 04 02   ldab  $0402         ;load B with PIA sound select
-EFB3 : 0E         cli
+EFB3 : 0E         cli                 ;clear interrupts I=0
 EFB4 : BD FF F0   jsr  LFFF0          ;jump sub Sound ROM (IRQ11)
-EFB7 : 7F 00 00   clr  X0000
-EFBA : 39         rts
+EFB7 : 7F 00 00   clr  $X0000         ;clear addr 0000
+EFBA : 39         rts                 ;return subroutine
 ;*************************************;
-;LEFBB:
-EFBB : C6 49      ldab  #$49
-;LEFBD:
-EFBD : 5A         decb
-EFBE : 26 FD      bne  LEFBD          ;branch Z=0
-EFC0 : 39         rts
-;
-;LEFC1:
-EFC1 : DE 06      ldx  X0006
-EFC3 : A6 00      ldaa  $00,x
-EFC5 : 81 AA      cmpa  #$AA
-EFC7 : 26 19      bne  LEFE2          ;branch Z=0
-EFC9 : 7F 00 05   clr  X0005
-EFCC : 08         inx
-EFCD : C6 01      ldab  #$01
-;LEFCF:
-EFCF : 86 3F      ldaa  #$3F
-EFD1 : B7 04 03   staa  $0403         ;store A in PIA CR port B
-EFD4 : 84 F7      anda  #$F7
-EFD6 : B7 04 03   staa  $0403         ;store A in PIA CR port B
-EFD9 : 58         aslb
-EFDA : 26 07      bne  LEFE3          ;branch Z=0
-EFDC : 59         rolb
-EFDD : 08         inx
-EFDE : 9C 08      cpx  X0008
-EFE0 : 26 05      bne  LEFE7          ;branch Z=0
-;LEFE2:
-EFE2 : 39         rts                 ;
-;
-;LEFE3:
-EFE3 : 6D 00      tst  $00,x
-EFE5 : 6D 00      tst  $00,x
-;LEFE7:
-EFE7 : E5 00      bitb  $00,x
-EFE9 : 27 07      beq  LEFF2          ;branch Z=1
-EFEB : 86 3C      ldaa  #$3C
-EFED : B7 04 01   staa  $0401         ;store A in PIA sound select
-EFF0 : 20 DD      bra  LEFCF          ;branch always
-;
-;LEFF2:
-EFF2 : 86 34      ldaa  #$34
-EFF4 : B7 04 01   staa  $0401         ;store A in PIA sound select
-EFF7 : 20 D6      bra  LEFCF          ;branch always
-        ;
-EFF9 : 00         db  $00
+;TALKING count down loop
+;*************************************;
+;TKCD LEFBB:
+EFBB : C6 49      ldab  #$49          ;load B with 49h (#73)
+;TKCDLP LEFBD:
+EFBD : 5A         decb                ;decr B
+EFBE : 26 FD      bne  LEFBD          ;branch Z=0 TKCDLP
+EFC0 : 39         rts                 ;return subroutine
+;*************************************;
+;TALKING speech clock (0403)
+;*************************************;
+;TKSC LEFC1:
+EFC1 : DE 06      ldx  $06            ;load X with 06
+EFC3 : A6 00      ldaa  $00,x         ;load A with X+00h
+EFC5 : 81 AA      cmpa  #$AA          ;compare A with AAh
+EFC7 : 26 19      bne  LEFE2          ;branch Z=0 TKSCX
+EFC9 : 7F 00 05   clr  $0005          ;clear 0005
+EFCC : 08         inx                 ;incr X
+EFCD : C6 01      ldab  #$01          ;load B with 01h
+;TKSC1 LEFCF:
+EFCF : 86 3F      ldaa  #$3F          ;load A with 3Fh (0011 1111)
+EFD1 : B7 04 03   staa  $0403         ;store A (3fh) in PIA CR port B (CB2 - speech clock)
+EFD4 : 84 F7      anda  #$F7          ;and A with F7h (1111 0111)
+EFD6 : B7 04 03   staa  $0403         ;store A (F7h) in PIA CR port B (CB2 - speech clock)
+EFD9 : 58         aslb                ;arith shift left B
+EFDA : 26 07      bne  LEFE3          ;branch Z=0 TKSD
+EFDC : 59         rolb                ;rotate left B
+EFDD : 08         inx                 ;incr X
+EFDE : 9C 08      cpx  $08            ;compare X with addr 08
+EFE0 : 26 05      bne  LEFE7          ;branch Z=0 TKSD1
+;TKSCX LEFE2:
+EFE2 : 39         rts                 ;return subroutine
+;*************************************;
+;TALKING speech data (0401)
+;*************************************;
+;TKSD LEFE3:
+EFE3 : 6D 00      tst  $00,x          ;test X+00h
+EFE5 : 6D 00      tst  $00,x          ;test X+00h
+;TKSD1 LEFE7:
+EFE7 : E5 00      bitb  $00,x         ;bit test B with X+00h
+EFE9 : 27 07      beq  LEFF2          ;branch Z=1 TKSD2
+EFEB : 86 3C      ldaa  #$3C          ;load A with 3Ch (0011 1100)
+EFED : B7 04 01   staa  $0401         ;store A (3Ch) in PIA sound select (CA2 - speech data)
+EFF0 : 20 DD      bra  LEFCF          ;branch always TKSC1
+;TKSD2 LEFF2:
+EFF2 : 86 34      ldaa  #$34          ;load A with 34h (0011 0100)
+EFF4 : B7 04 01   staa  $0401         ;store A (34h) in PIA sound select (CA2 - speech data)
+EFF7 : 20 D6      bra  LEFCF          ;branch always TKSC1
+;*************************************;
+; zero padding
+EFF9 : 00                             ;
 ;*************************************;
 ;ENTRY (from Sound ROM)
 ;*************************************;
 EFFA : 7E EE FB    jmp  LEEFB         ;ENTRY FOR DIAGNOSTICS
-EFFD : 7E EF 03    jmp  LEF03         ;ENTRY TO TALKING
+EFFD : 7E EF 03    jmp  LEF03         ;ENTRY TO TALKING (TKIRQ)
 
 ;--------------------------------------------------------------
 
