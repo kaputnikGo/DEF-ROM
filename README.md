@@ -17,6 +17,7 @@ Examining and experimenting with the 2716/2532 ROM code from Williams Electronic
 - Hyperball : ROM 8. 1981. Flipperless
 - Rat Race : 1983. 10 made, non-production
 - Thunderball : 1982. 10 made, non-production, with Speech ROMs
+- Firepower : ROM 6. 1979/80, speech ROMs
 
 
 
