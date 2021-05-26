@@ -1,0 +1,826 @@
+All files copyright Williams Electronics Inc
+
+List of Synths per ROM/Game (in order of appearance in ROM):
+(synth has an output)
+
+;TODO  
+;find a name based on function for SYNTHs with no sources
+;separate asm files for complete each Synth + its params and any tables
+; find earliest implementation of Walsh Function Sound Machine V2 (December 1981, Hyperball)
+
+temp    : new name
+none    : PSing - early version (pre) of Delta F, Delta A Routine
+SYNTHA  : ??
+SYNTH2  : PTilt - early version (pre) of Tilt
+SYNTH3  : PLiten - early version (pre) of Lightning+Appear Noise Routine
+SYNTH6  : Pulse -  using SND,NOT,WAV tables of amp,length,freq
+SYNTH10 : Tilt (low ramp down)
+-
+SYNTH1  : PGWave - early version (pre) of GWave (ROM 2 only)
+-
+Sinistar:
+SYNTH22 : (no source)
+SYNTH23 : Stacker1 - 2 stack pula/psha loops with com DAC, no tables, link NMI only(no source)(white noise blast)
+SYNTH24 : Stacker2 - 2 stack pula/psha loops with com DAC, no tables, 10 loops(no source)(white noise blast)
+SYNTH25 : - 4x com 1s to DAC(no source)
+
+
+Notes:
+Vari : VARIABLE DUTY CYCLE SQUARE WAVE ROUTINE
+Noise with Whistle Routine : Full version or Half version with no "Noise With Whistle Main Loop"
+
+Robotron 2084 has 18 different sound output routines, largest of any production ROM.
+Rat Race has 20 different routines.
+
+Notes about PROMS (pre ROM 1) as 512 byte code, multiplied x4 to fit into a 2716.
+All have slighlty different code layouts for each game. Dasmx checksum will be for the 2716 unless noted otherwise.
+Also PIA/DAC addr is 8400 or 0400, assuming on sound board that addr above $400 is ignored, as marked on some schematics.
+
+______________________________________________
+Disassembled by:
+DASMx object code disassembler
+(c) Copyright 1996-2003   Conquest Consultants
+Version 1.40 (Oct 18 2003)
+(also generates Checksum and CRC-32)
+______________________________________________
+
+
+
+WILLIAMS ROUTINE LIST (in order of appearance)
+26 synth routines in total
+note: [size] is of SOUND routine only, not any parameter loaders or data tables
+
+[NAME]                              [ROM#]    [size]        [PARAMS]    [TABLES]    [UTILITY]   [IRQ]       [JMPTBL]    [ZERO]
+World Cup - March 1978                                                              30 bytes    66 bytes    16 bytes    8 bytes
+SYNTHA (no source)                  [PROM 1]  [28 bytes]    66 bytes    20 bytes
+PSing (no source)                   [PROM 1]  [85 bytes]    0           48 bytes
+PTilt (no source)                   [PROM 1]  [33 bytes]    0           0
+
+Disco Fever - June 1978                                                             42 bytes    61 bytes    18 bytes    6 bytes
+Delta F, Delta A Routine            [PROM 1]  [90 bytes]    165 bytes   66 bytes
+
+Flash - October 1978                                                                60 bytes    78 bytes    48 bytes    721 bytes
+Three Oscillator Sound Generator    [ROM 1]   [156 bytes]   118 bytes   168 bytes
+Echo And Decay Routine              [ROM 1]   [12 bytes]    0           0
+Diving Plane Sound                  [ROM 1]   [31 bytes]    0           0
+PLiten (no source)                  [ROM 1]   [44 bytes]    14 bytes    0
+Funny "Electric Sound"              [ROM 1]   [71 bytes]    0           0
+Pulse (no source)                   [ROM 1]   [94 bytes]    35 bytes    46 bytes
+
+Gorgar - December 1979                                                              60 bytes    172 bytes   16 bytes    51 bytes
+Knocker routine                     [ROM 2]   [76 bytes]    0           30 bytes
+PGWave (no source)                  [ROM 2]   [93 bytes]    324 bytes   571 bytes
+Tilt (no source)                    [ROM 2]   [28 bytes]    0           0
+
+Firepower - February 1980                                                           35 bytes    149 bytes   20 bytes    99 bytes
+Vari                                [ROM 3]   [76 bytes]    117 bytes   90 bytes
+Lightning+Appear Noise Routine      [ROM 3]   [46 bytes]    18 bytes    0
+White Noise Routine                 [ROM 3]   [54 bytes]    15 bytes    0
+GWave                               [ROM 3]   [143 bytes]   185 bytes   514 bytes
+
+Defender Video -  September 1980                                                    34 bytes    107 bytes   30 bytes    3 bytes
+Organ (Note+Tune)                   [VROM 1]  [47 bytes]    151 bytes   162 bytes
+Filtered Noise Routine              [VROM 1]  [118 bytes]   29 bytes    0
+Radio                               [VROM 1]  [46 bytes]    0           16 bytes
+Hyper                               [VROM 1]  [31 bytes]    0           0
+Scream                              [VROM 1]  [81 bytes]    0           0 
+
+Black Knight - November 1980                                                        54 bytes    166 bytes   18 bytes    46 bytes
+Noise with Whistle Routine (Full)   [ROM 5]   [318 bytes]   113 bytes   51 bytes
+
+Solar Fire - July 1981                                                              33 bytes    120 bytes   24 bytes    57 bytes
+Ziren                               [ROM 7]   [92 bytes]    0           0
+Whist (THE BOMB OOOOOH NOOOOO!)     [ROM 7]   [51 bytes]    0           64 bytes
+
+Hyperball - December 1981                                                           35 bytes    60 bytes    12 bytes    1256 bytes
+Walsh Function Sound Machine V2     [ROM 8]   [966 bytes]   57 bytes    18 bytes
+
+
+
+#####################################################################
+PINBALL GAMES
+
+;*************************************;
+PROM 1 (World Cup) March 1978 (Sys 3)
+Size:    512 bytes
+Checksum:  B959
+CRC-32:    6C58F0F4
+ORG: $7E00
+DAC: $0400
+;-------------------------------------;
+SYNTHA (no source)
+PSing (no source)
+PTilt (no source)
+
+
+;*************************************;
+PROM 1x4 (Contact) May 1978 (Sys 3)
+Size:    2048 bytes (4xROM code)
+Checksum:  D78C
+CRC-32:    D3C713DA
+ORG: $7E00
+DAC: $0400
+;-------------------------------------;
+SYNTHA (no source)
+PTilt(no source)
+[No NMI routine]
+
+
+
+;*************************************;
+PROM 1 (Disco Fever) June 1978 (Sys 3)
+Size:    512 bytes
+Checksum:  C8AC
+CRC-32:    4D8F6A3C
+ORG: $7E00
+DAC: $8400
+;-------------------------------------;
+PTilt(no source)
+Delta F, Delta A Routine
+[No NMI routine]
+
+
+;*************************************;
+PROM 1x4 (Phoenix) August 1978 (Sys 4)
+Size:    2048 bytes (4xROM code)
+Checksum:  0A2C
+CRC-32:    1C3DEA6E
+ORG: $7E00
+DAC: $0400
+;-------------------------------------;
+Delta F, Delta A Routine
+PTilt(no source)
+[No NMI routine]
+
+
+;*************************************;
+PROM 1x4 (Pokerino) November 1978 (Sys 4)
+Size:    2048 bytes (4xROM code)
+Checksum:  1BC0
+CRC-32:    5DE02E62
+ORG: $7E00
+DAC: $8400
+;-------------------------------------;
+Delta F, Delta A Routine
+PTilt(no source)
+
+
+
+;*************************************;
+ROM 1 (Contact) May 1978 (Sys 3)
+Size:  2048 bytes
+Checksum: E106
+CRC-32:  F4190CA3
+ORG: $7800
+DAC: $8400
+;*************************************;
+ROM 1 (Flash) October 1978 (Sys 4)
+Size:  2048 bytes
+Checksum: E106
+CRC-32:  F4190CA3
+ORG: $7800
+DAC: $8400
+;*************************************;
+ROM 1 (Stellar Wars) March 1979 (Sys 6)
+Size:    2048 bytes
+Checksum:  E106
+CRC-32:    F4190CA3
+ORG: $7800
+DAC: $8400
+;*************************************;
+ROM 1 (Tri Zone) July 1979 (Sys 6)
+Size:    2048 bytes
+Checksum:  E106
+CRC-32:    F4190CA3
+ORG: $7800
+DAC: $8400
+;*************************************;
+ROM 1 (Time Warp) September 1979 (Sys 6)
+Size:  2048 bytes
+Checksum: E106
+CRC-32:  F4190CA3
+ORG: $7800
+DAC: $8400
+;*************************************;
+ROM 1 (Scorpion) July 1980 (Sys 6)
+Size:  2048 bytes
+Checksum: E106
+CRC-32:  F4190CA3
+ORG: $7800
+DAC: $8400
+;-------------------------------------;
+Three Oscillator Sound Generator
+Echo And Decay Routine
+Diving Plane Sound
+PTilt (no source)
+PLiten (no source)
+Funny "Electric Sound"
+Delta F, Delta A Routine
+Pulse (no source)
+
+
+
+;*************************************;
+ROM 2 (Gorgar, speech) December 1979 (Sys 6)
+Size:    2048 bytes
+Checksum:  EC44
+CRC-32:    C9103A68
+ORG: $F800
+DAC: $0400
+;*************************************;
+ROM 2 (Laser Ball) December 1979 (Sys 6)
+Size:    2048 bytes
+Checksum:  EC44
+CRC-32:    C9103A68
+ORG: $F800
+DAC: $0400
+;*************************************;
+ROM 2 (Blackout, speech) June 1980 (Sys 6)
+Size:    2048 bytes
+Checksum:  EC44
+CRC-32:    C9103A68
+ORG: $F800
+DAC: $0400
+;*************************************;
+ROM 2 (Alien Poker, speech) October 1980 (Sys 6)
+Size:    2048 bytes
+Checksum:  EC44
+CRC-32:    C9103A68
+ORG: $F800
+DAC: $0400
+;-------------------------------------;
+Three Oscillator Sound Generator
+Echo And Decay Routine
+PLiten (no source)
+Pulse (no source)
+Knocker routine
+PGWave (no source)
+Tilt (no source)
+
+
+
+
+;*************************************;
+ROM 3 (Firepower, speech) February 1980 (Sys 6)
+Size:    2048 bytes
+Checksum:  BDCA
+CRC-32:    55A10D13
+ORG: $F800
+DAC: $0400
+;*************************************;
+ROM 3 (Jungle Lord, speech) February 1981 (Sys 7)
+Size:    2048 bytes
+Checksum:  BDCA
+CRC-32:    55A10D13
+ORG: $F800
+DAC: $0400
+;*************************************;
+ROM 3 (Firepower II) July 1983 (Sys 7)
+Size:    2048 bytes
+Checksum:  BDCA
+CRC-32:    55A10D13
+ORG: $F800
+DAC: $0400
+;*************************************;
+ROM 3 (Star Light) June 1984 (Sys 7)
+Size:    2048 bytes
+Checksum:  BDCA
+CRC-32:    55A10D13
+ORG: $F800
+DAC: $0400
+;-------------------------------------;
+Vari
+Lightning+Appear Noise Routine
+White Noise Routine
+Pulse (no source)
+Knocker routine
+GWave
+Tilt (no source)
+
+
+
+;*************************************;
+ROM 4 (Algar) September 1980 (Sys 6A)
+Size:    2048 bytes
+Checksum:  C440
+CRC-32:    67EA12E7
+ORG: $F800
+DAC: $0400
+;*************************************;
+ROM 4 (Barracora) September 1981 (Sys 7)
+Size:    2048 bytes
+Checksum:  C440
+CRC-32:    67EA12E7
+ORG: $F800
+DAC: $0400
+;-------------------------------------;
+Vari
+Lightning+Appear Noise Routine
+White Noise Routine
+Pulse (no source)
+Knocker Routine
+GWave
+Tilt (no source)
+
+
+
+;*************************************;
+ROM 5 (Black Knight, speech) November 1980 (Sys 6)
+Size:    2048 bytes
+Checksum:  DD2F
+CRC-32:    6D454C0E
+ORG: $F800
+DAC: $0400
+;-------------------------------------;
+Vari
+Noise with Whistle Routine (Full)
+Knocker Routine
+GWave
+Tilt (no source)
+
+
+
+;*************************************;
+ROM 6 (Pharaoh, speech) May 1981 (Sys 7)
+Size:    2048 bytes
+Checksum:  BF93
+CRC-32:    B0E3A04B
+ORG: $F800
+DAC: $0400
+;-------------------------------------;
+Vari
+Organ (Tune)
+Knocker routine
+GWave
+Tilt (no source)
+
+
+
+;*************************************;
+ROM 7 (Solar Fire) July 1981 (Sys 7)
+Size:    2048 bytes
+Checksum:  DA1D
+CRC-32:    05A2230C
+ORG: $F800
+DAC: $0400
+;-------------------------------------;
+Vari
+Ziren
+Lightning+Appear Noise Routine
+Noise with Whistle Routine (Half)
+Whist (THE BOMB OOOOOH NOOOOO!)
+GWave
+Knocker routine
+Tilt (no source)
+
+
+
+;*************************************;
+ROM 8 (Hyperball) December 1981 (Sys 7)
+Size:    4096 bytes
+Checksum:  25A8
+CRC-32:    06051E5E
+ORG: $F000
+DAC: $0400
+;-------------------------------------;
+Walsh Function Sound Machine V2
+Tilt (no source)
+Filtered Noise Routine
+Radio
+Hyper
+Lightning+Appear Noise Routine
+White Noise Routine
+Vari
+GWave
+
+
+
+;*************************************;
+ROM 9
+;-------------------------------------;
+
+** unknown **
+
+
+
+;*************************************;
+ROM 10 (Varkon) September 1982 (Sys 7)
+Size:    2048 bytes
+Checksum:  A694
+CRC-32:    D13DB2BB
+ORG: $F800
+DAC: $0400
+;-------------------------------------;
+Vari
+GWave
+Tilt
+Lightning+Appear Noise Routine 
+Filtered Noise Routine 
+
+
+
+;*************************************;
+ROM 11
+;-------------------------------------;
+
+** unknown **
+
+
+
+;*************************************;
+ROM 12 (Cosmic Gunfight) June 1982 (Sys 7)
+Size:    2048 bytes
+Checksum:  ABDE
+CRC-32:    AF41737B
+ORG: $F800
+DAC: $0400
+;-------------------------------------;
+Vari
+Lightning+Appear Noise Routine
+White Noise Routine
+Knocker Routine
+GWave
+Tilt (no source)
+
+
+
+;*************************************;
+ROM 13 (Time Fantasy) March 1983 (Sys 7) - NB. same ROM CRC,checksum as Firepower
+Size:    2048 bytes
+Checksum:  BDCA
+CRC-32:    55A10D13
+ORG: $F800
+DAC: $0400
+;-------------------------------------;
+Vari
+Lightning+Appear Noise Routine
+White Noise Routine 
+Pulse (no source)
+Knocker Routine
+GWave
+Tilt (no source)
+
+
+
+;*************************************;
+ROM 14 (Warlok) October 1982 (Sys 7)
+Size:    2048 bytes
+Checksum:  FD04
+CRC-32:    5D8E46D6
+ORG: $F800
+DAC: $0400
+;-------------------------------------;
+Three Oscillator Sound Generator
+Echo And Decay Routine
+Plane
+PTilt(no source)
+PLiten(no source)
+Funny "Electric Sound"
+Delta F, Delta A Routine
+Pulse(no source)
+
+
+
+
+;*************************************;
+ROM 15 (Defender) December 1982 (Sys 7)
+Size:    2048 bytes
+Checksum:  AF3F
+CRC-32:    CABAEC58
+ORG: $F800
+DAC: $0400
+;-------------------------------------;
+Vari
+Lightning+Appear Noise Routine
+White Noise Routine
+Filtered Noise Routine
+Radio
+Hyper
+Scream
+Organ (Tune)
+GWave
+Tilt (no source)
+
+
+
+;*************************************;
+ROM PROTO 1(Thunderball, speech) May 1982 (Sys 7)
+Size:    4096 bytes
+Checksum:  A229
+CRC-32:    CC70AF52
+ORG: $F000
+DAC: $0400
+;-------------------------------------;
+Vari
+Noise with Whistle Routine (Full)
+Knocker routine
+GWave
+Lightning+Appear Noise Routine
+Filtered Noise Routine
+Tilt (no source)
+Walsh Function Sound Machine V2
+
+
+
+;*************************************;
+ROM PROTO 2(Rat Race, 8K) January 1983 (Sys 7)(prob Sys 9)
+Size:  8192 bytes
+Checksum: B486
+CRC-32:  C54B9402
+ORG: $E000
+DAC: $2002
+;-------------------------------------;
+Organ (Tune)
+Tilt (no source)
+SYNTH12 (no source)
+SYNTH13 (no source)
+SYNTH14 (no source)
+Lightning+Appear Noise Routine
+Funny "Electric Sound"
+Hyper
+Scream
+Vari
+White Noise Routine
+GWave
+[---- mid rom zero padding + CHKSUM PROG ----]
+GWave
+Filtered Noise Routine
+Three Oscillator Sound Generator
+Whist (THE BOMB OOOOOH NOOOOO!)
+Knocker Routine
+Delta F, Delta A Routine
+Lightning+Appear Noise Routine
+Noise with Whistle Routine
+Walsh Function Sound Machine V2
+Ziren
+
+
+
+;*************************************;
+ROM ?? (Laser Cue) March 1984 (Sys 7) (routines sim to Cosmic Gunfight)
+Size:    2048 bytes
+Checksum:  52FB
+CRC-32:    1888C635
+ORG: 
+DAC:
+;-------------------------------------; 
+Vari
+Knocker Routine
+Tilt
+Lightning+Appear Noise Routine
+White Noise Routine
+GWave
+
+
+
+
+#####################################################################
+SPEECH ROMS
+IC num and addrs:  4($E000),5($C000),6($D000),7($B000)
+;----------------------------------------------------;
+
+Gorgar
+Speech ROMS: IC 5,6,7 with Pinball Sound ROM 2
+ROM IC 6: TALK, TALKD
+Size:    4096 bytes
+Checksum:  CD8A
+CRC-32:    218290B9
+;-------------------------------------;
+Blackout
+Speech ROMS: IC 5,6,7 with Pinball Sound ROM 2
+ROM IC 6: TALK, TALKD
+Size:    4096 bytes
+Checksum:  5D03
+CRC-32:    0104E5C4
+;-------------------------------------;
+Alien Poker
+Speech ROMS: IC 5,6,7 with Pinball Sound ROM 2
+ROM IC 6: TALK, TALKD
+Size:    4096 bytes
+Checksum:  6DE0
+CRC-32:    15A3CC85
+
+
+
+;*************************************;
+Firepower
+Speech ROMS: IC 5,6,7 with Pinball Sound ROM 3
+ROM IC 6: TALK, TALKD
+Size:    4096 bytes
+Checksum:  B1E1
+CRC-32:    E56F7AA2
+;-------------------------------------;
+Jungle Lord
+Speech ROMS: IC 5,6,7 with Pinball Sound ROM 3
+ROM IC 6: TALK, TALKD
+Size:    4096 bytes
+Checksum:  DB78
+CRC-32:    F2AC6A52
+;-------------------------------------;
+
+
+
+;*************************************;
+Black Knight
+Speech ROMS: IC 4,5,6,7 with Pinball Sound ROM 5
+ROM IC 4: TALK, TALKD
+Size:    4096 bytes
+Checksum:  07B5
+CRC-32:    F36F12E5
+;-------------------------------------;
+
+
+
+;*************************************;
+Pharaoh
+Speech ROMS: IC 4,5,6,7 with Pinball Sound ROM 6
+ROM IC 4: TALK, TALKD
+Size:    4096 bytes
+Checksum:  DCEC
+CRC-32:    9ECC23FD
+;-------------------------------------;
+
+
+
+;*************************************;
+Thunderball
+Speech ROMS: IC 4,5,6,7 with Pinball Sound ROM Prototype 1
+ROM IC 4: TALK, TALKD
+Size:    4096 bytes
+Checksum:  B005
+CRC-32:    2A4D6F4B
+
+
+
+;*************************************;
+Sinistar
+Speech ROMS: IC 4,5,6,7 with Video Sound ROM 9
+ROM IC 4: TALK, TALKD
+Size:    4096 bytes
+Checksum:  2F10
+CRC-32:    4B56A626
+
+
+
+#####################################################################
+VIDEO GAMES
+
+
+;*************************************;
+Video Sound ROM 1 (Defender) September 1980 (proto in AMOA show)
+Size:    2048 bytes
+Checksum:  BC41
+CRC-32:    FEFD5B48
+ORG: $F800
+DAC: $0400
+;-------------------------------------;
+Vari
+Lightning+Appear Noise Routine
+White Noise Routine
+Filtered Noise Routine
+Radio
+Hyper
+Scream
+Organ (Note+Tune)
+GWave
+
+
+
+;*************************************;
+Video Sound ROM 2 (Stargate) 1981
+Size:     2048 bytes
+Checksum:  A716
+CRC-32:    2FCF6C4D
+ORG: $F800
+DAC: $0400
+;-------------------------------------; 
+Vari
+Lightning+Appear Noise Routine
+White Noise Routine 
+Filtered Noise Routine 
+Radio
+Hyper
+Scream
+Organ (Tune)
+GWave
+
+
+
+;*************************************;
+Video Sound ROM 3 (Robotron 2084) 1982
+Size:    4096 bytes
+Checksum:  6780
+CRC-32:    C56C1D28
+ORG: $F000
+DAC: $0400
+;-------------------------------------;
+Three Oscillator Sound Generator
+Echo And Decay Routine 
+Diving Plane Sound
+Ziren
+Whist (THE BOMB OOOOOH NOOOOO!)
+Knocker Routine
+Funny "Electric Sound"
+Delta F, Delta A Routine
+Vari
+Lightning+Appear Noise Routine
+White Noise Routine 
+Noise with Whistle Routine (Full)
+Filtered Noise Routine 
+Radio 
+Hyper 
+Scream
+Organ (Tune)
+GWave
+
+
+
+
+;*************************************;
+Video Sound ROM 4 (Joust) 1983 (pinball version)
+Size:    4096 bytes
+Checksum:  9A11
+CRC-32:    3BBC90BF
+ORG: $F000
+DAC: $0400
+;-------------------------------------;
+Three Oscillator Sound Generator
+Whist (THE BOMB OOOOOH NOOOOO!)
+Knocker Routine
+Delta F, Delta A Routine
+Vari
+Lightning+Appear Noise Routine
+Noise with Whistle Routine (Full)
+Tilt
+Filtered Noise Routine
+GWave
+Walsh Function Sound Machine V2
+
+
+
+
+;*************************************;
+Video Sound ROM 8 (Bubbles) 1982
+Size:    4096 bytes
+Checksum:  30A7
+CRC-32:    689CE2AA
+ORG: $F000
+DAC: $0400
+;-------------------------------------;
+Noise with Whistle Routine (Full)
+Vari
+Organ (Tune)
+Knocker Routine
+GWave
+Tilt
+
+
+
+
+;*************************************;
+Video Sound ROM 9/10 (Sinistar) 1982 (stereo, with Speech)
+Size:    4096 bytes
+Checksum:  A822
+CRC-32:    B82F4DDB
+ORG: $F000
+DAC: $0400
+;-------------------------------------;
+Organ (Tune)
+Walsh Function Sound Machine V2
+SYNTH22 (no source)
+SYNTH23 (no source)
+SYNTH24 (no source)
+SYNTH25 (no source)
+GWave
+Lightning+Appear Noise Routine
+Hyper
+Filtered Noise Routine
+Delta F, Delta A Routine
+
+
+
+
+;*************************************;
+Video Sound ROM 18 (Blaster) 1983
+Size:    4096 bytes
+Checksum:  D012
+CRC-32:    C33A3145
+ORG: $F000
+DAC: $0400
+;-------------------------------------;
+Diving Plane Sound
+Knocker Routine
+Vari
+Lightning+Appear Noise Routine
+White Noise Routine
+Filtered Noise Routine
+Radio
+Hyper
+Scream
+Whist (THE BOMB OOOOOH NOOOOO!)
+GWave
+Walsh Function Sound Machine V2
+
+
+
+
