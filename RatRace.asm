@@ -584,10 +584,11 @@ E385 : 26 B9      bne LE340     ;branch Z=0 SYN191 (VAR0)
 ;VARX:
 E387 : 39         rts           ;return subroutine
 ;*************************************;
-;VVECT1
+;Vari Vectors
 ;*************************************;
-E388 : 58 01 00 08 81 02 00 FF FF 
-E391 : 48 91 00 FC 01 02 00 FC FF 
+;VVECT1
+E388 : 58 01 00 08 81 02 00 FF FF     ;
+E391 : 48 91 00 FC 01 02 00 FC FF     ;
 ;*************************************;
 ;Turbo
 ;*************************************;
@@ -642,8 +643,9 @@ E3DB : 20 CC      bra LE3A9     ;branch always SYN201(NOISE0)
 ;NSEND:
 E3DD : 39         rts           ;return subroutine
 ;*************************************;
-;PARAM13 
+;GWave jump
 ;*************************************;
+;GWJMP
 E3DE : 8D 03      bsr LE3E3           ;branch sub GWLD
 E3E0 : 7E F1 70   jmp LF170           ;jump GWAVE
 ;*************************************;
@@ -1522,75 +1524,77 @@ F035 : 8D 20      bsr LF057           ;branch sub NMI4
 ;IRQ1 LF037:
 F037 : 20 FE      bra LF037           ;branch always IRQ1
 ;*************************************;
-;NMI
+;Diagnostic Processing
 ;*************************************; 
+;NMI
 F039 : 0F         sei                 ;set interrupt mask I=1  
 F03A : 8E 00 FF   lds #$00FF          ;load stack pointer with 00FFh
 F03D : 4F         clra                ;clear A
-;NMI1 LF03E:
+;NMI1 
 F03E : CE FF FF   ldx #$FFFF          ;load X with FFFFh
 F041 : 5F         clrb                ;clear A
-;NMI2 LF042:
+;NMI2 
 F042 : E9 00      adcb $00,x          ;B = Carry + B + addr X +00h
 F044 : 09         dex                 ;decr X
 F045 : 8C F0 00   cpx #$F000          ;compare X with value F000h
 F048 : 26 F8      bne LF042           ;branch Z=0 NMI2
 F04A : E1 00      cmpb $00,x          ;compare B with value in addr X + 00h
 F04C : 27 01      beq LF04F           ;branch Z=1 NMI3
-F04E : 3E         wai                 ;wait interrupt
-;NMI3 LF04F:
+F04E : 3E         wai                 ;wait interrupt, PC+1
+;NMI3
 F04F : 4C         inca                ;incr A
 F050 : 36         psha                ;push A into stack then SP - 1
 F051 : BD F0 57   jsr LF057           ;jump sub NMI4
 F054 : 32         pula                ;SP + 1 pull stack into A
 F055 : 20 E7      bra LF03E           ;branch always NMI1
-;NMI4 LF057:
+;NMI4 
 F057 : 81 01      cmpa #$01           ;compare A with value 01h
-F059 : 25 4A      bcs LF0A5           ;branch C=1 NMIC
-F05B : 22 03      bhi LF060           ;branch C=0 and Z=0 NMI5
-F05D : 7E F0 EC   jmp LF0EC           ;jump PRMFDB1
-;NMI5 LF060:
+F059 : 25 4A      bcs LF0A5           ;branch C=1 NMI
+F05B : 22 03      bhi LF060           ;branch C+Z=0 NMI5
+F05D : 7E F0 EC   jmp LF0EC           ;jump IRQPRM
+;NMI5 
 F060 : 81 19      cmpa #$19           ;compare A with value 19h
-F062 : 22 08      bhi LF06C           ;branch C=0 and Z=0 NMI6
+F062 : 22 08      bhi LF06C           ;branch C+Z=0 NMI6
 F064 : 80 02      suba #$02           ;subtract A with value 02h
-F066 : BD F1 0A   jsr LF10A           ;jump sub PARAM1
-F069 : 7E F1 70   jmp LF170           ;jump SYNTH1 below
-;NMI6 LF06C:
+F066 : BD F1 0A   jsr LF10A           ;jump sub GWLD
+F069 : 7E F1 70   jmp LF170           ;jump GWAVE
+;NMI6 
 F06C : 81 2F      cmpa #$2F           ;compare A with value 2Fh
-F06E : 22 05      bhi LF075           ;branch C=0 and Z=0 NMI7
+F06E : 22 05      bhi LF075           ;branch C+Z=0 NMI7
 F070 : 80 1A      suba #$1A           ;subtract A with value 1Ah
-F072 : 7E E3 DE   jmp LE3DE           ;jump PARAM13 top mem
-;NMI7 LF075:
+F072 : 7E E3 DE   jmp LE3DE           ;jump GWJMP
+;NMI7
 F075 : 81 52      cmpa #$52           ;compare A with value 52h
-F077 : 22 0D      bhi LF086           ;branch C=0 and Z=0 NMI8
+F077 : 22 0D      bhi LF086           ;branch C+Z=0 NMI8
 F079 : 80 30      suba #$30           ;subtract A with value 30h
-F07B : CE F0 A6   ldx #$F0A6          ;load X with value F0A6h (VECTJUMP) (F54E) 
-F07E : 48         asla                ;arith shift left A (bit0 is 0)
-F07F : BD E1 89   jsr LE189           ;jump sub CALCOS top mem
+F07B : CE F0 A6   ldx #$F0A6          ;load X with value F0A6h (JMPTBL1)
+F07E : 48         asla                ;arith shift left A 
+F07F : BD E1 89   jsr LE189           ;jump sub ADDX
 F082 : EE 00      ldx $00,x           ;load X with addr X + 00h
 F084 : 6E 00      jmp $00,x           ;jump addr X + 00h
-;NMI8 LF086:
+;NMI8
 F086 : 81 54      cmpa #$54           ;compare A with value 54h
-F088 : 22 1B      bhi LF0A5           ;branch C=0 and Z=0 NMIC
+F088 : 22 1B      bhi LF0A5           ;branch C+Z=0 NMIX
 F08A : CE 00 90   ldx #$0090          ;load X with value 0090h
 F08D : DF 8E      stx $8E             ;store X in addr 8E
 F08F : 81 53      cmpa #$53           ;compare A with value 53h
 F091 : 26 05      bne LF098           ;branch Z=0 NMI9
-F093 : CE E3 88   ldx #$E388          ;load X with value E388h (VVECT)
+F093 : CE E3 88   ldx #$E388          ;load X with value E388h (VVECT1)
 F096 : 20 03      bra LF09B           ;branch always NMIA
-;NMI9 LF098:
-F098 : CE E3 91   ldx #$E391          ;load X with value E391h (VVECT)
-;NMIA LF09B:
+;NMI9
+F098 : CE E3 91   ldx #$E391          ;load X with value E391h (VVECT1)
+;NMIA
 F09B : C6 09      ldab #$09           ;load B with value 09h
-F09D : BD F2 3B   jsr LF23B           ;jump sub UTIL1
-F0A0 : BD E3 3B   jsr LE33B           ;jump sub SYNTH19 VARI mem above
-;NMIB LF0A3:
-F0A3 : 20 FE      bra LF0A3           ;branch always NMIB
-;NMIC LF0A5:
+F09D : BD F2 3B   jsr LF23B           ;jump sub TRANS
+F0A0 : BD E3 3B   jsr LE33B           ;jump sub VARI
+;NMIW
+F0A3 : 20 FE      bra LF0A3           ;branch always NMIW
+;NMIX
 F0A5 : 39         rts                 ;return subroutine
 ;*************************************;
-;VECTJUMP JMPTBL1 table to locations x35
+;IRQ jump table to locations x35
 ;*************************************;
+;JMPTBL1
 F0A6 : F5 4E                          ;CANNON
 F0A8 : F5 59                          ;SMLCAN
 F0AA : F5 F3                          ;CLRDAC 
@@ -1627,28 +1631,25 @@ F0E6 : E2 EA                          ;SCREAM
 F0E8 : E3 9A                          ;TURBO
 F0EA : E0 CD                          ;ORGNT1
 ;*************************************;
-;PRMFDB1
+;IRQ processing and data
 ;*************************************;
-F0EC : CE F1 02   ldx #$F102          ;load X with value F102h (FDBdata7)
-;LF0EF:
+;IRQPRM
+F0EC : CE F1 02   ldx #$F102          ;load X with value F102h (IRQDAT)
+;IRQPRM1
 F0EF : A6 00      ldaa $00,x          ;load A with value in addr X + 00h
-F0F1 : 26 01      bne LF0F4           ;branch Z=0 PRMFDB2 
+F0F1 : 26 01      bne LF0F4           ;branch Z=0 IRQPRM2
 F0F3 : 39         rts                 ;return subroutine
-;*************************************;
-;PRMFDB2 
-;*************************************;
-;LF0F4:
+;IRQPRM2
 F0F4 : 81 01      cmpa #$01           ;compare A with value 01h
-F0F6 : 27 07      beq LF0FF           ;branch Z=1 LFOFF 
+F0F6 : 27 07      beq LF0FF           ;branch Z=1 IRQPRM3
 F0F8 : DF 82      stx $82             ;store X in addr 82
 F0FA : BD F0 57   jsr LF057           ;jump sub NMI4
 F0FD : DE 82      ldx $82             ;load X with value in addr 82
-;LF0FF:
+;IRQPRM3
 F0FF : 08         inx                 ;incr X
-F100 : 20 ED      bra LF0EF           ;branch always PRMFDB1
-;*************************************;
-;FDBdata7
-;*************************************;
+F100 : 20 ED      bra LF0EF           ;branch always IRQPRM1
+;
+;IRQDAT
 F102 : 03 06 0A 04 0E 05 09 00
 ;*************************************;
 ;GWAVE Loader #2
@@ -1681,14 +1682,14 @@ F12B : 84 0F      anda #$0F           ;and A with value 0Fh (WAVE #)
 F12D : 97 87      staa $87            ;store A in addr 87 (TEMPA)(SAVE)
 F12F : DF 8A      stx $8A             ;store X in addr 8A (TEMPX)(SAVE INDEX)
 F131 : CE F2 4F   ldx #$F24F          ;load X with value F24Fh (FDBdata8)(GWVTAB)(CALC WAVEFORM ADDR)
-;PRM11 LF134 GWLD2:
+;GWLD2:
 F134 : 7A 00 87   dec $0087           ;decr value in addr 0087 (TEMPA)(WAVE FROM #)
 F137 : 2B 08      bmi LF141           ;branch N=1 PARAM2 (GWLD3)(FINIS)
 F139 : A6 00      ldaa $00,x          ;load A with value at addr X + 00h
 F13B : 4C         inca                ;incr A
 F13C : BD E1 89   jsr LE189           ;jump sub CALCOS top mem
 F13F : 20 F3      bra LF134           ;branch always PRM11 (GWLD2)
-;PARAM2 GWLD3
+;PGWLD3
 F141 : DF 96      stx $96             ;store X in addr 96 (GWFRM)
 F143 : BD F1 FA   jsr LF1FA           ;jump sub PARAM4 (WVTRAN)(XSFER WAVE TO RAM)
 F146 : DE 8A      ldx $8A             ;load X with value in addr 8A (TEMPX)(RESTORE INDEX)
@@ -1757,7 +1758,7 @@ F1A5 : 09         dex                 ;decr X
 F1A6 : 01         nop                 ;
 F1A7 : 01         nop                 ;
 F1A8 : 20 DF      bra LF189           ;branch always SYN13 (GOUT)(SYNC 36)
-;GEND - PRMCSC
+;GEND 
 F1AA : 96 93      ldaa $93            ;load A with value at addr 93 (GECDEC)
 F1AC : 8D 5E      bsr LF20C           ;branch sub PARAM5 (WVDECA)
 ;GEND40
@@ -1774,48 +1775,48 @@ F1BE : 97 A1      staa $A1            ;store A in addr A1 (FOFSET)
 ;GEND61
 F1C0 : DE 99      ldx $99             ;load X with value in addr 99 (GWFRQ)(GET INDEX)
 F1C2 : 5F         clrb                ;clear B (START FOUND FLAG INIT CLEAR)
-;PRMC1 LF1C3 GW0:
+;GW0:
 F1C3 : 96 A1      ldaa $A1            ;load A with value in addr A1 (FOFSET)(INC OR DEC?)
 F1C5 : 7D 00 94   tst $0094           ;test value in addr 0094 (GDFINC)
 F1C8 : 2B 06      bmi LF1D0           ;branch N=1 PRMC2 (GW1)(DEC)
 F1CA : AB 00      adda $00,x          ;add A with value in addr X + 00h (INC)
 F1CC : 25 08      bcs LF1D6           ;branch C=1 PRMC3 (GW2)(CARRY=OVERFLOW)
 F1CE : 20 0B      bra LF1DB           ;branch always PRMC4 (GW2A)
-;PRMC2 LF1D0 GW1:
+;GW1:
 F1D0 : AB 00      adda $00,x          ;add A with value in addr X + 00h
 F1D2 : 27 02      beq LF1D6           ;branch Z=1 PRMC3
 F1D4 : 25 05      bcs LF1DB           ;branch C=1 PRMC4
-;PRMC3 LF1D6 GW2 :
+;GW2 :
 F1D6 : 5D         tstb                ;test B (FOUND START YET?)
 F1D7 : 27 08      beq LF1E1           ;branch Z=1 PRMC5 (GW2B)(NO)
 F1D9 : 20 0F      bra LF1EA           ;branch always PARAM3 (GW3)(YES, THIS IS THE END)
-;PRMC4 LF1DB GW2A:
+;GW2A:
 F1DB : 5D         tstb                ;test B
 F1DC : 26 03      bne LF1E1           ;branch Z=0 PRMC5 (GW2B)(ALREADY FOUND START)
 F1DE : DF 99      stx $99             ;store X in addr 99 (GWFRQ)(FOUND START)
 F1E0 : 5C         incb                ;incr B
-;PRMC5 LF1E1 GW2B:
+;GW2B:
 F1E1 : 08         inx                 ;incr X
 F1E2 : 9C 9B      cpx $9B             ;compare X with value in 9B (FRQEND)
 F1E4 : 26 DD      bne LF1C3           ;branch Z=0 PRMC1 (GW0)(NOT OVER YET)
 F1E6 : 5D         tstb                ;test B (FOUND START?)
 F1E7 : 26 01      bne LF1EA           ;branch Z=0 PARAM3 (GW3)(YES)
 F1E9 : 39         rts                 ;return subroutine (ALL OVER)
-;GW3 PARAM3
+;GW3
 F1EA : DF 9B      stx $9B             ;store X in addr 9B (FRQEND)
 F1EC : 96 93      ldaa $93            ;load A with value in addr 93 (GECDEC)(RE:XSFER WAVE?)
 F1EE : 27 06      beq LF1F6           ;branch Z=1 PRM31 (GEND0)(NO)
 F1F0 : 8D 08      bsr LF1FA           ;branch sub PARAM4 (WVTRAN)(XSFER WAVE)
 F1F2 : 96 98      ldaa $98            ;load A with value in addr 98 (PRDECA)
 F1F4 : 8D 16      bsr LF20C           ;branch sub PARAM5 (WVDECA)
-;PRM31 LF1F6 GEND0:
+;GEND0:
 F1F6 : 7E F1 70   jmp LF170           ;jump SYNTH1 (GWAVE)
-;PRM32 LF1F9 GEND1:
+;GEND1:
 F1F9 : 39         rts                 ;return subroutine (TERMINATE)
 ;*************************************;
-;PARAM4  - Wave Transfer Routine (similar to ROM15 PRAM18)
+;Wave Transfer Routine
 ;*************************************;
-;LF1FA WVTRAN:
+;WVTRAN:
 F1FA : CE 00 A2   ldx #$00A2          ;load X with value 00A2h (#GWTAB)
 F1FD : DF 8E      stx $8E             ;store X in addr 8E (XPTR)
 F1FF : DE 96      ldx $96             ;load X with value in addr 96 (GWFRM)
@@ -1826,7 +1827,7 @@ F207 : DE 8E      ldx $8E             ;load X with value in addr 8E (XPTR)
 F209 : DF 9D      stx $9D             ;store X in addr 9D (WVEND)(GET END ADDR)
 F20B : 39         rts                 ;return subroutine
 ;*************************************;
-;PARAM5 - Wave Decay Routine (similar to ROM15 PARAM19)
+;Wave Decay Routine
 ;*************************************;
 ;decay amount in ACCA 1/16 per decay
 ;WVDECA
@@ -1836,7 +1837,7 @@ F20F : DE 96      ldx $96             ;load X with value in addr 96 (GWFRM)(ROM 
 F211 : DF 8C      stx $8C             ;store X in addr 8C (XPLAY) 
 F213 : CE 00 A2   ldx #$00A2          ;load X with value 00A2h (#GWTAB)
 F216 : 97 88      staa $88            ;store A in addr 88 (TEMPB)(DECAY FACTOR)
-;PRM51 LF218 WVDLP:
+;WVDLP:
 F218 : DF 8E      stx $8E             ;store X in addr 8E (XPTR)
 F21A : DE 8C      ldx $8C             ;load X with value in addr 8C (XPLAY)
 F21C : D6 88      ldab $88            ;load B with value in addr 88 (TEMPB)
@@ -1850,7 +1851,7 @@ F226 : 08         inx                 ;incr X
 F227 : DF 8C      stx $8C             ;store X in addr 8C (XPLAY)
 F229 : DE 8E      ldx $8E             ;load X with value in addr 8E (XPTR)
 F22B : A6 00      ldaa $00,x          ;load A with value in addr X + 00h
-;PRM52 LF22D WVDLP1:
+;WVDLP1:
 F22D : 10         sba                 ;A = A - B (B unchanged) (DECAY)
 F22E : 7A 00 87   dec $0087           ;decr value in addr 0087 (TEMPA)
 F231 : 26 FA      bne LF22D           ;branch Z=0 PRM52 (WVDLP1)
@@ -1858,14 +1859,14 @@ F233 : A7 00      staa $00,x          ;store A in addr X + 00h
 F235 : 08         inx                 ;incr X
 F236 : 9C 9D      cpx $9D             ;compare X with value in addr 9D (WVEND)(END OF WAVE?)
 F238 : 26 DE      bne LF218           ;branch Z=0 PRM51 (WVDLP)(NO)
-;PRM53 LF23A WVDCX:
+;WVDCX:
 F23A : 39         rts                 ;return subroutine
 ;*************************************;
-;UTIL1 Parameter Transfer (same as ROM15 UTIL1)
+;Parameter Transfer 
 ;*************************************;
 ;TRANS
 F23B : 36         psha                ;push A into stack then SP - 1
-;UTL11 LF23C TRANS1:
+;TRANS1:
 F23C : A6 00      ldaa $00,x          ;load A in addr X + 00h
 F23E : DF 8C      stx $8C             ;store X in addr 0C (XPLAY)
 F240 : DE 8E      ldx $8E             ;load X from value in addr 8E (XPTR)
@@ -1879,9 +1880,9 @@ F24B : 26 EF      bne LF23C           ;branch Z=0 UTL11
 F24D : 32         pula                ;SP + 1 pull stack into A
 F24E : 39         rts                 ;return subroutine
 ;*************************************;
-;GWVTAB - Wave table, 1st byte wavelength - FDBdata8
+;GWave table, 1st byte wavelength 
 ;*************************************;
-;called by PARAM13 PRM132 2nd time
+;GWVTAB
 F24F : 08 7F D9 FF D9 7F 24 00 24     ;GS2
 ;
 F258 : 08 00 40 80 00 FF 00 80 40     ;GSSQR2
@@ -1950,7 +1951,7 @@ F371 : A1 A7 AE B5 B8 BC BE BF        ;
 F379 : C1 C2 C2 C2 C1 BF BE BB        ;
 F381 : B6 B1 AC A4 9E 93              ;
 ;*************************************;
-;SVTAB - GWAVE SOUND VECTOR TABLE - FDBdata9
+;GWAVE SOUND VECTOR TABLE
 ;*************************************;
 ;b0 GECHO,GCCNT
 ;b1 GECDEC,WAVE#
@@ -1959,7 +1960,7 @@ F381 : B6 B1 AC A4 9E 93              ;
 ;b4 VARIABLE FREQ COUNTER
 ;b5 FREQ PATTERN LENGTH
 ;b6 FREQ PATTERN OFFSET
-;called by PARAM13 - PRM132 1st time (x15?) - hex 2 dec get GFRTAB (starts F42F (00), with 13 patterns)
+;SVTAB
 F387 : 03 15 11 FF 00 0D 26           ; F42F + 26h = F455 : SPNSND
 F38E : 14 0A 00 00 00 04 1E           ; =F44D : UNKN1
 F395 : 14 0A 00 00 00 04 22           ; =F451 : UNKN2
@@ -1994,8 +1995,9 @@ F421 : 11 05 11 01 0F 01 00           ; =F42F(DP1V)
 ;
 F428 : F1 19 00 00 00 0E 1E           ; =F44D : UNKN1
 ;*************************************;
-;GFRTAB - GWAVE FREQ PATTERN TABLE - FDBdata10
+;GWAVE FREQ PATTERN TABLE
 ;*************************************; 
+;GFRTAB 
 ;BigBen Sounds
 F42F : 08 40 08 40 08 40 08 40 08 40  ;BBSND
 F439 : 08 40 08 40 08 40 08 40 08 40  ;
@@ -3765,7 +3767,6 @@ FFEE : 26 F8      bne LFFE8           ;branch Z=0  ZIRLP2
 FFF0 : 39         rts                 ;return subroutine
 ;*************************************;
 ;zero padding
-;*
 FFF1 : 00 00 00 00 00 00 00
 ;*************************************;
 ;Motorola vector table
