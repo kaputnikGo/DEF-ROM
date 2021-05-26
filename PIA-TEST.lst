@@ -1,6 +1,8 @@
-; PIA1 and PIA2 TEST CODE (verbose) - 10 Dec 2019
+; PIA1 and PIA2 TEST CODE (verbose) - 13 Mar 2021
 ; Heathkit ET-3400 Audio Setup - testing 2x PIA input params and ouput LEDs
 ; user addr 0000 - 00C4 and 0100 - 01FF
+; template for 2x PIA use with current hardware
+; PIA2 port A not yet used
 ;
 ; 8000 PIA1 #FF A output
 ; 8001 PIA1 #00 DDR port A
@@ -9,45 +11,43 @@
 ; 8001 PIA1 #3C control reg (0011 1100)
 ; 8003 PIA1 #37 control reg (0011 0111)
 ;
-; 8004 PIA2 #FF A output
-; 8005 PIA2 #00 DDR port A
-; 8006 PIA2 #00 B input
-; 8007 PIA2 #00 DDR port B
-; 8005 PIA2 #3C control reg (0011 1100)
-; 8007 PIA2 #37 control reg (0011 0111)
+; 4000 PIA2 #FF A output
+; 4001 PIA2 #00 DDR port A
+; 4002 PIA2 #00 B input
+; 4003 PIA2 #00 DDR port B
+; 4001 PIA2 #3C control reg (0011 1100)
+; 4003 PIA2 #37 control reg (0011 0111)
 ; 
 ;*************************************;
 ; PIA INIT org 0011
 ;*************************************;
 0011 : 8E 01 FF   lds #$01FF          ; load SP with 01FFh
 0014 : CE 80 00	  ldx #$8000          ; load X with 8000h, PIA1 (DAC) addr
-0017 : 6F 01		  clr	$01,x           ; clear(00) 8001 PIA1 DDR port A 
-0019 : 6F 03      clr $03,x           ; clear(00) 8003 PIA1 DDR port B
-001B : 6F 02      clr $02,x           ; clear(00) 8002 PIA1 set port B in
-001D : 6F 05      clr $05,x           ; clear(00) 8005 PIA2 DDR port A
-001F : 6F 07      clr $07,x           ; clear(00) 8007 PIA2 DDR port B
-0021 : 6F 06      clr $06,x           ; clear(00) 8006 PIA2 set port B in
-0023 : 86 FF		  ldaa	#$FF          ; load A with FFh (1111 1111)
-0025 : A7 00		  staa	$00,x         ; store A in addr 8000 PIA1 set port A out
-0027 : A7 04      staa  $04,x         ; store A in addr 8004 PIA2 set port A out
-0029 : 86 3C		  ldaa	#$3C          ; load A with 3Ch(0011 1100)
-002B : A7 01		  staa	$01,x         ; store A in addr 8001 PIA1 set control reg A
-002D : A7 05      staa  $05,x         ; store A in addr 8005 PIA2 set control reg A
-002F : 86 37      ldaa  #$37          ; load A with 37h(0011 0111)
-0031 : A7 03      staa  $03,x         ; store A in addr 8003 PIA1 set control reg B 
-0033 : A7 07      staa  $07,x         ; store A in addr 8007 PIA2 set control reg B
-0035 : 4F         clra                ; clear A
+0017 : 6F 01      clr	$01,x           ; clear(00) addr X + 01h (8001 PIA1 DDR port A) 
+0019 : 6F 03      clr $03,x           ; clear(00) addr X + 03h (8003 PIA1 DDR port B)
+001B : 6F 02      clr $02,x           ; clear(00) addr X + 02h (8002 PIA1 port B in)
+001D : 86 FF		  ldaa	#$FF          ; load A with FFh (1111 1111)
+001F : A7 00      staa	$00,x         ; store A in addr X + 00h (8000 PIA1 port A out)
+0021 : 86 3C		  ldaa	#$3C          ; load A with 3Ch(0011 1100)
+0023 : A7 01		  staa	$01,x         ; store A in addr X + 01h (8001 PIA1 port A)
+0025 : 86 37      ldaa  #$37          ; load A with 37h(0011 0111)
+0027 : A7 03      staa  $03,x         ; store A in addr X + 03h (8003 PIA1 port B) 
+0029 : CE 40 00   ldx #$4000          ; load X with 4000h, PIA2 addr
+002C : 6F 03      clr $03,x           ; clear(00) addr X + 03h (4003 PIA2 DDR port B)
+002E : 6F 02      clr $02,x           ; clear(00) addr X + 02h (4002 PIA2 port B in)
+0030 : A7 03      staa  $03,x         ; store A in addr X + 03h (4004 PIA2 port B)
 ;*************************************;
-
-0036 : B6 80 02   ldaa X8002          ; load A with PIA1 B
+;MAIN LOOP start 0032
+;*************************************;
+0032 : B6 80 02   ldaa X8002          ; load A with PIA1 B
+0035 : 01         nop                 ; reserve
+0036 : B7 80 00   staa X8000          ; store A in PIA1 A
 0039 : 01         nop                 ; reserve
-003A : B7 80 00   staa X8000          ; store A in PIA1 A
+003A : B6 40 02   ldaa X4002          ; load A with PIA2 B
 003D : 01         nop                 ; reserve
-003E : B6 80 06   ldaa X8006          ; load A with PIA2 B
-0041 : 01         nop                 ; reserve
-0042 : B7 80 04   staa X8004          ; store A in PIA2 A
-0045 : 20 EF      bra L0036           ; branch always L0036
-0047 : 01         nop                 ; END
+003E : B7 40 01   staa X4000          ; store A in PIA2 A
+0041 : 20 EF      bra L0032           ; branch always L0032
+0043 : 01         nop                 ; END
 ;*************************************;
 ; END LOOP
 ;*************************************;
