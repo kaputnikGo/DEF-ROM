@@ -15,35 +15,18 @@
     ; CPU:  Motorola 6800 (6800/6802/6808 family)
     ;
         ; Rat Race, 10 made, no production, Sound ROM is 8k, PIA addr 2000, DAC output is portB 2002
-        ; January 1983, System 7
-        ; probably sound rom has lots beta/unused/inactive code etc
+        ; January 1983, System 7 (8k in sys 7 board? should be sys9?)
+        ;
+        ; possibly a development ROM with ability to switch to different sound routines (IRQ jump table has 35)
         ;
         ; Upper part of ROM is E000 - EFFF and has 0-padding from E5E3 (0A1Ch, 2588d, 2.5K bytes)
         ; Lower part of ROM is F000 - FFFF and is full
         ; MotVects load lower half F001
-        ; routine counts start at lower half (F000)
-        ; FDBdata counts start from E000
         ;
         ; NMI organ FDBs not sounding good in ROM1 SYNTH
         ; x20 SYNTH routines !
         ;
-        ;PARAM     : routine to load store FDBs/vars for a SYNTH
-        ;SYNTH     : routine with write output to DAC for SOUND
-        ;CALCOS    : calculate an offset for X
-        ;PRMSYN    : small PARAM routine for a SYNTH
-        ;PRMSTK    : small routine of pula in SP
-        ;PRMCSC    : param routine of cascading vars
-        ;PRMFDB    : small param routine to load FDB
-        ;PRMCLRDAC : clear DAC and wait X=1000
-        ;PRMLOAD   : small param routine load X from FDB table repeated
-        ;PRMLDX    : small param routine load X with FDB
-        ;PRMXLDS   : small param load X and sequential store
-        ;PRMSYNBSR : small routine for SYNTH with param and bsr
-        ;PRMCLR    : small routine to clear addresses
-        ;PRMBSR    : small routine of sequential branch subs
-        ;PRMLDA    ; small routine to load and compare A
-        ;
-        ; update 19 April 2021
+        ; update 26 May 2021
         ;
 ;Mapping of ROM addresses and key functions:
 ; ROM   ADDR 
@@ -60,15 +43,14 @@
 ;       F0EC routines
 ;       F24F FDB data
 ;       F54E routines
-;       FC5E JMPTBL2
-;       FC7E routines?
+;       FAD0 Walsh
 ;       ...
 ;       FFF8 MOTVECT
 ;
      org $E000
 ;
 ;*************************************;
-;FDB melody table - NMI organ ?
+;Organ table
 ;*************************************;
 ;ORGTAB
 ;bits: OSCILLATOR MASK(1),DELAY(1),DURATION(2)
@@ -103,13 +85,13 @@ E0C0 : 38 37 04 3A 00 29 07 1E        ;
 E0C8 : 38 3F 02 FE                    ;51st note
 E0CC : 4F                             ;null note (clra) ?
 ;*************************************;
-;PARAM12 (similar to ROM15 PARAM7 - NMI organ)
+;Organ Tune 
 ;*************************************;
-;LE0CD ORGNT1
+;ORGNT1
 E0CD : 7F 00 90   clr $0090           ;clr (00) addr 0090 (ORGFLG)
 E0D1 : 97 87      staa $87            ;store A in addr 87 (TEMPA) (TUNE NUMBER)
 E0D3 : CE E0 00   ldx #$E000          ;load X with E000h (ORGTAB)
-;PRM121 LE0D6 ORGNT2:
+;ORGNT2:
 E0D6 : A6 00      ldaa $00,x          ;load A with addr X + 00h (TUNE TABLE LENGTH)
 E0D8 : 27 2D      beq LE107           ;branch Z=1 PRM124(ORGNT5) (INVALID TUNE)
 E0DA : 7A 00 87   dec $0087           ;decr addr 0087 (TEMPA)
@@ -117,13 +99,13 @@ E0DD : 20 06      bra LE0E5           ;branch Z=1 PRM122 (ORGNT3)
 E0DF : 4C         inca                ;incr A 
 E0E0 : BD E1 89   jsr LE189           ;jump sub CALCOS 
 E0E3 : 20 F1      bra LE0D6           ;branch always PRM121 (ORGNT2)
-;PRM122 LE0E5 ORGNT3:
+;ORGNT3:
 E0E5 : 08         inx                 ;incr X
 E0E6 : DF 8E      stx $8E             ;store X in addr 8E (XPTR)(NOTE POINTER)
 E0E8 : BD E1 89   jsr LE189           ;jump sub CALCOS 
 E0EB : DF 8C      stx $8C             ;store X in addr 8C (XPLAY)(TUNE END)
 E0ED : DE 8E      ldx $8E             ;load X in addr 8E (XPTR)
-;PRM123 LE0EF ORGNT4: - store melody location into mem 93, sets X with melody addr and A with X(lo)
+;ORGNT4: - store melody location into mem 93, sets X with melody addr and A with X(lo)
 E0EF : A6 00      ldaa $00,x          ;load A with addr X + 00h (TUNE LOOP)
 E0F1 : 97 93      staa $93            ;store A in addr 93 (OSCIL)
 E0F3 : A6 01      ldaa $01,x          ;load A with addr X + 01h
@@ -138,15 +120,15 @@ E100 : 08         inx                 ;incr X
 E101 : DF 8E      stx $8E             ;store X in addr 8E (XPTR)
 E103 : 9C 8C      cpx $8C             ;comp X with addr 8C (XPLAY)
 E105 : 26 E8      bne LE0EF           ;branch Z=0 PRM123 (ORGNT4)
-;PRM124 LE107:
+;ORGNT5:
 E107 : 39         rts                 ;return subroutine
 ;*************************************;
-;SYNTH10 (similar to ROM15 SYNTH8 - NMI organ)
+;Organ Loader
 ;*************************************;
 ;ORGANL
 E108 : CE 00 94   ldx #$0094          ;load X with 0094h (scratch mem locations)
 ;ALT : 80 02      suba  #$02          ;A = A - 02h from ROM15
-;SYN101 LE10B LDLP: - 01 nop length writer for freq/pitch
+;LDLP: - 01 nop length writer for freq/pitch
 E10B : 81 00      cmpa #$00           ;compare A with 00h <- instead of suba
 E10D : 27 15      beq LE124           ;branch Z=1 SYN103  <-- write loop from 0094
 E10F : 81 03      cmpa #$03           ;compare A with 03h (needs 3 more bytes space for jmp write)
@@ -156,23 +138,26 @@ E115 : E7 00      stab $00,x          ;store B in addr X + 00h <-- 01 nop writer
 E117 : 08         inx                 ;incr X
 E118 : 80 02      suba #$02           ;A = A - 02h
 E11A : 20 EF      bra LE10B           ;branch always SYN101 (LDLP)
-;SYN102 LE11C LD2: - writes 91 00 (cmpa $00) gate for freq/pitch end jmp
+;LD2: - writes 91 00 (cmpa $00) gate for freq/pitch end jmp
 E11C : C6 91      ldab #$91           ;load B with 91h
 E11E : E7 00      stab $00,x          ;store B in addr X + 00h
 E120 : 6F 01      clr $01,x           ;clear addr X + 01h
 E122 : 08         inx                 ;incr X
 E123 : 08         inx                 ;incr X
-;SYN103 LE124 LD1: - writes 7E E1 32 (jmp E132) end freq/pitch
+;LD1: - writes 7E E1 32 (jmp E132) end freq/pitch
 E124 : C6 7E      ldab #$7E           ;load B with 7Eh (JMP START2)
 E126 : E7 00      stab $00,x          ;store B in addr X + 00h
 E128 : C6 E1      ldab #$E1           ;load B with E1h (#ORGAN1!>8 MSB)
 E12A : E7 01      stab $01,x          ;store B in addr X + 01h
 E12C : C6 32      ldab #$32           ;load B with 32h (#ORGAN1!.$FF LSB)
 E12E : E7 02      stab $02,x          ;store B in addr X + 02h
+;*************************************;
+;Organ Routine 
+;*************************************;
+;* DUR=DURATION, OSCILLATOR MASK
 ;ORGAN
-;DUR=DURATION, OSCILLATOR MASK
 E130 : DE 91      ldx $91             ;load X with addr 91 (DUR)
-;SYN104 E132 ORGAN1 - synth output writer and loop reader
+;ORGAN1 - synth output writer and loop reader
 E132 : 4F         clra                ;clear A
 E133 : F6 00 88   ldab $0088          ;load B with addr 88 (LOAD B EXTEND TEMPB)
 E136 : 5C         incb                ;incr B
@@ -201,11 +186,12 @@ E155 : B7 20 02   staa $2002          ;store A in DAC output SOUND
 E158 : 09         dex                 ;decr X
 E159 : 27 03      beq LE15E           ;branch Z=1 SYN105 (NOTE OVER?)
 E15B : 7E 00 94   jmp L0094           ;jump to timer location 0094 (RDELAY)(to jmp writes that set freq/pitch duration)
-;SYN105 LE15E ORGAN2:
+;ORGAN2:
 E15E : 39         rts                 ;return subroutine
 ;*************************************;
-;PARAM13
+;param shift and rotate, used by synth 12,13,14
 ;*************************************;
+;PARAM13
 E15F : 96 81      ldaa $81            ;load A with value in addr 81
 E161 : 44         lsra                ;logic shift right A(bit7=0)
 E162 : 98 81      eora $81            ;exclusive OR A with value in addr 81
@@ -215,28 +201,30 @@ E166 : 76 00 80   ror $0080           ;rotate right in addr 0080 (bit7 = C then 
 E169 : 76 00 81   ror $0081           ;rotate right in addr 0081 (bit7 = C then C = bit0)
 E16C : 39         rts                 ;return subroutine
 ;*************************************;
-;SYNTH11 (same as ROM15 SYNTH10)
+;Tilt
 ;*************************************;
+;TILT
 E16D : CE 00 E0   ldx #$00E0          ;load X with value 00E0h
 E170 : 5F         clrb                ;clear B
-;SYN111 LE171:
+;TILT1
 E171 : 86 20      ldaa #$20           ;load A with value 20h
-E173 : 8D 14      bsr LE189           ;branch sub CALCOS
-;SYN112 LE175:
+E173 : 8D 14      bsr LE189           ;branch sub ADDX
+;TILT2
 E175 : 09         dex                 ;decr X
-E176 : 26 FD      bne LE175           ;branch Z=0 SYN112
+E176 : 26 FD      bne LE175           ;branch Z=0 TILT2
 E178 : 7F 20 02   clr X2002           ;clear DAC output SOUND
-;SYN113 LE17B:
+;TILT3
 E17B : 5A         decb                ;decr B
-E17C : 26 FD      bne LE17B           ;branch Z=0 SYN113
+E17C : 26 FD      bne LE17B           ;branch Z=0 TILT3
 E17E : 73 20 02   com X2002           ;complement 1s in DAC output SOUND
 E181 : DE 8C      ldx $8C             ;load X with value in addr 8C
 E183 : 8C 12 00   cpx #$1200          ;compare X with value 1200h
-E186 : 26 E9      bne LE171           ;branch Z=0 SYN111
+E186 : 26 E9      bne LE171           ;branch Z=0 TILT1
 E188 : 39         rts                 ;return subroutine
 ;*************************************;
-;CALCOS 
+;Add A to X Register
 ;*************************************;
+;ADDX
 E189 : DF 8C      stx $8C             ;store X in addr 8C
 E18B : 9B 8D      adda $8D            ;add A with value in addr 8D
 E18D : 97 8D      staa $8D            ;store A in addr 8D
@@ -246,212 +234,209 @@ E193 : 97 8C      staa $8C            ;store A in addr 8C
 E195 : DE 8C      ldx $8C             ;load X with value in addr 8C
 E197 : 39         rts                 ;return subroutine
 ;*************************************;
+;DAC clr/staa, com/staa
+;*************************************;
 ;SYNTH12
+E198 : C6 BF      ldab #$BF           ;load B with value BFh
+;SYN121 outer B loop
+E19A : 4F         clra                ;clear A
+E19B : B7 20 02   staa $2002          ;store A in DAC output SOUND
+E19E : 17         tba                 ;transfer B to A
+;SYN122 decr A loop 1
+E19F : 4A         deca                ;decr A
+E1A0 : 26 FD      bne LE19F           ;branch Z=0 SYN122
+;
+E1A2 : 17         tba                 ;transfer B to A
+E1A3 : 43         coma                ;complement 1s A
+E1A4 : B7 20 02   staa $2002          ;store A in DAC output SOUND
+E1A7 : 8D B6      bsr LE15F           ;branch sub PARAM13 (lsra, ror)
+;SYN123 decr A loop 2
+E1A9 : 4A         deca                ;decr A
+E1AA : 26 FD      bne LE1A9           ;branch Z=0 SYN123
+;
+E1AC : 5A         decb                ;decr B
+E1AD : 26 EB      bne LE19A           ;branch Z=0 SYN121
+;
+E1AF : 39         rts                 ;return subroutine
 ;*************************************;
-E198 : C6 BF      ldab #$BF    ;load B with value BFh
-;SYN121 LE19A:
-E19A : 4F         clra          ;clear A
-E19B : B7 20 02   staa $2002   ;store A in DAC output SOUND
-E19E : 17         tba           ;transfer B to A
-;SYN122 LE19F:
-E19F : 4A         deca          ;decr A
-E1A0 : 26 FD      bne LE19F     ;branch Z=0 SYN122
-E1A2 : 17         tba           ;transfer B to A
-E1A3 : 43         coma          ;complement 1s A
-E1A4 : B7 20 02   staa $2002   ;store A in DAC output SOUND
-E1A7 : 8D B6      bsr LE15F     ;branch sub PARAM13
-;SYN123 LE1A9:
-E1A9 : 4A         deca          ;decr A
-E1AA : 26 FD      bne LE1A9     ;branch Z=0 SYN123
-E1AC : 5A         decb          ;decr B
-E1AD : 26 EB      bne LE19A     ;branch Z=0 SYN121
-E1AF : 39         rts           ;return subroutine
+;SYNTH13 DAC clr, com, dec, com
 ;*************************************;
-;SYNTH13 dupe with SYNTH14 below except ldab FF and decb
-;*************************************;
-E1B0 : C6 FF      ldab #$FF    ;load B with value FFh
-E1B2 : 7F 20 02   clr X2002     ;clear DAC output SOUND
+E1B0 : C6 FF      ldab #$FF           ;load B with value FFh
+E1B2 : 7F 20 02   clr $2002           ;clear DAC output SOUND
 ;SYN131 LE1B5:
-E1B5 : BD E1 5F   jsr LE15F     ;jump sub PARAM13
-E1B8 : 96 81      ldaa $81     ;load A with value in addr 81
+E1B5 : BD E1 5F   jsr LE15F           ;jump sub PARAM13
+E1B8 : 96 81      ldaa $81            ;load A with value in addr 81
 ;SYN132 LE1BA:
-E1BA : 20 00      bra LE1BC     ;branch always SYN133
+E1BA : 20 00      bra LE1BC           ;branch always SYN133
 ;SYN133 LE1BC:
-E1BC : 4A         deca          ;decr A
-E1BD : 26 FB      bne LE1BA     ;branch Z=0 SYN132
-E1BF : 73 20 02   com $2002     ;complement 1s in DAC output SOUND
-E1C2 : C5 01      bitb #$01    ;bit test B with value 01h
-E1C4 : 26 03      bne LE1C9     ;branch Z=0 SYN134
-E1C6 : 7A 20 02   dec $2002     ;decr value in DAC output SOUND
+E1BC : 4A         deca                ;decr A
+E1BD : 26 FB      bne LE1BA           ;branch Z=0 SYN132
+E1BF : 73 20 02   com $2002           ;complement 1s in DAC output SOUND
+E1C2 : C5 01      bitb #$01           ;bit test B with value 01h
+E1C4 : 26 03      bne LE1C9           ;branch Z=0 SYN134
+E1C6 : 7A 20 02   dec $2002           ;decr value in DAC output SOUND
 ;SYN134 LE1C9:
-E1C9 : 17         tba           ;transfer B to A
+E1C9 : 17         tba                 ;transfer B to A
 ;SYN135 LE1CA:
-E1CA : 4A         deca          ;decr A
-E1CB : 26 FD      bne LE1CA     ;branch Z=0 SYN135
-E1CD : 73 20 02   com X2002     ;complement 1s in DAC output SOUND
-E1D0 : 5A         decb          ;decr B
-E1D1 : 26 E2      bne LE1B5     ;branch Z=0 SYN131
-E1D3 : 39         rts           ;return subroutine
+E1CA : 4A         deca                ;decr A
+E1CB : 26 FD      bne LE1CA           ;branch Z=0 SYN135
+E1CD : 73 20 02   com $2002           ;complement 1s in DAC output SOUND
+E1D0 : 5A         decb                ;decr B
+E1D1 : 26 E2      bne LE1B5           ;branch Z=0 SYN131
+E1D3 : 39         rts                 ;return subroutine
 ;*************************************;
-;SYNTH14 dupe with SYNTH13 above except ldab 01 and incb
+;SYNTH14 DAC clr, com, dec, com
 ;*************************************;
-E1D4 : C6 01      ldab #$01    ;load B with value 01h
-E1D6 : 7F 20 02   clr X2002     ;clear DAC output SOUND
+E1D4 : C6 01      ldab #$01           ;load B with value 01h
+E1D6 : 7F 20 02   clr $2002           ;clear DAC output SOUND
 ;SYN141 LE1D9:
-E1D9 : BD E1 5F   jsr LE15F     ;jump sub PARAM13
-E1DC : 96 81      ldaa $81     ;load A with value in addr 81
+E1D9 : BD E1 5F   jsr LE15F           ;jump sub PARAM13
+E1DC : 96 81      ldaa $81            ;load A with value in addr 81
 ;SYN142 LE1DE:
-E1DE : 20 00      bra LE1E0     ;branch always SYN143
+E1DE : 20 00      bra LE1E0           ;branch always SYN143
 ;SYN143 LE1E0:
-E1E0 : 4A         deca          ;decr A
-E1E1 : 26 FB      bne LE1DE     ;branch Z=0 SYN142
-E1E3 : 73 20 02   com $2002     ;complement 1s in DAC output SOUND
-E1E6 : C5 01      bitb #$01    ;bit test B with value 01h
-E1E8 : 26 03      bne LE1ED     ;branch Z=0 SYN144
-E1EA : 7A 20 02   dec $2002     ;decr value in DAC output SOUND
+E1E0 : 4A         deca                ;decr A
+E1E1 : 26 FB      bne LE1DE           ;branch Z=0 SYN142
+E1E3 : 73 20 02   com $2002           ;complement 1s in DAC output SOUND
+E1E6 : C5 01      bitb #$01           ;bit test B with value 01h
+E1E8 : 26 03      bne LE1ED           ;branch Z=0 SYN144
+E1EA : 7A 20 02   dec $2002           ;decr value in DAC output SOUND
 ;SYN144 LE1ED:
-E1ED : 17         tba           ;transfer B to A
+E1ED : 17         tba                 ;transfer B to A
 ;SYN145 LE1EE:
-E1EE : 4A         deca          ;decr A
-E1EF : 26 FD      bne LE1EE     ;branch Z=0 SYN145
-E1F1 : 73 20 02   com $2002     ;complement 1s in DAC output SOUND
-E1F4 : 5C         incb          ;incr B
-E1F5 : 26 E2      bne LE1D9     ;branch Z=0 SYN141
-E1F7 : 39         rts           ;return subroutine
+E1EE : 4A         deca                ;decr A
+E1EF : 26 FD      bne LE1EE           ;branch Z=0 SYN145
+E1F1 : 73 20 02   com $2002           ;complement 1s in DAC output SOUND
+E1F4 : 5C         incb                ;incr B
+E1F5 : 26 E2      bne LE1D9           ;branch Z=0 SYN141
+E1F7 : 39         rts                 ;return subroutine
 ;*************************************;
-;FDBdata1
+;Single Oscillator Sound Calls
 ;*************************************;
-E1F8 : 01 03 FF 80 FF 00 
+E1F8 : 01 03 FF 80 FF 00              ;VEC02X 
+;*
+;ATARI
+E1FE : CE E1 F8   ldx #$E1F8          ;load X with value E1F8h (VEC02X)
+;PERK1
+E201 : BD F8 57   jsr LF857           ;jump sub MOVE
+E204 : 7E F8 70   jmp LF870           ;jump SYNTH6 SING
+;
+E207 : 48 03 01 0C FF 00              ;VEC06X 
+;PERK$$
+E20D : 86 FF      ldaa #$FF           ;load A with value FFh
+E20F : 97 89      staa $89            ;store A in addr 89 
+E211 : CE E2 07   ldx #$E207          ;load X with value E207h (VEC06X)
+;PERK$1:
+E214 : 8D EB      bsr LE201           ;branch sub PERK1
+E216 : 8D 6E      bsr LE286           ;branch sub ECHO
+E218 : 20 FA      bra LE214           ;branch always PERK$1
+;
+E21A : E0 01 02 10 FF 00              ;VEC08X
+;HSTD
+E220 : 86 FF      ldaa #$FF           ;load A with value FFh
+E222 : 97 89      staa $89            ;store A in addr 89
+E224 : CE E2 1A   ldx #$E21A          ;load X with value E21Ah (VEC08X)
+E227 : 20 EB      bra LE214           ;branch always PERK$1
+;
+E229 : 20 03 FF 50 FF 00              ;VEC03X 
+E22F : 50 03 01 20 FF 00              ;VEC04X
+;SIREN
+E235 : C6 2F      ldab #$2F           ;load B with value 2Fh
+E237 : D7 89      stab $89            ;store B in addr 89
+;SIREN1
+E239 : CE E2 29   ldx #$E229          ;load X with value E229h (VEC03X)
+E23C : 8D C3      bsr LE201           ;branch sub PERK1
+E23E : CE E2 2F   ldx #$E22F          ;load X with value E22Fh (VEC04X)
+E241 : 8D BE      bsr LE201           ;branch sub PERK1
+E243 : 5A         decb                ;decr B
+E244 : 26 F3      bne LE239           ;branch Z=0 SIREN1
+E246 : 39         rts                 ;return subroutine
 ;*************************************;
-;SYNPRM1
+;Appear - Liten routine params
 ;*************************************;
-E1FE : CE E1 F8   ldx #$E1F8    ;load X with value E1F8h (FDBdata1)
+;APPEAR
+E247 : 86 FF      ldaa #$FF           ;load A with value FFh
+E249 : 97 97      staa $97            ;store A in addr 97
+E24B : 86 60      ldaa #$60           ;load A with value 60h
+E24D : C6 FF      ldab #$FF           ;load B with value FFh
 ;*************************************;
-;SYNPRM2
+;Lightning+Appear Noise Routine
 ;*************************************;
-E201 : BD F8 57   jsr LF857     ;jump sub PRMXLDS 
-E204 : 7E F8 70   jmp LF870     ;jump SYNTH6 low mem
+;LITEN:
+E24F : 97 96      staa $96            ;store A in addr 96 (LFREQ)
+E251 : 86 FF      ldaa #$FF           ;load A with value FFh (HIGHEST AMP)
+E253 : B7 20 02   staa $2002          ;store A in DAC output SOUND
+E256 : D7 92      stab $92            ;store B in addr 92 (CYCNT)
+;LITE0:
+E258 : D6 92      ldab $92            ;load B with value in addr 92 (CYCNT)
+;LITE1:
+E25A : 96 81      ldaa $81            ;load A with value in addr 81 (LO) (GET RANDOM)
+E25C : 44         lsra                ;logic shift right A (bit7=0)
+E25D : 44         lsra                ;logic shift right A (bit7=0)
+E25E : 44         lsra                ;logic shift right A (bit7=0)
+E25F : 98 81      eora $81            ;exclusive OR with value in addr 81 (LO)
+E261 : 44         lsra                ;logic shift right A (bit7=0)
+E262 : 76 00 80   ror $0080           ;rotate right in addr 0080 (bit7 = C then C = bit0) (HI)
+E265 : 76 00 81   ror $0081           ;rotate right in addr 0081 (bit7 = C then C = bit0) (LO)
+E268 : 24 03      bcc LE26D           ;branch C=0 SYN154(LITE2)
+E26A : 73 20 02   com $2002           ;complement 1s in DAC output SOUND
+;LITE2:
+E26D : 96 96      ldaa $96            ;load A with value in addr 96 (LFREQ)(COUNT FREQ)
+;LITE3:
+E26F : 4A         deca                ;decr A
+E270 : 26 FD      bne LE26F           ;branch Z=0 SYN155 (LITE3)
+E272 : 5A         decb                ;decr B (COUNT CYCLES)
+E273 : 26 E5      bne LE25A           ;branch Z=0 SYN153 (LITE1)
+E275 : 96 96      ldaa $96            ;load A with value in addr 96 (LFREQ)
+E277 : 9B 97      adda $97            ;add A with value in addr 97 (DFREQ)
+E279 : 97 96      staa $96            ;store A in addr 96 (LFREQ)
+E27B : 26 DB      bne LE258           ;branch Z=0 SYN152 (LITE0)
+E27D : 39         rts                 ;return subroutine
 ;*************************************;
-;FDBdata2
+;Lightning 
 ;*************************************;
-E207 : 48 03 01 0C FF 00
+;LITE
+E27E : 86 01      ldaa #$01           ;load A with value 01h
+E280 : 97 97      staa $97            ;store A in addr 97
+E282 : C6 03      ldab #$03           ;load B with value 03h
+E284 : 20 C9      bra LE24F           ;branch always SYN151
 ;*************************************;
-;SYNPRM3 
+;Echo Function 
 ;*************************************;
-E20D : 86 FF      ldaa #$FF     ;load A with value FFh
-E20F : 97 89      staa $89      ;store A in addr 89 
-E211 : CE E2 07   ldx #$E207    ;load X with value E207h (FDBdata2)
+;ECHO:
+E286 : 96 89      ldaa $89            ;load A with value in addr 89
+E288 : 80 08      suba #$08           ;subtract A with value 08h
+E28A : 2A 03      bpl LE28F           ;branch N=0 PRMSTK1
+E28C : 97 89      staa $89            ;store A in addr 89
+E28E : 39         rts                 ;return subroutine
+;ECHO1
+E28F : 32         pula                ;SP + 1 pull stack into A
+E290 : 32         pula                ;SP + 1 pull stack into A
+E291 : 39         rts                 ;return subroutine
 ;*************************************;
-;SYNPRM4 - NOT LINKED
+;Funny "Electric Sound"
 ;*************************************;
-E214 : 8D EB      bsr LE201     ;branch sub SYNPRM2 above
-E216 : 8D 6E      bsr LE286     ;branch sub PRMSYN8 below
-E218 : 20 FA      bra LE214     ;branch always SYNPRM4
-;*************************************;
-;FDBdata3
-;*************************************;
-E21A : E0 01 02 10 FF 00 
-;*************************************;
-;SYNPRM5
-;*************************************;
-E220 : 86 FF      ldaa #$FF     ;load A with value FFh
-E222 : 97 89      staa $89      ;store A in addr 89
-E224 : CE E2 1A   ldx #$E21A    ;load X with value E21Ah (FDBdata3)
-E227 : 20 EB      bra LE214     ;branch always SYNPRM4 above
-;*************************************;
-;FDBdata4
-;*************************************;
-E229 : 20 03 FF 50 FF 00
-E22F : 50 03 01 20 FF 00
-;*************************************;
-;SYNPRM6
-;*************************************;
-E235 : C6 2F      ldab #$2F    ;load B with value 2Fh
-E237 : D7 89      stab $89     ;store B in addr 89
-;SNPM61 LE239:
-E239 : CE E2 29   ldx #$E229    ;load X with value E229h (FDBdata4)
-E23C : 8D C3      bsr LE201     ;branch sub SYNPRM2
-E23E : CE E2 2F   ldx #$E22F    ;load X with value E22Fh (FDBdata4)
-E241 : 8D BE      bsr LE201     ;branch sub SYNPRM2
-E243 : 5A         decb          ;decr B
-E244 : 26 F3      bne LE239     ;branch Z=0 SNPM61
-E246 : 39         rts           ;return subroutine
-;*************************************;
-;SYNTH15 Lightning+Appear Noise Routine - (similar ROM15 SYNTH2)
-;*************************************;
-;preload params
-E247 : 86 FF      ldaa #$FF     ;load A with value FFh
-E249 : 97 97      staa $97      ;store A in addr 97
-E24B : 86 60      ldaa #$60     ;load A with value 60h
-E24D : C6 FF      ldab #$FF     ;load B with value FFh
-;SYN151 LE24F LITEN:
-E24F : 97 96      staa $96      ;store A in addr 96 (LFREQ)
-E251 : 86 FF      ldaa #$FF     ;load A with value FFh (HIGHEST AMP)
-E253 : B7 20 02   staa $2002    ;store A in DAC output SOUND
-E256 : D7 92      stab $92      ;store B in addr 92 (CYCNT)
-;SYN152 LE258 LITE0:
-E258 : D6 92      ldab $92      ;load B with value in addr 92 (CYCNT)
-;SYN153 LE25A LITE1:
-E25A : 96 81      ldaa $81      ;load A with value in addr 81 (LO) (GET RANDOM)
-E25C : 44         lsra          ;logic shift right A (bit7=0)
-E25D : 44         lsra          ;logic shift right A (bit7=0)
-E25E : 44         lsra          ;logic shift right A (bit7=0)
-E25F : 98 81      eora $81      ;exclusive OR with value in addr 81 (LO)
-E261 : 44         lsra          ;logic shift right A (bit7=0)
-E262 : 76 00 80   ror $0080     ;rotate right in addr 0080 (bit7 = C then C = bit0) (HI)
-E265 : 76 00 81   ror $0081     ;rotate right in addr 0081 (bit7 = C then C = bit0) (LO)
-E268 : 24 03      bcc LE26D     ;branch C=0 SYN154(LITE2)
-E26A : 73 20 02   com $2002     ;complement 1s in DAC output SOUND
-;SYN154 LE26D LITE2:
-E26D : 96 96      ldaa $96      ;load A with value in addr 96 (LFREQ)(COUNT FREQ)
-;SYN155 LE26F LITE3:
-E26F : 4A         deca          ;decr A
-E270 : 26 FD      bne LE26F     ;branch Z=0 SYN155 (LITE3)
-E272 : 5A         decb          ;decr B (COUNT CYCLES)
-E273 : 26 E5      bne LE25A     ;branch Z=0 SYN153 (LITE1)
-E275 : 96 96      ldaa $96      ;load A with value in addr 96 (LFREQ)
-E277 : 9B 97      adda $97      ;add A with value in addr 97 (DFREQ)
-E279 : 97 96      staa $96      ;store A in addr 96 (LFREQ)
-E27B : 26 DB      bne LE258     ;branch Z=0 SYN152 (LITE0)
-E27D : 39         rts           ;return subroutine
-;*************************************;
-;PRMSYN7
-;*************************************;
-E27E : 86 01      ldaa #$01    ;load A with value 01h
-E280 : 97 97      staa $97     ;store A in addr 97
-E282 : C6 03      ldab #$03    ;load B with value 03h
-E284 : 20 C9      bra LE24F     ;branch always SYN151
-;*************************************;
-;PRMSYN8
-;*************************************;
-E286 : 96 89      ldaa $89     ;load A with value in addr 89
-E288 : 80 08      suba #$08    ;subtract A with value 08h
-E28A : 2A 03      bpl LE28F     ;branch N=0 PRMSTK1
-E28C : 97 89      staa $89     ;store A in addr 89
-E28E : 39         rts           ;return subroutine
-;*************************************;
-;PRMSTK1
-;*************************************;
-E28F : 32         pula          ;SP + 1 pull stack into A
-E290 : 32         pula          ;SP + 1 pull stack into A
-E291 : 39         rts           ;return subroutine
-;*************************************;
-;SYNTH16
-;*************************************;
+;* SUPPOSED TO GENERATE A PHASED OUTPUT AT
+;* A CHANGING FREQUENCY. IT DOESN'T, AND
+;* I'M NOT SURE EXACTLY WHAT IT DOES DO.
+;* BEST LEAVE THIS ALONE.
+;SND1
 E292 : C6 11      ldab #$11    ;load B with value 11h
 E294 : D7 AC      stab $AC     ;store B in addr AC
+;SND1$
 E296 : 86 FE      ldaa #$FE    ;load A with value FEh
 E298 : 97 91      staa $91     ;store A in addr 91
+;SND1$$
 E29A : 86 9F      ldaa #$9F    ;load A with value 9Fh
 E29C : D6 AC      ldab $AC     ;load B with value in addr AC
-;SYN161 LE29E:
+;SND1A
 E29E : CE 01 C0   ldx #$01C0    ;load X with value 01C0h
-;SYN162 LE2A1:
+;SND1B
 E2A1 : 09         dex           ;decr X
 E2A2 : 27 20      beq LE2C4     ;branch Z=1 SYN165
 E2A4 : F7 00 90   stab $0090   ;store B in addr 0090
 E2A7 : B7 20 02   staa $2002   ;store A in DAC output SOUND
-;SYN163 LE2AA:
+;SND1C
 E2AA : 09         dex           ;decr X
 E2AB : 27 17      beq LE2C4     ;branch Z=1 SYN165
 E2AD : 7A 00 90   dec $0090     ;decr value in addr 0090
@@ -460,32 +445,33 @@ E2B2 : 09         dex           ;decr X
 E2B3 : 27 0F      beq LE2C4     ;branch Z=1 SYN165
 E2B5 : D7 90      stab $90     ;store B in addr 90
 E2B7 : 73 20 02   com $2002     ;complement 1s in DAC output SOUND
-;SYN164 LE2BA:
+;SND1D
 E2BA : 09         dex           ;decr X
 E2BB : 27 07      beq LE2C4     ;branch Z=1 SYN165
 E2BD : 7A 00 90   dec $0090     ;decr value in addr 0090
 E2C0 : 26 F8      bne LE2BA     ;branch Z=0 SYN164
 E2C2 : 20 DD      bra LE2A1     ;branch always SYN162
-;SYN165 LE2C4:
+;SSND1E
 E2C4 : D0 91      subb $91     ;subtract B with value in addr 91
 E2C6 : C1 10      cmpb #$10    ;compare B with value 10h
 E2C8 : 22 D4      bhi LE29E     ;branch C=0 and Z=0 SYN161
 E2CA : 39         rts           ;return subroutine
 ;*************************************;
-;SYNTH17 Hyper (same as ROM15 SYNTH6)
+;Hyper 
 ;*************************************;
+;HYPER
 E2CB : 4F         clra          ;clear A
 E2CC : B7 20 02   staa $2002    ;store A in DAC output SOUND
 E2CF : 97 87      staa $87      ;store A in addr 87 (TEMPA)(ZERO PHASE)
-;SYN171 LE2D1 HYPER1:
+;HYPER1:
 E2D1 : 4F         clra          ;clear A (ZERO TIME COUNTER)
-;SYN172 LE2D2 HYPER2:
+;HYPER2:
 E2D2 : 91 87      cmpa $87      ;compare A with value in addr 87 (TEMPA)
 E2D4 : 26 03      bne LE2D9     ;branch Z=0 SYN173 (HYPER3)
 E2D6 : 73 20 02   com $2002     ;complement 1s in DAC output SOUND (PHASE EDGE?)
-;SYN173 LE2D9 HYPER3:
+;HYPER3:
 E2D9 : C6 12      ldab #$12     ;load B with value 12h (DELAY)
-;SYN174 LE2DB HYPER4:
+;HYPER4:
 E2DB : 5A         decb          ;decr B
 E2DC : 26 FD      bne LE2DB     ;branch Z=0 SYN174 (HYPER4)
 E2DE : 4C         inca          ;incr A (ADVANCE TIME COUNTER)
@@ -495,28 +481,29 @@ E2E4 : 7C 00 87   inc $0087     ;incr value in addr 0087 (TEMPA)(NEXT PHASE)
 E2E7 : 2A E8      bpl LE2D1     ;branch N=0 SYN171 (HYPER1)(DONE?)
 E2E9 : 39         rts           ;return subroutine
 ;*************************************;
-;SYNTH18 Scream (same as ROM15 SYNTH7)
+;Scream 
 ;*************************************;
+;SCREAM
 E2EA : CE 00 90   ldx #$0090    ;load X with value 0090h (#STABLE ZERO FREQS AND TIMES)
-;SYN181 LE2ED SCREM1:
+;SCREM1:
 E2ED : 6F 00      clr $00,x     ;clear value in addr X + 00h
 E2EF : 08         inx           ;incr X
 E2F0 : 8C 00 A0   cpx #$00A0    ;compare X with value 00A0h (#SRMEND)
 E2F3 : 26 F8      bne LE2ED     ;branch Z=0 SYN181 (SCREM1)
 E2F5 : 86 18      ldaa #$18     ;load A with value 18h (START FIRST ECHO)
 E2F7 : 97 90      staa $90      ;store A in addr 90 (STABLE+FREQ)
-;SYN182 LE2F9 SCREM2:
+;SCREM2:
 E2F9 : CE 00 90   ldx #$0090    ;load X with value 0090h (#STABLE INITIALIZE COUNTER)
 E2FC : 86 C0      ldaa #$C0     ;load A with value C0h (INITIALIZE AMPLITUDE)
 E2FE : 97 87      staa $87      ;store A in addr 87 (TEMPA)
 E300 : 5F         clrb          ;clear B (ZERO OUTPUT BUFFER)
-;SYN183 LE301 SCREM3:
+;SCREM3:
 E301 : A6 01      ldaa $01,x    ;load A with value in addr X + 01h (TIMER,X ADD FREQ TO TIMER)
 E303 : AB 00      adda $00,x    ;add A with value in addr X + 00h (FREQ)
 E305 : A7 01      staa $01,x    ;store A in addr X + 01h (TIMER)
 E307 : 2A 02      bpl LE30B     ;branch N=0 SYN184 (SCREM4)(ADD AMPLITUDE IF MINUS)
 E309 : DB 87      addb $87      ;add B with value in addr 87 (TEMPA)
-;SYN184 LE30B SCREM4:
+;SCREM4:
 E30B : 74 00 87   lsr $0087     ;logic shift right (bit7=0) in addr 0087 (TEMPA)(DECAY AMPLITUDE)
 E30E : 08         inx           ;incr X (NEXT ECHO)
 E30F : 08         inx           ;incr X
@@ -527,17 +514,17 @@ E318 : 7C 00 88   inc $0088     ;incr value in addr 0088 (TEMPB)(ADVANCE TIMER)
 E31B : 26 DC      bne LE2F9     ;branch Z=0 SYN182 (SCREM2)
 E31D : CE 00 90   ldx #$0090    ;load X with value 0090h (#STABLE LOWER NON-ZERO FREQS)
 E320 : 5F         clrb          ;clear B (ALL ZERO NOT FLAG)
-;SYN185 LE321 SCREM5:
+;SCREM5:
 E321 : A6 00      ldaa $00,x    ;load A with value in addr X + 00h (FREQ)
 E323 : 27 0B      beq LE330     ;branch Z=1 SYN187 (SCREM7)
 E325 : 81 37      cmpa #$37     ;compare A with value 37h
 E327 : 26 04      bne LE32D     ;branch Z=0 SYN186 (SCREM6)
 E329 : C6 19      ldab #$19     ;load B with value 19h (START NEXT ECHO)
 E32B : E7 02      stab $02,x    ;store B in addr X + 02h (FREQ+2)
-;SYN186 LE32D SCREM6:
+;SCREM6:
 E32D : 6A 00      dec $00,x     ;decr value in addr X + 00h (FREQ)
 E32F : 5C         incb          ;incr B (SET FLAG)
-;SYN187 LE330:
+;SCREM7
 E330 : 08         inx           ;incr X
 E331 : 08         inx           ;incr X
 E332 : 8C 00 A0   cpx #$00A0    ;compare X with value 00A0h (#SRMEND)
@@ -546,39 +533,39 @@ E337 : 5D         tstb          ;test B=0 (DONE?)
 E338 : 26 BF      bne LE2F9     ;branch Z=0 SYN182 (SCREM2)
 E33A : 39         rts           ;return subroutine
 ;*************************************;
-;SYNTH19 - Variable Duty Cycle Square Wave Routine (same as ROM15 SYNTH1)
+;Variable Duty Cycle Square Wave Routine
 ;*************************************;
 ;VARI
 E33B : 96 98      ldaa $98      ;load A with value in addr 98 (VAMP)
 E33D : B7 20 02   staa $2002    ;store A in DAC output SOUND
-;SYN191 LE340 VAR0:
+;VAR0:
 E340 : 96 90      ldaa $90      ;load A with value in addr 90 (LOPER)
 E342 : 97 99      staa $99      ;store A in addr 99 (LOCNT)
 E344 : 96 91      ldaa $91      ;load A with value in addr 91 (HIPER)
 E346 : 97 9A      staa $9A      ;store A in addr 9A (HICNT)
-;SYN192 LE348 V0:
+;V0:
 E348 : DE 95      ldx $95       ;load X with value in addr 95 (SWPDT)
-;SYN193 LE34A V0LP:
+;V0LP:
 E34A : 96 99      ldaa $99      ;load A with value in addr 99 (LOCNT) (LO CYCLE)
 E34C : 73 20 02   com $2002     ;complement 1s in DAC output SOUND
-;SYN194 LE34F V1:
+;V1:
 E34F : 09         dex           ;decr X
 E350 : 27 10      beq LE362     ;branch Z=1 SYN196 (VSWEEP)
 E352 : 4A         deca          ;decr A
 E353 : 26 FA      bne LE34F     ;branch Z=0 SYN194 (V1)
 E355 : 73 20 02   com $2002     ;complement 1s in DAC output SOUND
 E358 : 96 9A      ldaa $9A      ;load A with value in addr 9A (HICNT) (HI CYCLE)
-;SYN195 LE35A V2:
+;V2:
 E35A : 09         dex           ;decr X
 E35B : 27 05      beq LE362     ;branch Z=1 SYN196 (VSWEEP)
 E35D : 4A         deca          ;decr A
 E35E : 26 FA      bne LE35A     ;branch Z=0 SYN195 (V2)
 E360 : 20 E8      bra LE34A     ;branch always SYN193 (V0LP) (LOOP BACK)
-;SYN196 LE362 VSWEEP:
+;VSWEEP:
 E362 : B6 20 02   ldaa $2002    ;load A with value in DAC output SOUND
 E365 : 2B 01      bmi LE368     ;branch N=1 SYN197 (VS1)
 E367 : 43         coma          ;complement 1s A
-;SYN197 LE368:
+;VS1
 E368 : 8B 00      adda #$00     ;add A with value 00h
 E36A : B7 20 02   staa $2002    ;store A in DAC output SOUND
 E36D : 96 99      ldaa $99      ;load A with value in addr 99 (LOCNT)
@@ -594,7 +581,7 @@ E37F : 27 06      beq LE387     ;branch Z=1 SYN198 (VARX)
 E381 : 9B 90      adda $90      ;add A with value in addr 90 (LOPER)
 E383 : 97 90      staa $90      ;store A in addr 90 (LOPER)
 E385 : 26 B9      bne LE340     ;branch Z=0 SYN191 (VAR0)
-;SYN198 LE387 VARX:
+;VARX:
 E387 : 39         rts           ;return subroutine
 ;*************************************;
 ;VVECT1
@@ -605,26 +592,26 @@ E391 : 48 91 00 FC 01 02 00 FC FF
 ;Turbo
 ;*************************************;
 ;TURBO
-E39A : 86 20      ldaa #$20     ;load A with value 20h
-E39C : 97 92      staa $92      ;store A in addr 92 (CYCNT)
-E39E : 97 95      staa $95      ;store A in addr 95 (NFFLG)
-E3A0 : 86 01      ldaa #$01     ;load A with value 01h
-E3A2 : CE 00 01   ldx #$0001    ;load X with value 0001h
-E3A5 : C6 FF      ldab #$FF     ;load B with value FFh
-;*
-;White Noise Routine  (SYNTH20 - same as ROM15 SYNTH3)
-;*
+E39A : 86 20      ldaa #$20           ;load A with value 20h
+E39C : 97 92      staa $92            ;store A in addr 92 (CYCNT)
+E39E : 97 95      staa $95            ;store A in addr 95 (NFFLG)
+E3A0 : 86 01      ldaa #$01           ;load A with value 01h
+E3A2 : CE 00 01   ldx #$0001          ;load X with value 0001h
+E3A5 : C6 FF      ldab #$FF           ;load B with value FFh
+;*************************************;
+;White Noise Routine 
+;*************************************;
 ;*X=INIT PERIOD, ACCB=INIT AMP, ACCA DECAY RATE
 ;*CYCNT=CYCLE COUNT, NFFLG= FREQ DECAY FLAG
 ;*
 ;NOISE
 E3A7 : 97 90      staa $90      ;store A in addr 90 (DECAY)
-;SYN201 LE3A9 NOISE0:
+;NOISE0:
 E3A9 : DF 93      stx $93       ;store X in addr 93 (NFRQ1)
-;SYN202 LE3AB NOIS00:
+;NOIS00:
 E3AB : D7 91      stab $91      ;store B in addr 91 (NAMP)
 E3AD : D6 92      ldab $92      ;load B with value in addr 92 (CYCNT)
-;SYN203 LE3AF NOISE1:
+;NOISE1:
 E3AF : 96 81      ldaa $81      ;load A with value in addr 81 (LO)(GET RANDOM BIT)
 E3B1 : 44         lsra          ;logic shift right A (bit7=0)
 E3B2 : 44         lsra          ;logic shift right A (bit7=0)
@@ -636,10 +623,10 @@ E3BA : 76 00 81   ror $0081     ;rotate right in addr 0081 (bit7 = C then C = bi
 E3BD : 86 00      ldaa #$00     ;load A with value 00h
 E3BF : 24 02      bcc LE3C3     ;branch C=0 SYN204 (NOISE2)
 E3C1 : 96 91      ldaa $91      ;load A with value in addr 91 (NAMP)
-;SYN204 LE3C3 NOISE2:
+;NOISE2:
 E3C3 : B7 20 02   staa $2002    ;store A in DAC output SOUND
 E3C6 : DE 93      ldx $93       ;load X with value in addr 93 (NFRQ1)(INCREASING DELAY)
-;SYN205 LE3C8 NOISE3:
+;NOISE3:
 E3C8 : 09         dex           ;decr X
 E3C9 : 26 FD      bne LE3C8     ;branch Z=0 SYN205 (NOISE3)
 E3CB : 5A         decb          ;decr B (FIN CYCLE COUNT?)
@@ -652,15 +639,17 @@ E3D6 : 08         inx           ;incr X
 E3D7 : 96 95      ldaa $95      ;load A with value in addr 95 (NFFLG)(DECAY FREQ?)
 E3D9 : 27 D0      beq LE3AB     ;branch Z=1 SYN202 (NOIS00)(NO)
 E3DB : 20 CC      bra LE3A9     ;branch always SYN201(NOISE0)
-;SYN206 LE3DD NSEND:
+;NSEND:
 E3DD : 39         rts           ;return subroutine
 ;*************************************;
-;PARAM13 - GWAVE LOADER (same as ROM15 PARAM13x)
+;PARAM13 
 ;*************************************;
-E3DE : 8D 03      bsr LE3E3     ;branch sub PRM131
-E3E0 : 7E F1 70   jmp LF170     ;jump SYNTH1
-;
-;PRM131 LE3E3 GWLD:
+E3DE : 8D 03      bsr LE3E3           ;branch sub GWLD
+E3E0 : 7E F1 70   jmp LF170           ;jump GWAVE
+;*************************************;
+;GWAVE Loader #1 (2nd is F10A)
+;*************************************;
+;GWLD:
 E3E3 : 16         tab           ;transfer A to B (A unchanged)
 E3E4 : 58         aslb          ;arith shift left B (bit0 is 0)
 E3E5 : 1B         aba           ;A = A + B
@@ -1600,43 +1589,43 @@ F0A3 : 20 FE      bra LF0A3           ;branch always NMIB
 ;NMIC LF0A5:
 F0A5 : 39         rts                 ;return subroutine
 ;*************************************;
-;VECTJUMP JMPTBL1 table to locations
+;VECTJUMP JMPTBL1 table to locations x35
 ;*************************************;
-F0A6 : F5 4E                          ;PRMSYNx1
-F0A8 : F5 59                          ;PRMCLRDAC
-F0AA : F5 F3                          ;PRMCLRDAC 
-F0AC : F6 B5                          ;PRMLDXx1
-F0AE : F5 6C                          ;PRMSYNx3
-F0B0 : F5 70                          ;PRMSYNx4 
-F0B2 : F5 74                          ;SYNTH
-F0B4 : F6 BD                          ;PRMLDXx2
-F0B6 : F6 C5                          ;PRMLDXx3 
-F0B8 : F7 44                          ;SYNTH3
-F0BA : F7 BB                          ;SYNTH5
-F0BC : F8 26                          ;PRMSYNx5 
-F0BE : F8 38                          ;PRMSYNx6
-F0C0 : F8 CB                          ;SYNTH7 
-F0C2 : F9 3F                          ;PRMJSR
+F0A6 : F5 4E                          ;CANNON
+F0A8 : F5 59                          ;SMLCAN
+F0AA : F5 F3                          ;CLRDAC 
+F0AC : F6 B5                          ;THNDR
+F0AE : F5 6C                          ;FNFRQ2
+F0B0 : F5 70                          ;THRUST
+F0B2 : F5 74                          ;FNFRQ4
+F0B4 : F6 BD                          ;THNDR5
+F0B6 : F6 C5                          ;THNDR4
+F0B8 : F7 44                          ;WHISTL
+F0BA : F7 BB                          ;KNOCK
+F0BC : F8 26                          ;ORRRR
+F0BE : F8 38                          ;SQRT
+F0C0 : F8 CB                          ;LITE
+F0C2 : F9 3F                          ;CDR
 F0C4 : E1 98                          ;SYNTH12
-F0C6 : F9 00                          ;PARAM7
-F0C8 : F9 04                          ;PRM71
-F0CA : F9 08                          ;PRM72
-F0CC : F9 0C                          ;PRM73
-F0CE : FF 94                          ;PARAM11
-F0D0 : E2 20                          ;SYNPRM5 
-F0D2 : E2 35                          ;SYNPRM6
-F0D4 : E2 47                          ;SYNTH15
-F0D6 : E2 7E                          ;PRMSYN7
-F0D8 : E1 6D                          ;SYNTH11
+F0C6 : F9 00                          ;WINGUP
+F0C8 : F9 04                          ;CLIP
+F0CA : F9 08                          ;CLOP
+F0CC : F9 0C                          ;WINGDN
+F0CE : FF 94                          ;ZIREN
+F0D0 : E2 20                          ;HSTD
+F0D2 : E2 35                          ;SIREN
+F0D4 : E2 47                          ;APPEAR
+F0D6 : E2 7E                          ;LITE
+F0D8 : E1 6D                          ;TILT
 F0DA : E1 B0                          ;SYNTH13
 F0DC : E1 D4                          ;SYNTH14
-F0DE : E1 FE                          ;SYNPRM1
-F0E0 : E2 0D                          ;SYNPRM3
-F0E2 : E2 92                          ;SYNTH16
-F0E4 : E2 CB                          ;SYNTH17
-F0E6 : E2 EA                          ;SYNTH18
-F0E8 : E3 9A                          ;SYNTH20
-F0EA : E0 CD                          ;PARAM12 (NMI Organ param)
+F0DE : E1 FE                          ;ATARI
+F0E0 : E2 0D                          ;PERK$$
+F0E2 : E2 92                          ;SND1
+F0E4 : E2 CB                          ;HYPER
+F0E6 : E2 EA                          ;SCREAM
+F0E8 : E3 9A                          ;TURBO
+F0EA : E0 CD                          ;ORGNT1
 ;*************************************;
 ;PRMFDB1
 ;*************************************;
@@ -1662,7 +1651,7 @@ F100 : 20 ED      bra LF0EF           ;branch always PRMFDB1
 ;*************************************;
 F102 : 03 06 0A 04 0E 05 09 00
 ;*************************************;
-;PARAM1 - GWAVE Loader(similar to ROM15 PARAM13x)
+;GWAVE Loader #2
 ;*************************************;
 ;GWLD
 F10A : 16         tab                 ;transfer A to B (A unchanged)(MULKT BY 7)
@@ -1670,8 +1659,8 @@ F10B : 58         aslb                ;arith shift left B (bit0 is 0)
 F10C : 1B         aba                 ;A = A + B
 F10D : 1B         aba                 ;A = A + B
 F10E : 1B         aba                 ;A = A + B
-F10F : CE F3 87   ldx #$F387          ;load X with value F387h (FDBdata9)(SVTAB)(SOUND VECTOR TABLE)
-F112 : BD E1 89   jsr LE189           ;jump sub CALCOS
+F10F : CE F3 87   ldx #$F387          ;load X with value F387h (SVTAB)(SOUND VECTOR TABLE)
+F112 : BD E1 89   jsr LE189           ;jump sub ADDX
 F115 : A6 00      ldaa $00,x          ;load A with value at addr X + 00h
 F117 : 16         tab                 ;transfer A to B (A unchanged)
 F118 : 84 0F      anda #$0F           ;and A with value 0Fh
@@ -1723,16 +1712,16 @@ F16A : BD E1 89   jsr LE189           ;jump sub CALCOS
 F16D : DF 9B      stx $9B             ;store X in addr 9B (FRQEND)
 F16F : 39         rts                 ;return subroutine
 ;*************************************;
-;SYNTH1 - GWAVE ROUTINE (modified from ROM15 SYNTH9)
+;GWAVE ROUTINE 
 ;*************************************;
 ;ACCA=Freq Pattern Length, X=Freq Pattern Addr
 ;GWAVE
 F170 : 96 91      ldaa $91            ;load A with value in addr 91 (GECHO)
 F172 : 97 A0      staa $A0            ;store A in addr A0 (GECNT)
-;SYN11 LF174 GWT4
+;GWT4
 F174 : DE 99      ldx $99             ;load X with value in addr 99 (GWFRQ)
 F176 : DF 8C      stx $8C             ;store X in addr 8C (XPLAY)
-;SYN12 LF178 GPLAY:
+;GPLAY:
 F178 : DE 8C      ldx $8C             ;load X with value in addr 8C (XPLAY)(GET NEW PERIOD)
 F17A : A6 00      ldaa $00,x          ;load A with value in addr X + 00h 
 F17C : 9B A1      adda $A1            ;add A with value in addr A1 (FOFSET)
@@ -1742,11 +1731,11 @@ F182 : 27 26      beq LF1AA           ;branch Z=1 PRMCSC (GEND)(FINISH ON ZERO)
 F184 : D6 92      ldab $92            ;load B with value in addr 92 (GCCNT)(CYCLE COUNT)
 F186 : 08         inx                 ;incr X
 F187 : DF 8C      stx $8C             ;store X in addr 8C (XPLAY)
-;SYN13 LF189 GOUT:
+;GOUT:
 F189 : CE 00 A2   ldx #$00A2          ;load X with value 00A2 (#GWTAB)(SETUP WAVEFORM POINTER)
-;SYN14 LF18C GOUTLP:
+;GOUTLP:
 F18C : 96 9F      ldaa $9F            ;load A with value in addr 9F (GPER)
-;SYN15 LF18E GPRLP:
+;GPRLP:
 F18E : 4A         deca                ;decr A (WAIT FOR PERIOD)
 F18F : 26 FD      bne LF18E           ;branch Z=0 SYN15 (GPRLP)
 F191 : A6 00      ldaa $00,x          ;load A with value in addr  X + 00h (OUTPUT SOUND)
@@ -1929,13 +1918,21 @@ F311 : 00 DC 00 E8 00 F4 00 00        ;
 ;end taken from Robotron
 ;
 ;below from Robotron not found
+            48 45 4B 50 56 5B 60 64  69
 ;HBPAT2 FCB 72,69,75,80,86,91,96,100,105
+             6D  71 74  77  7A  7C  7E  7F  7F  80
 ;       FCB 109,113,116,119,122,124,126,127,127,128
+             7F  7F  7E 7C  7A  77  74  71  6D
 ;       FCB 127,127,126,124,122,119,116,113,109
+             69  64 60 5B 56 50 4B 45 40
 ;       FCB 105,100,96,91,86,80,75,69,64
+            3B 35 30 2A 25 20 1C 17 13 0F 0C 09 06
 ;       FCB 59,53,48,42,37,32,28,23,19,15,12,9,6
+           04 02 01 01 00
 ;       FCB 4,2,1,1,0
+           01 01 02 04 06 09 0C 13 17 1C 20 25 2A
 ;       FCB 1,1,2,4,6,9,12,15,19,23,28,32,37,42
+            30 35 3B 40
 ;       FCB 48,53,59,64
 ;
 F319 : 1C 80 40 29 1B 10 09 06        ;
@@ -2057,25 +2054,22 @@ F52F : 20 10 0C 0A 08 07 06 05        ;
 F537 : 0C 08 80 10 78 18 70 20        ;
 F53F : 60 28 58 30 50 40 10 08        ;
 F547 : 01                             ;
-;
 ;*************************************;
-;FDBdata11
+;FNOISE Calling Routine
 ;*************************************;
-F548 : 01 01 01 FF 03 E8
-;*************************************;
-;SYNPRM9
-;*************************************;
-F54E : CE F5 48   ldx #$F548          ;load X with value F548h (FDBdata11)
-F551 : 20 09      bra LF55C           ;branch always SYNPRM10
-;*************************************;
-;FDBdata12
-;*************************************;
-F553 : 01 01 01 40 10 00
-;*************************************;
-;SYNPRM10
-;*************************************;
-F559 : CE F5 53   ldx #$F553          ;load X with value F553h (FDBdata12)
-;LF55C:
+;FCB CANNON
+F548 : 01 01 01 FF 03 E8              ;FCBCAN
+;CANNON
+F54E : CE F5 48   ldx #$F548          ;load X with value F548h (FCBCAN)
+F551 : 20 09      bra LF55C           ;branch always FNOSLD
+;*
+;FCB SMALL CANNNON
+F553 : 01 01 01 40 10 00              ;FCBSML
+;SMLCAN
+F559 : CE F5 53   ldx #$F553          ;load X with value F553h (FCBSML)
+;*
+;Filtered Noise Loader
+;FNOSLD
 F55C : A6 00      ldaa $00,x          ;load A with value at addr X + 00h
 F55E : 97 96      staa $96            ;store A in addr 96
 F560 : A6 01      ldaa $01,x          ;load A with value in addr X + 01h
@@ -2083,37 +2077,36 @@ F562 : 97 97      staa $97            ;store A in addr 97
 F564 : A6 02      ldaa $02,x          ;load A with value in addr X + 02h  
 F566 : E6 03      ldab $03,x          ;load B with value in addr X + 03h
 F568 : EE 04      ldx $04,x           ;load X with value in addr X + 04h
-F56A : 20 0F      bra LF57B           ;branch always SYN22
-;*************************************;
-;SYNPRM11
-;*************************************;
+F56A : 20 0F      bra LF57B           ;branch always FNOISE
+;*
+;FNFRQ2
 F56C : C6 02      ldab #$02           ;load B with value 02h
-F56E : 20 06      bra LF576           ;branch always SYN21
-;*************************************;
-;SYNPRM12
-;*************************************;
+F56E : 20 06      bra LF576           ;branch always FNRPRM
+;*
+;THRUST
 F570 : C6 03      ldab #$03           ;load B with value 03h
-F572 : 20 02      bra LF576           ;branch always SYN21
-;*************************************;
-;SYNTH2 Filtered Noise Routine (similar to ROM15 SYNTH4)
-;*************************************;
-;*X=SAMPLE COUNT, ACCB=INITIAL MAX FREQ
-;*ACCA=FREQ DECAY FLAG ,DSFLG=DISTORTION FLAG
-;preload params
+F572 : 20 02      bra LF576           ;branch always FNRPRM
+;
+;FNFRQ4
 F574 : C6 04      ldab #$04           ;load B with value 04h
-;SYN21 LF576:
+;FNRPRM
 F576 : 4F         clra                ;clear A
 F577 : 97 97      staa $97            ;store A in addr 97
 F579 : 97 96      staa $96            ;store A in addr 96
-;SYN22 LF57B FNOISE:
+;*************************************;
+;Filtered Noise Routine
+;*************************************;
+;*X=SAMPLE COUNT, ACCB=INITIAL MAX FREQ
+;*ACCA=FREQ DECAY FLAG ,DSFLG=DISTORTION FLAG
+;FNOISE:
 F57B : 97 95      staa $95            ;store A in addr 95 (FDFLG)
 F57D : D7 90      stab $90            ;store B in addr 90 (FMAX)
 F57F : DF 93      stx $93             ;store X in addr 93 (SAMPC)
 F581 : 7F 00 92   clr $0092           ;clear addr 0092 (FLO)
-;SYN23 LF584 FNOIS0:
+;FNOIS0:
 F584 : DE 93      ldx $93             ;load X with value in addr 93 
 F586 : B6 20 02   ldaa $2002          ;load A from DAC output SOUND (SAMPC)
-;SYN24 LF589 FNOIS1:
+;FNOIS1:
 F589 : 16         tab                 ;transfer A to B (NEXT RANDOM NUMBER)
 F58A : 54         lsrb                ;logic shift right B (bit7=0)
 F58B : 54         lsrb                ;logic shift right B (bit7=0)
@@ -2127,12 +2120,12 @@ F598 : 7D 00 96   tst $0096           ;test value in addr 0096=00 (N=0(MSB), Z=1
 F59B : 27 04      beq LF5A1           ;branch Z=1 SYN25 (FNOIS2)
 F59D : D4 80      andb $80            ;and B with value in addr 80 (HI)(DISTORT FREQ)
 F59F : DB 97      addb $97            ;add B with value in addr 97 <- not in ROM15
-;SYN25 LF5A1 FNOIS2:
+;FNOIS2:
 F5A1 : D7 91      stab $91            ;store B in addr 91 (FHI)
 F5A3 : D6 92      ldab $92            ;load B with value in addr 92 (FLO)
 F5A5 : 91 81      cmpa $81            ;compare A with value in addr 81 (LO)
 F5A7 : 22 12      bhi LF5BB           ;branch C=0 and Z=0 SYN27 (FNOIS4)
-;SYN26 LF5A9 FNOIS3:
+;FNOIS3:
 F5A9 : 09         dex                 ;decr X (SLOPE UP)
 F5AA : 27 26      beq LF5D2           ;branch Z=1 SYN29 (FNOIS6)
 F5AC : B7 20 02   staa $2002          ;store A in DAC output SOUND
@@ -2142,7 +2135,7 @@ F5B3 : 25 16      bcs LF5CB           ;branch C=1 SYN28 (FNOIS5)
 F5B5 : 91 81      cmpa $81            ;compare A with value in addr 81 (LO)
 F5B7 : 23 F0      bls LF5A9           ;branch C=1 and Z=1 SYN26 (FNOIS3)
 F5B9 : 20 10      bra LF5CB           ;branch always SYN28 (FNOIS5)
-;SYN27 LF5BB FNOIS4:
+;FNOIS4:
 F5BB : 09         dex                 ;decr X (SLOPE DOWN)
 F5BC : 27 14      beq LF5D2           ;branch Z=1 SYN29 (FNOIS6)
 F5BE : B7 20 02   staa $2002          ;store A in DAC output SOUND
@@ -2151,11 +2144,11 @@ F5C3 : 92 91      sbca $91            ;A = A - C - value in addr 91 (FHI)
 F5C5 : 25 04      bcs LF5CB           ;branch C=1 SYN28 (FNOIS5)
 F5C7 : 91 81      cmpa $81            ;compare A with value in addr 81 (LO)
 F5C9 : 22 F0      bhi LF5BB           ;branch C=0 and Z=0 SYN27 (FNOIS4)
-;SYN28 LF5CB FNOIS5:
+;FNOIS5:
 F5CB : 96 81      ldaa $81            ;load A with value in addr 81 (LO)
 F5CD : B7 20 02   staa $2002          ;store A in DAC output SOUND
 F5D0 : 20 B7      bra LF589           ;branch always SYN24 (FNOIS1)
-;SYN29 LF5D2 FNOIS6:
+;FNOIS6:
 F5D2 : D6 95      ldab $95            ;load B with value in addr 95 (FDFLG)
 F5D4 : 27 B3      beq LF589           ;branch Z=1 SYN24 (FNOIS1)
 F5D6 : 96 90      ldaa $90            ;load A with value in addr 90 (FMAX)(DECAY MAX FREQ)
@@ -2175,22 +2168,23 @@ F5E8 : D7 92      stab $92            ;store B in addr 92 (FLO)
 F5EA : 97 90      staa $90            ;store A in addr 90 (FMAX)
 F5EC : 26 96      bne LF584           ;branch Z=0 SYN23 (FNOIS0)
 F5EE : C1 07      cmpb #$07           ;compare B with value 07h 
-;SYN2A XF5F0:
 F5F0 : 26 92      bne LF584           ;branch Z=0 SYN23 (FNOIS0)
 F5F2 : 39         rts                 ;return subroutine
 ;*************************************;
-;PRMCLRDAC (clear DAC and wait X=1000)
+;clear DAC and wait X=1000
 ;*************************************;
+;CLRDAC
 F5F3 : 7F 20 02   clr $2002           ;clear DAC output SOUND
 F5F6 : CE 10 00   ldx #$1000          ;load X with value 1000h
-;LF5F9:
+;CLRDAC1
 F5F9 : 09         dex                 ;decr X
-F5FA : 26 FD      bne LF5F9           ;branch Z=0 LF5F9
+F5FA : 26 FD      bne LF5F9           ;branch Z=0 CLRDAC1
 F5FC : 39         rts                 ;return subroutine
 ;*************************************;
-;PRMLOAD1
+;Three Oscillator Play Loader
 ;*************************************;
-F5FD : CE F6 B1   ldx #$F6B1          ;load X with value F6B1h (FDBdata13)
+;PLAYLD
+F5FD : CE F6 B1   ldx #$F6B1          ;load X with value F6B1h (RDECAY)
 F600 : DF 84      stx $84             ;store X in addr 84
 F602 : CE 00 90   ldx #$0090          ;load X with value 0090h
 F605 : DF 8E      stx $8E             ;store X in addr 8E
@@ -2198,34 +2192,35 @@ F607 : C6 AF      ldab #$AF           ;load B with value AFh
 F609 : D7 89      stab $89            ;store B in addr 89
 F60B : 39         rts                 ;return subroutine
 ;*************************************;
-;Three Oscillator Sound Generator (ROM1 PARAM1) PARAM6
+;Three Oscillator Sound Generator
 ;*************************************;
+;PLAY
 F60C : DF 8C      stx $8C             ;store X in addr 8C
-F60E : CE F6 B1   ldx #$F6B1          ;load X with value F6B1h (FDBdata13) (SYN02)
+F60E : CE F6 B1   ldx #$F6B1          ;load X with value F6B1h (#DECAYZ) (SYN02)
 F611 : DF 84      stx $84             ;store X in addr 84
 F613 : 86 80      ldaa #$80           ;load A with value 80h
-;PRM61 LF615:
+;PLAY1
 F615 : D6 93      ldab $93            ;load B with value in addr 93
-F617 : 2A 09      bpl LF622           ;branch N=0 PRM63
+F617 : 2A 09      bpl LF622           ;branch N=0 PLAY3
 F619 : D6 81      ldab $81            ;load B with value in addr 81
 F61B : 54         lsrb                ;logic shift right B (bit7=0)
 F61C : 54         lsrb                ;logic shift right B (bit7=0)
 F61D : 54         lsrb                ;logic shift right B (bit7=0)
 F61E : 5C         incb                ;logic shift right B (bit7=0)
-;PRM62 LF61F:
+;PLAY2
 F61F : 5A         decb                ;decr B
-F620 : 26 FD      bne LF61F           ;branch Z=0 PRM62
-;PRM63 LF622:
+F620 : 26 FD      bne LF61F           ;branch Z=0 PLAY2
+;PLAY3
 F622 : 7A 00 98   dec $0098           ;decr value in addr 0098
-F625 : 27 4C      beq LF673           ;branch Z=1 PRM67
+F625 : 27 4C      beq LF673           ;branch Z=1 PLAY7
 F627 : 7A 00 99   dec $0099           ;decr value in addr 0099
-F62A : 27 4C      beq LF678           ;branch Z=1 PRM68
+F62A : 27 4C      beq LF678           ;branch Z=1 PLAY8
 F62C : 7A 00 9A   dec $009A           ;decr value in addr 009A
-F62F : 27 4C      beq LF67D           ;branch Z=1 PRM69
+F62F : 27 4C      beq LF67D           ;branch Z=1 PLAY9
 F631 : 7A 00 9B   dec $009B           ;decr value in addr 009B
-F634 : 26 DF      bne LF615           ;branch Z=0 PRM61
+F634 : 26 DF      bne LF615           ;branch Z=0 PLAY1
 F636 : D6 93      ldab $93            ;load B with value in addr 93
-F638 : 27 DB      beq LF615           ;branch Z=1 PRM61
+F638 : 27 DB      beq LF615           ;branch Z=1 PLAY1
 F63A : C4 7F      andb #$7F           ;and B with value 7Fh
 F63C : D7 9B      stab $9B            ;store B in addr 9B
 F63E : D6 81      ldab $81            ;load B with value in addr 81
@@ -2234,53 +2229,53 @@ F641 : DB 81      addb $81            ;add B with value in addr 81
 F643 : CB 0B      addb #$0B           ;add B with value 0Bh
 F645 : D7 81      stab $81            ;store B in addr 81
 F647 : 7A 00 AB   dec $00AB           ;decr addr 00AB
-F64A : 26 0E      bne LF65A           ;branch Z=0 PRM64
+F64A : 26 0E      bne LF65A           ;branch Z=0 PLAY4
 F64C : D6 9F      ldab $9F            ;load B with value in addr 9F
 F64E : D7 AB      stab $AB            ;store B in addr AB
 F650 : DE 84      ldx $84             ;load X with value in addr 84
 F652 : 09         dex                 ;decr X
 F653 : 8C F6 AA   cpx #$F6AA          ;compare X with value F6AAh (SYN01)
-F656 : 27 4E      beq LF6A6           ;branch Z=1 PRM6C
+F656 : 27 4E      beq LF6A6           ;branch Z=1 PLAYX
 F658 : DF 84      stx $84             ;store X in addr 84
-;PRM64 LF65A:
+;PLAY6
 F65A : D6 81      ldab $81            ;load B with value in addr 81
-F65C : 2B 06      bmi LF664           ;branch N=1 PRM65
+F65C : 2B 06      bmi LF664           ;branch N=1 PLAY6A
 F65E : D4 97      andb $97            ;and B with value in addr 97
 F660 : C4 7F      andb #$7F           ;and B with value 7Fh
-F662 : 20 05      bra LF669           ;branch always PRM66
-;PRM65 LF664:
+F662 : 20 05      bra LF669           ;branch always PLAYB
+;PLAY6A
 F664 : D4 97      andb $97            ;and B with value in addr 97
 F666 : C4 7F      andb #$7F           ;and B with value 7Fh
 F668 : 50         negb                ;complement 2s B
-;PRM66 LF669:
+;PLAY6B
 F669 : 36         psha                ;push A into stack then SP - 1
 F66A : 1B         aba                 ;A = A + B
 F66B : 16         tab                 ;transfer A to B
 F66C : 32         pula                ;SP + 1 pull stack into A
 F66D : DE 84      ldx $84             ;load X with value in addr 84
 F66F : AD 00      jsr $00,x           ;jump sub addr X + 00h
-F671 : 20 A2      bra LF615           ;branch always PRM61
-;PRM67 LF673:
+F671 : 20 A2      bra LF615           ;branch always PLAY1
+;PLAY7
 F673 : CE 00 90   ldx #$0090          ;load X with value 0090
-F676 : 20 08      bra LF680           ;branch always PRM6A
-;PRM68 LF678:
+F676 : 20 08      bra LF680           ;branch always PLAY10
+;PLAY8 
 F678 : CE 00 91   ldx #$0091          ;load X with value 0091
-F67B : 20 03      bra LF680           ;branch always PRM6A
-;PRM69 LF67D:
+F67B : 20 03      bra LF680           ;branch always PLAY10
+;PLAY9 
 F67D : CE 00 92   ldx #$0092          ;load X with value 0092h
-;PRM6A LF680:
+;PLAY10 
 F680 : 6D 18      tst $18,x           ;test value in addr X + 18h
-F682 : 27 12      beq LF696           ;branch Z=1 PRM6B
+F682 : 27 12      beq LF696           ;branch Z=1 PLAY11
 F684 : 6A 18      dec $18,x           ;decr addr X + 18h
-F686 : 26 0E      bne LF696           ;branch Z=0 PRM6B
+F686 : 26 0E      bne LF696           ;branch Z=0 PLAY11
 F688 : E6 0C      ldab $0C,x          ;load B with value in addr X + 0Ch
 F68A : E7 18      stab $18,x          ;store B in addr X + 18h
 F68C : E6 00      ldab $00,x          ;load B with value in addr X + 00h
 F68E : EB 10      addb $10,x          ;add B with value in addr X + 10h
 F690 : E1 14      cmpb $14,x          ;compare B with value in addr X + 14h
-F692 : 27 12      beq LF6A6           ;branch Z=1 PRM6C
+F692 : 27 12      beq LF6A6           ;branch Z=1 PLAYX
 F694 : E7 00      stab $00,x          ;store B in addr X + 00h
-;PRM6B LF696:
+;PLAY11
 F696 : E6 00      ldab $00,x          ;load B with value in addr X + 00h   
 F698 : E7 08      stab $08,x          ;store B in addr X + 08h
 F69A : AB 04      adda $04,x          ;add A with value in addr X + 04h
@@ -2288,77 +2283,68 @@ F69C : 60 04      neg $04,x           ;complement 2s in addr X + 04h
 F69E : 16         tab                 ;transfer A to B
 F69F : DE 84      ldx $84             ;load X with value in addr 84
 F6A1 : AD 00      jsr $00,x           ;jump sub addr X + 00h
-F6A3 : 7E F6 15   jmp LF615           ;jump PRM61
-;PRM6C LF6A6:
+F6A3 : 7E F6 15   jmp LF615           ;jump PLAY1
+;PLAYX
 F6A6 : DE 8C      ldx $8C             ;load X with value in addr 8C
 F6A8 : 39         rts                 ;return subroutine
 ;*************************************;
-; Echo And Decay Routine (Flash ROM1 SYNTH0) FDBdata13
+; Echo And Decay Routine 
 ;*************************************;
-F6A9 : 54         lsrb                ;logical shift right B (0nnn nnnn)
-;SYN01
-F6AA : 54         lsrb                ;logical shift right B (0nnn nnnn) note fall through above:add one lsrb
-F6AB : 54         lsrb                ;logical shift right B (00nn nnnn)
-F6AC : 54         lsrb                ;logical shift right B (000n nnnn)
-F6AD : 54         lsrb                ;logical shift right B (0000 nnnn)
-F6AE : 54         lsrb                ;logical shift right B (0000 0nnn)
-F6AF : 54         lsrb                ;logical shift right B (0000 00nn)
-F6B0 : 54         lsrb                ;logical shift right B (0000 000n)
-;SYN02
-F6B1 : F7 20 02   stab $8400          ;store B in DAC output SOUND 
+;RDECAY
+F6A9 : 54         lsrb                ;logical shift right B (/2)
+;#RDECAY+1 
+F6AA : 54         lsrb                ;logical shift right B 
+F6AB : 54         lsrb                ;logical shift right B
+F6AC : 54         lsrb                ;logical shift right B 
+F6AD : 54         lsrb                ;logical shift right B 
+F6AE : 54         lsrb                ;logical shift right B
+F6AF : 54         lsrb                ;logical shift right B 
+F6B0 : 54         lsrb                ;logical shift right B
+;#DECAYZ 
+F6B1 : F7 20 02   stab $2002          ;store B in DAC output SOUND 
 F6B4 : 39         rts                 ;return subroutine
 ;*************************************;
-;3 Oscillator Calling Routines PRMLDX1
+;3 Oscillator Calling Routines
 ;*************************************;
-F6B5 : BD F5 FD   jsr LF5FD           ;jump sub PRMLOAD1
-F6B8 : CE F7 28   ldx #$F728          ;load X with value F728h (FDBdata15c)
-F6BB : 20 0E      bra LF6CB           ;branch always PRMLDX3
-;*
-F6BD : BD F5 FD   jsr LF5FD           ;jump sub PRMLOAD1
-F6C0 : CE F7 0C   ldx #$F70C          ;load X with value F70Ch (FDBdata15b)
-F6C3 : 20 06      bra LF6CB           ;branch always PRMLDX3
-;*
-F6C5 : BD F5 FD   jsr LF5FD           ;jump sub PRMLOAD1
-F6C8 : CE F6 F0   ldx #$F6F0          ;load X with value F6F0h (FDBdata15a)
-;LF6CB:
+;THNDR
+F6B5 : BD F5 FD   jsr LF5FD           ;jump sub PLAYLD
+F6B8 : CE F7 28   ldx #$F728          ;load X with value F728h (VEC017)
+F6BB : 20 0E      bra LF6CB           ;branch always THNDR1 
+;THNDR5
+F6BD : BD F5 FD   jsr LF5FD           ;jump sub PLAYLD
+F6C0 : CE F7 0C   ldx #$F70C          ;load X with value F70Ch (VEC05)
+F6C3 : 20 06      bra LF6CB           ;branch always THNDR1
+;THNDR4
+F6C5 : BD F5 FD   jsr LF5FD           ;jump sub PLAYLD
+F6C8 : CE F6 F0   ldx #$F6F0          ;load X with value F6F0h (VEC04)
+;THNDR1
 F6CB : C6 1C      ldab #$1C           ;load B with value 1Ch
-F6CD : BD F2 3B   jsr LF23B           ;jump sub UTIL1
-F6D0 : 7E F6 0C   jmp LF60C           ;jump PARAM6
+F6CD : BD F2 3B   jsr LF23B           ;jump sub TRANS
+F6D0 : 7E F6 0C   jmp LF60C           ;jump PLAY
 F6D3 : 39         rts                 ;return subroutine
 ;*************************************;
-;VEC01 FDBdata14 - 28 bytes
+;Three Oscillator Tables- 28 bytes
+;
+F6D4 : FFFF FF90 FFFF FFFF FFFF       ;VEC01
+F6DE : FF90 FFFF FFFF FFFF FFFF       ;
+F6E8 : 0000 0000 0000 0000            ;
+;
+F6F0 : 3000 0000 7F00 0000 3000       ;VEC04
+F6FA : 0000 0100 0000 7F00 0000       ;
+F704 : 0200 0000 0100 0000            ;
+;
+F70C : 0400 0004 7F00 007F 0400       ;VEC05
+F716 : 0004 FF00 00A0 0000 0000       ;
+F720 : 0000 0000 FF00 00A0            ;
+;
+F728 : 0280 0030 0A7F 007F 0280       ;VEC017
+F732 : 0030 C080 0020 0110 0015       ;
+F73C : C010 0000 C080 0000            ;
 ;*************************************;
-F6D4 : FF FF FF 90 FF FF FF FF
-F6DC : FF FF FF 90 FF FF FF FF
-F6E4 : FF FF FF FF 00 00 00 00 
-F6EC : 00 00 00 00
-;*************************************;
-;VEC04 FDBdata15a - 28 bytes
-;*************************************;
-F6F0 : 30 00 00 00 7F 00 00 00
-F6F8 : 30 00 00 00 01 00 00 00
-F700 : 7F 00 00 00 02 00 00 00
-F708 : 01 00 00 00 
-;*************************************;
-;VEC05 FDBdata15b - 28 bytes
-;*************************************;
-F70C : 04 00 00 04 7F 00 00 7F 
-F714 : 04 00 00 04 FF 00 00 A0 
-F71C : 00 00 00 00 00 00 00 00
-F724 : FF 00 00 A0 
-;*************************************;
-;FDBdata15c - 28 bytes
-;*************************************;
-F728 : 02 80 00 30 0A 7F 00 7F
-F730 : 02 80 00 30 C0 80 00 20 
-F738 : 01 10 00 15 C0 10 00 00
-F740 : C0 80 00 00
-;*************************************;
-;(SYNTH3)
-;*************************************;
-F744 : BD F5 FD   jsr LF5FD           ;jump sub PRMLOAD1 (load X = F7 20)
-;*
 ;* THE BOMB OOOOOH NOOOOO!
+;*************************************;
+;WHISTL
+F744 : BD F5 FD   jsr LF5FD           ;jump sub PRMLOAD1 (load X = F7 20)
 ;WHIST
 F747 : 86 80      ldaa #$80           ;load A with value 80h
 F749 : 97 9A      staa $9A            ;store A in addr 9A (FREQZ)
@@ -2391,7 +2377,7 @@ F776 : 81 20      cmpa #$20           ;compare A with value 20h
 F778 : 26 D5      bne LF74F           ;branch Z=0 SYN31 (WHIST0)
 F77A : 39         rts                 ;return subroutine
 ;*
-;Sine Table (FDBdata16)
+;Sine Table
 ;*
 ;SINTBL
 F77B : 80 8C 98 A5 B0 BC C6 D0 
@@ -2403,13 +2389,13 @@ F7A3 : 25 1D 15 0F 0A 05 02 01
 F7AB : 00 01 02 05 0A 0F 15 1D
 F7B3 : 25 2F 39 43 4F 5A 67 73
 ;*************************************;
-;Knocker Routine (SYNTH5)
+;Knocker Routine
 ;*************************************;
 ;KNOCK
 F7BB : 7F 20 02   clr $2002           ;clear DAC output SOUND (FULL BLAST)
-F7BE : CE F8 02   ldx #$F802          ;load X with value F802h (#KNKTAB)(FDBdata17)
+F7BE : CE F8 02   ldx #$F802          ;load X with value F802h (#KNKTAB)
 F7C1 : DF 92      stx $92             ;store X in addr 92 (SNDTMP)
-;SYN51 LF7C3 SQLP:
+;SQLP:
 F7C3 : DE 92      ldx $92             ;load X with value in addr 92 (SNDTMP)(RESTORE X REG)
 F7C5 : A6 00      ldaa $00,x          ;load A with value in addr X + 00h (GET PERIOD)
 F7C7 : 27 33      beq LF7FC           ;branch Z=1 SYN59 (END)(END ON ZERO)
@@ -2422,23 +2408,23 @@ F7D2 : 08         inx                 ;incr X
 F7D3 : DF 92      stx $92             ;store X in addr 92 (SNDTMP)(SAVE X)
 F7D5 : 97 90      staa $90            ;store A in addr 90 (PERIOD)
 F7D7 : C4 0F      andb #$0F           ;and B with value 0Fh
-;SYN53 LF7D9 LP0:
+;LP0:
 F7D9 : 96 91      ldaa $91            ;load A with value in addr 91 (AMP)
 F7DB : B7 20 00   staa $2000          ;store A in PIA sound select (SOUND) <-- error here? addr should be 2002
 F7DE : 96 90      ldaa $90            ;load A with value in addr 90 (PERIOD)
-;SYN54 LF7E0 LP1:
+;LP1:
 F7E0 : CE 00 05   ldx #$0005          ;load X with value 0005h (DELAY)
-;SYN55 LF7E3 LP11:
+;LP11:
 F7E3 : 09         dex                 ;decr X
-;SYN56 LF7E4:
+;LF7E4:
 F7E4 : 26 FD      bne LF7E3           ;branch Z=0 SYN55 (LP11)
 F7E6 : 4A         deca                ;decr A
 F7E7 : 26 F7      bne LF7E0           ;branch Z=0 SYN54 (LP1)
 F7E9 : 7F 20 00   clr $2000           ;clear (00) PIA sound select (SOUND) <-- error here? addr should be 2002
 F7EC : 96 90      ldaa $90            ;load A with value in addr 90 (PERIOD)
-;SYN57 LF7EE LP2:
+;LP2:
 F7EE : CE 00 05   ldx #$0005          ;load X with value 0005h (DELAY)
-;SYN58 LF7F1 LP22:
+;LP22:
 F7F1 : 09         dex                 ;decr X
 F7F2 : 26 FD      bne LF7F1           ;branch Z=0 SYN58 (LP22)
 F7F4 : 4A         deca                ;decr A
@@ -2446,38 +2432,37 @@ F7F5 : 26 F7      bne LF7EE           ;branch Z=0 SYN57 (LP2)
 F7F7 : 5A         decb                ;decr B
 F7F8 : 26 DF      bne LF7D9           ;branch Z=0 SYN53 (LP0)
 F7FA : 20 C7      bra LF7C3           ;branch always SYN51 (SQLP)
-;SYN59 LF7FC END:
+;END:
 F7FC : 86 80      ldaa #$80           ;load A with value 80h (OVERRIDE OFF)
 F7FE : B7 20 02   staa $2002          ;store A in DAC output (SOUND+2) <-- what?
 F801 : 39         rts                 ;return subroutine
 ;*
-;Knocker Pattern (FDBdata17)
-;*
-;KNKTAB
-F802 : 01FC 02FC 03F8 04F8 06F8 08F4 0CF4 
-F810 : 10F4 20F2 40F1 60F1 80F1 A0F1 C0F1 00
+;Knocker Pattern
 ;
-F81F : 00 FE 04 
-F822 : 02 04 FF 00 
+F802 : 01FC 02FC 03F8 04F8 06F8 08F4  ;KNKTAB
+F80E : 0CF4 10F4 20F2 40F1 60F1 80F1  ;
+F81A : A0F1 C0F1 0000                 ;
 ;*************************************;
-;PRMSYN5
+;ORRRR table
+;
+F820 : FE04 0204 FF00                 ;VEC05X 
+;ORRRR
+F826 : BD F5 FD   jsr LF5FD           ;jump sub PLAYLD
+F829 : CE F8 20   ldx #$F820          ;load X with value F820h (VEC05X) 
+F82C : BD F8 57   jsr LF857           ;jump sub MOVE
+F82F : 7E F8 70   jmp LF870           ;jump SING
 ;*************************************;
-F826 : BD F5 FD   jsr LF5FD           ;jump sub PRMLOAD1
-F829 : CE F8 20   ldx #$F820          ;load X with value F820h (FDBdata17) 
-F82C : BD F8 57   jsr LF857           ;jump sub PRMXLDS 
-F82F : 7E F8 70   jmp LF870           ;jump SYNTH6
-;*************************************;
-;FDBdata18
-;*************************************;
-F832 : 50 FF 00 00 60 80
-;*************************************;
-;PRMSYN6 
-;*************************************;
-F838 : BD F5 FD   jsr LF5FD           ;jump sub PRMLOAD1
+;
+F832 : 50FF 0000 6080                 ;VEC09X
+;Random Squirts 
+;
+;SQRT
+F838 : BD F5 FD   jsr LF5FD           ;jump sub PLAYLD
 F83B : C6 30      ldab #$30           ;load B with value 30h
-F83D : CE F8 32   ldx #$F832          ;load X with value F832h (FDB data above)
-F840 : 8D 15      bsr LF857           ;branch sub PRMXLDS
-;LF842:
+;SQRT1
+F83D : CE F8 32   ldx #$F832          ;load X with value F832h (VEC09X)
+F840 : 8D 15      bsr LF857           ;branch sub MOVE
+;SQRT2:
 F842 : 96 81      ldaa $81            ;load A with value in addr 81
 F844 : 48         asla                ;arith shift left A (bit0 is 0)
 F845 : 9B 81      adda $81            ;add A with value in addr 81
@@ -2487,12 +2472,12 @@ F84B : 44         lsra                ;logic shift right A (bit7=0)
 F84C : 44         lsra                ;logic shift right A (bit7=0)
 F84D : 8B 0C      adda #$0C           ;add A with value 0Ch
 F84F : 97 91      staa $91            ;store A in addr 91
-F851 : 8D 1D      bsr LF870           ;branch sub SYNTH6 below
+F851 : 8D 1D      bsr LF870           ;branch sub SING
 F853 : 5A         decb                ;decr B
-F854 : 26 EC      bne LF842           ;branch Z=0 
+F854 : 26 EC      bne LF842           ;branch Z=0 SQRT2
 F856 : 39         rts                 ;return subroutine
 ;*************************************;
-;Move Parameters (PRMXLDS1 similar to ROM1 PARAM21)
+;Move Parameters
 ;*************************************;
 ;MOVE
 F857 : A6 00      ldaa $00,x          ;load A with value in addr X + 00h
@@ -2509,7 +2494,7 @@ F86B : A6 05      ldaa $05,x          ;load A with value in addr X + 05h
 F86D : 97 96      staa $96            ;store A in addr 96 (D$AMP)
 F86F : 39         rts                 ;return subroutine
 ;*************************************;
-;Delta F, Delta A Routine (SYNTH6)
+;Delta F, Delta A Routine
 ;*************************************;
 ;SING
 F870 : 96 89      ldaa $89            ;load A with value in addr 89  (AMP0)(GET STARTING AMPLITUDE)
@@ -2519,11 +2504,11 @@ F873 : D6 95      ldab $95            ;load B with value in addr 95 (C$AMP)(GET 
 F875 : D7 97      stab $97            ;store B in addr 97 (C$AMP$)(SAVE AS COUNTER)
 F877 : D6 92      ldab $92            ;load B with value in addr 92 (C$FRQ)(GET CYCLES AT FREQUENCY)
 F879 : D7 98      stab $98            ;store B in addr 98 (C$FRQ$)(SAVE AS COUNTER)
-;SYN61 LF87B SING1:
+;SING1:
 F87B : 43         coma                ;complement 1s A (INVERT AMPLITUDE)
 F87C : D6 91      ldab $91            ;load B with value in addr 91 (FREQ$)(GET FREQUENCY COUNTER)
 F87E : B7 20 02   staa $2002          ;store A in DAC output SOUND (OUTPUT TO D/A)
-;SYN62 LF881 SING2:
+;SING2:
 F881 : 5A         decb                ;decr B
 F882 : 26 FD      bne LF881           ;branch Z=0 SYN62 (SING2)
 F884 : 43         coma                ;complement 1s A (INVERT AMPLITUDE)
@@ -2534,7 +2519,7 @@ F88A : 09         dex                 ;decr X (-I---)(SYNC, 20 CYCLES)
 F88B : 08         inx                 ;incr X (-I)
 F88C : 09         dex                 ;decr X (-I)
 F88D : B7 20 02   staa $2002          ;store A in DAC output SOUND (OUTPUT TO D/A)
-;SYN64 LF890 SING3:
+;SING3:
 F890 : 5A         decb                ;decr B
 F891 : 26 FD      bne LF890           ;branch Z=0 SYN64 (SING3)
 F893 : 7A 00 98   dec $0098           ;decr value in addr 0098 (C$FRQ$)(CHECK CYCLES AT FREQUENCY)
@@ -2550,7 +2535,7 @@ F8A7 : 9B 96      adda $96            ;add A with value in addr 96 (D$AMP)(ADD A
 F8A9 : 2B 1E      bmi LF8C9           ;branch N=1 SYN67 (SING6)(RETURN FROM SUBROUTINE)
 F8AB : 01         nop                 ;(SYNC, 2 CYCLES)
 F8AC : 20 15      bra LF8C3           ;branch always SYN66 (SING5)
-;SYN65 LF8AE SING4:
+;SING4:
 F8AE : 08         inx                 ;incr X (-I)
 F8AF : 09         dex                 ;decr X (-I---)(SYNC, 10 CYCLES)
 F8B0 : 01         nop                 ;(-I)
@@ -2563,105 +2548,107 @@ F8BB : D0 93      subb $93            ;subtract B with value in addr 93 (D$FRQ)(
 F8BD : D1 94      cmpb $94            ;compare B with value in addr 94 (E$FRQ)(COMPARE TO END FREQUENCY)
 F8BF : D1 94      cmpb $94            ;compare B with value in addr 94 (E$FRQ)(SYNC, 3 CYCLES)
 F8C1 : 27 06      beq LF8C9           ;branch Z=1 SYN67 (SING6)(RETURN FROM SUBROUTINE)
-;SYN66 LF8C3 SING5:
+;SING5:
 F8C3 : D7 91      stab $91            ;store B in addr 91 (FREQ$)(SAVE FREQUENCY COUNT)
 F8C5 : C0 05      subb #$05           ;subtract B with value 05h (SYNC TO FREQUENCY COUNTDOWN)
 F8C7 : 20 B8      bra LF881           ;branch always SYN62 (SING2)(JUMP INTO COUNTDOWN LOOP)
-;SYN67 LF8C9 SING6:
+;SING6:
 F8C9 : 33         pulb                ;SP + 1 pull stack into B (RESTORE B)
 F8CA : 39         rts                 ;return subroutine
-;*
+;*************************************;
 ;Lightning
-;*
+;*************************************;
 ;LITE
 F8CB : 86 01      ldaa #$01           ;load A with value 01h
 F8CD : 97 97      staa $97            ;store A in addr 97 (DFREQ)
 F8CF : C6 03      ldab #$03           ;load B with value 03h
 ;*************************************;
-;Lightning+Appear Noise Routine (SYNTH7 - similar to ROM15 SYNTH2)
+;Lightning+Appear Noise Routine 
 ;*************************************;
 ;LITEN
 F8D1 : 97 96      staa $96            ;store A in addr 96 (LFREQ)
 F8D3 : 86 FF      ldaa #$FF           ;load A with value FFh (HIGHEST AMP)
 F8D5 : B7 20 02   staa $2002          ;store A in DAC output SOUND
 F8D8 : D7 92      stab $92            ;store B in addr 92 (CYCNT)
-;SYN71 LF8DA LITE0:
+;LITE0:
 F8DA : D6 92      ldab $92            ;load B with value in addr 92 (CYCNT)
-;SYN72 LF8DC LITE1:
+;LITE1:
 F8DC : 96 81      ldaa $81            ;load A with value in addr 81 (LO) (GET RANDOM)
 F8DE : 44         lsra                ;logic shift right A (bit7=0)
 F8DF : 44         lsra                ;logic shift right A (bit7=0)
 F8E0 : 44         lsra                ;logic shift right A (bit7=0)
 F8E1 : 98 81      eora $81            ;exclusive OR with value in addr 81 (LO)
 F8E3 : 44         lsra                ;logic shift right A (bit7=0)
-F8E4 : 76 00 80   ror $0080           ;rotate right in addr 0080 (bit7 = C then C = bit0) (HI)
-F8E7 : 76 00 81   ror $0081           ;rotate right in addr 0081 (bit7 = C then C = bit0) (LO)
-F8EA : 24 03      bcc LF8EF           ;branch C=0 SYN73 (LITE2)
+F8E4 : 76 00 80   ror $0080           ;rotate right in addr 0080 (HI)
+F8E7 : 76 00 81   ror $0081           ;rotate right in addr 0081 (LO)
+F8EA : 24 03      bcc LF8EF           ;branch C=0 LITE2
 F8EC : 73 20 02   com $2002           ;complement 1s in DAC output SOUND
-;SYN73 LF8EF LITE2:
+;LITE2:
 F8EF : 96 96      ldaa $96            ;load A with value in addr 96 (LFREQ)(COUNT FREQ)
-;SYN74 LF8F1 LITE3:
+;LITE3:
 F8F1 : 4A         deca                ;decr 
-F8F2 : 26 FD      bne LF8F1           ;branch Z=0 SYN74(LITE3)
+F8F2 : 26 FD      bne LF8F1           ;branch Z=0 LITE3
 F8F4 : 5A         decb                ;decr B (COUNT CYCLES)
-F8F5 : 26 E5      bne LF8DC           ;branch Z=0 SYN72 (LITE1)
+F8F5 : 26 E5      bne LF8DC           ;branch Z=0 LITE1
 F8F7 : 96 96      ldaa $96            ;load A with value in addr 96 (LFREQ)
 F8F9 : 9B 97      adda $97            ;add A with value in addr 97 (DFREQ)
 F8FB : 97 96      staa $96            ;store A in addr 96 (LFREQ)
-F8FD : 26 DB      bne LF8DA           ;branch Z=0 SYN71 (LITE0)
+F8FD : 26 DB      bne LF8DA           ;branch Z=0 LITE0
 F8FF : 39         rts                 ;return subroutine
 ;*************************************;
-;PARAM7 - called by JMPTBL1
+;JNOISE loader (Joust)
 ;*************************************;
+;WINGUP
 F900 : 86 00      ldaa #$00           ;load A with value 00h
-F902 : 20 29      bra LF92D           ;branch always PARAM8
-;PRM71 LF904
+F902 : 20 29      bra LF92D           ;branch always JKNOIS
+;CLIP
 F904 : 86 01      ldaa #$01           ;load A with value 01h
-F906 : 20 25      bra LF92D           ;branch always PARAM8
-;PRM72 LF908
+F906 : 20 25      bra LF92D           ;branch always JKNOIS
+;CLOP
 F908 : 86 02      ldaa #$02           ;load A with value 02h
-F90A : 20 21      bra LF92D           ;branch always PARAM8
-;PRM73 LF90C
+F90A : 20 21      bra LF92D           ;branch always JKNOIS
+;WINGDN
 F90C : 86 03      ldaa #$03           ;load A with value 03h
-F90E : 8D 1D      bsr LF92D           ;branch sub PARAM8
-F910 : 86 04      ldaa #$04           ;load A with value 03h
-F912 : 20 19      bra LF92D           ;branch always PARAM8
+F90E : 8D 1D      bsr LF92D           ;branch sub JKNOIS
+F910 : 86 04      ldaa #$04           ;load A with value 04h
+F912 : 20 19      bra LF92D           ;branch always JKNOIS
 ;*************************************;
-;FDBdata19
+;JNOIST 
 ;*************************************;
-F914 : 0D 40 F0 FF 12 08 A8 18
-F91C : 01 08 04 A8 18 01 10 04
-F924 : 20 F8 FF 20 10 F0 10 01
-F92C : 01 
+F914 : 0D 40 F0 FF 12                 ;$1F WING UP
+F919 : 08 A8 18 01 08                 ; 20 CLIP
+F91E : 04 A8 18 01 10                 ; 21 CLOP
+F923 : 04 20 F8 FF 20                 ; 1E WING DOWN PART 1
+F928 : 10 F0 10 01 01                 ;  "            "   2
 ;*************************************;
-;PARAM8
+;JKNOIS
 ;*************************************;
-F92D : CE D9 39   ldx #$D939          ;load X with value D939h
-F930 : DF 80      stx $80             ;store X in addr 80
+F92D : CE D9 39   ldx #$D939          ;load X with value D939h GOOD SEED
+F930 : DF 80      stx $80             ;store X in addr 80(HI)
 F932 : 16         tab                 ;transfer A to B
 F933 : 48         asla                ;arith shift left A (bit0 is 0)
 F934 : 48         asla                ;arith shift left A (bit0 is 0)
 F935 : 1B         aba                 ;A = A + B
-F936 : CE F9 14   ldx #$F914          ;load X with value F914h (FDBdata19)
-F939 : BD E1 89   jsr LE189           ;jump sub CALCOS
-F93C : 7E F9 A6   jmp LF9A6           ;jump SYNTH8
+F936 : CE F9 14   ldx #$F914          ;load X with value F914h (JNOIST)
+F939 : BD E1 89   jsr LE189           ;jump sub ADDX
+F93C : 7E F9 A6   jmp LF9A6           ;jump NOISLG
 ;*************************************;
 ;CROWD ROAR
 ;*************************************;
 ;CDR
-F93F : CE F9 5E   ldx #$F95E          ;load X with value F95Eh (#WS1)(1ST WHISTLE PARAMS)(FDBdata20)
+F93F : CE F9 5E   ldx #$F95E          ;load X with value F95Eh (#WS1)(1ST WHISTLE PARAMS)
 F942 : DF A1      stx $A1             ;store X in addr A1 (PTRHI)
-F944 : BD FA 88   jsr LFA88           ;jump sub PRMLDX5 (WISLD)
+F944 : BD FA 88   jsr LFA88           ;jump sub WISLD
 F947 : CE A5 00   ldx #$A500          ;load X with value A500h (SEED)
-F94A : DF 80      stx $80             ;store X in addr 80 (HI)
-F94C : CE F9 87   ldx #$F987          ;load X with value F987h (#CR1)(1ST CROWD ROAR NOISE PARAMS)(FDBdata21)
-F94F : BD F9 91   jsr LF991           ;jump sub PRMXLDS2 (NOISLD)
-F952 : BD FA 2C   jsr LFA2C           ;jump sub PRMCLR1 (NINIT)
-F955 : CE F9 8C   ldx #$F98C          ;load X with value F98Ch (#CR2)(FDBdata21)
-F958 : BD F9 91   jsr LF991           ;jump sub PRMXLDS2 (NOISLD)
-F95B : 7E FA 39   jmp LFA39           ;jump PRMBSR (NINIT2)
+F94A : DF 80      stx $80             ;store X in addr 80 (HI) 
+F94C : CE F9 87   ldx #$F987          ;load X with value F987h (#CR1)(1ST CROWD ROAR NOISE PARAMS)
+F94F : BD F9 91   jsr LF991           ;jump sub NOISLD
+F952 : BD FA 2C   jsr LFA2C           ;jump sub NINIT
+F955 : CE F9 8C   ldx #$F98C          ;load X with value F98Ch (#CR2)
+F958 : BD F9 91   jsr LF991           ;jump sub NOISLD
+F95B : 7E FA 39   jmp LFA39           ;jump NINIT2
 ;*************************************;
-;WHISTLE PARAMS (FDBdata20)
+;WHISTLE PARAMS 
 ;*************************************;
 F95E : 90 10 02 14 40                 ;WS1
 F963 : B4 40 FF 14 30                 ;
@@ -2672,7 +2659,7 @@ F977 : C0 30 02 14 58                 ;
 F97C : AC 20 02 08 58                 ;
 F985 : A6 58 FF 18 22                 ;
 F986 : 00
-;FDBdata21
+;
 F987 : 30 10 FC 00 01                 ;CR1
 F98C : 30 FC 01 00 01                 ;CR2
 ;*************************************;
@@ -2696,41 +2683,41 @@ F9A3 : 97 AD      staa $AD            ;store A in addr AD (NFRQ2)
 ;NEND
 F9A5 : 39         rts                 ;return subroutine
 ;*
-;*LOAD NOISE AND GO
+;*LOAD NOISE AND GO (SYNTH8)
 ;*
 ;NOISLG
-F9A6 : 8D E9      bsr LF991           ;branch sub PRMXLDS2 (NOISLD)
+F9A6 : 8D E9      bsr LF991           ;branch sub NOISLD
 ;*
 ;*NOISE INIT
 ;*
 ;NOIN
-F9A8 : 8D 30      bsr LF9DA           ;branch sub PRMSYNBSR1 (NSUB)(CY2&NFRQ2 TO CYCNT&NFRQ)
+F9A8 : 8D 30      bsr LF9DA           ;branch sub NSUB(CY2&NFRQ2 TO CYCNT&NFRQ)
 ;*
 ;*NOISE LOOP
 ;*
-;SYN81 LF9AA NO1:
-F9AA : 8D 58      bsr LFA04           ;branch sub PRMSYNBSR4 (RNT)(FREQ CHECK)
+;NO1:
+F9AA : 8D 58      bsr LFA04           ;branch sub RNT(FREQ CHECK)
 F9AC : 96 AC      ldaa $AC            ;load A with value in addr AC (NFRQ)(FREQ REINITED)
 F9AE : 91 AD      cmpa $AD            ;compare A with value in addr AD (NFRQ2)
-F9B0 : 26 F8      bne LF9AA           ;branch Z=0 SYN81 (NO1) (IF NOT KEEEP DELAYING)
-F9B2 : 59         rolb                ;rotate left B (C to bit0, bit7 to C)(RESTORE MAX AMPLITUDE TO NOISE)
+F9B0 : 26 F8      bne LF9AA           ;branch Z=0 NO1 (IF NOT KEEEP DELAYING)
+F9B2 : 59         rolb                ;rotate left B (RESTORE MAX AMPLITUDE TO NOISE)
 F9B3 : F7 20 02   stab $2002          ;store B in DAC output SOUND
-F9B6 : 8D 2D      bsr LF9E5           ;branch sub PRMSYNBSR2 (NOISE1)(PREPARE NEXT RAND NO)
-F9B8 : 8D 38      bsr LF9F2           ;branch sub PRMSYNBSR3 (NOISE2)
-F9BA : 8D 5C      bsr LFA18           ;branch sub PRMSYNBSR5 (RNA)(AMPLITUDE &CYCL3 COUNT CECK)
+F9B6 : 8D 2D      bsr LF9E5           ;branch sub NOISE1(PREPARE NEXT RAND NO)
+F9B8 : 8D 38      bsr LF9F2           ;branch sub NOISE2
+F9BA : 8D 5C      bsr LFA18           ;branch sub RNA(AMPLITUDE &CYCL3 COUNT CECK)
 F9BC : 7D 00 91   tst $0091           ;test value in addr 0091 (NAMP)(SEE IF DONE)
-F9BF : 27 E4      beq LF9A5           ;branch Z=1 PRMLDXx4 (NEND)(RTS IF FINISHED)
+F9BF : 27 E4      beq LF9A5           ;branch Z=1 NEND(RTS IF FINISHED)
 F9C1 : 7D 00 92   tst $0092           ;test value in addr 0092 (CYCNT)(SEE IF NEXT FREQ)
-F9C4 : 26 E4      bne LF9AA           ;branch Z=0 SYN81 (NO1)(IF NOT GO FREQ DELAY LOOP)
+F9C4 : 26 E4      bne LF9AA           ;branch Z=0 NO1(IF NOT GO FREQ DELAY LOOP)
 F9C6 : 7D 00 95   tst $0095           ;test value in addr 0095 (NFFLG)(SEE IF SWEEP MODE)
-F9C9 : 27 DF      beq LF9AA           ;branch Z=1 SYN81 (NO1)(IF NO SWEEP GO DELAY)
-F9CB : 2B 05      bmi LF9D2           ;branch N=1 SYN82 (NO3)(SWEEP DOWN)
+F9C9 : 27 DF      beq LF9AA           ;branch Z=1 NO1(IF NO SWEEP GO DELAY)
+F9CB : 2B 05      bmi LF9D2           ;branch N=1 NO3(SWEEP DOWN)
 F9CD : 7C 00 AD   inc $00AD           ;incr addr 00AD (NFRQ2)
-F9D0 : 20 D8      bra LF9AA           ;branch always SYN81 (NO1)
-;SYN82 LF9D2 NO3:
+F9D0 : 20 D8      bra LF9AA           ;branch always NO1
+;NO3:
 F9D2 : 7A 00 AD   dec $00AD           ;decr value in addr 00AD (NFRQ2)
 F9D5 : 7A 00 AC   dec $00AC           ;decr value in addr 00AC (NFRQ)
-F9D8 : 20 D0      bra LF9AA           ;branch always SYN81 (NO1)
+F9D8 : 20 D0      bra LF9AA           ;branch always NO1
 ;NSUB
 F9DA : 7F 00 92   clr $0092           ;clear addr 0092 (CYCNT)
 F9DD : 96 AD      ldaa $AD            ;load A with value in addr AD (NFRQ2)
@@ -2758,9 +2745,9 @@ F9F4 : 44         lsra                ;logic shift right A (bit7=0)
 F9F5 : 76 00 80   ror $0080           ;rotate right in addr 0080 (bit7 = C then C = bit0) (HI)
 F9F8 : 76 00 81   ror $0081           ;rotate right in addr 0081 (bit7 = C then C = bit0) (LO)
 F9FB : 86 00      ldaa #$00           ;load A with value 00h
-F9FD : 24 02      bcc LFA01           ;branch C=0 LFA01 (NOISE3)
+F9FD : 24 02      bcc LFA01           ;branch C=0 NOISE3
 F9FF : 96 91      ldaa $91            ;load A with value in addr 91 (NAMP)
-;LFA01 NOISE3:
+;NOISE3:
 FA01 : 97 AB      staa $AB            ;store A in addr AB (NNOIS)(NEXT NOISE VALUE)
 ;*
 FA03 : 39         rts                 ;return subroutine
@@ -2768,32 +2755,32 @@ FA03 : 39         rts                 ;return subroutine
 ;RNT
 FA04 : 96 AD      ldaa $AD            ;load A with value in addr AD (NFRQ2)(NOISE FREQ)
 FA06 : 7A 00 AC   dec $00AC           ;decr addr 00AC (NFREQ)
-FA09 : 27 04      beq LFA0F           ;branch Z=1 LFA0F (NW0)
+FA09 : 27 04      beq LFA0F           ;branch Z=1 NW0
 FA0B : 08         inx                 ;incr X
 FA0C : 09         dex                 ;decr X (TEQ)
-FA0D : 20 08      bra LFA17           ;branch always LFA17 (NNW1)
-;LFA0F NW0:
+FA0D : 20 08      bra LFA17           ;branch always NNW1
+;NW0:
 FA0F : 97 AC      staa $AC            ;store A in addr AC (NFRQ)(REINIT FREQ)
 FA11 : D6 AB      ldab $AB            ;load B in addr AB (NNOIS)(SAVE NEXT NOISE VAL IN B REG)
 FA13 : 54         lsrb                ;logic shift right B (bit7=0) (HALF AMPLITUDE)
 FA14 : 7C 00 92   inc $0092           ;incr addr 0092 (CYCNT)(NOISE CYCLE COUNT AT NAMP)
 ;*
-;LFA17 NNW1:
+;NNW1:
 FA17 : 39         rts                 ;return subroutine
 ;*
 ;RNA
 FA18 : 96 A8      ldaa $A8            ;load A with value in addr A8 (CY2)(NOISE AMPL CHANGE)
 FA1A : 91 92      cmpa $92            ;compare A wih value in addr 92 (CYCNT)
-FA1C : 27 04      beq LFA22           ;branch Z=1 LFA22 (NW2)
+FA1C : 27 04      beq LFA22           ;branch Z=1 NW2
 FA1E : 08         inx                 ;incr X
 FA1F : 09         dex                 ;decr X
-FA20 : 20 09      bra LFA2B           ;branch always LFA2B (NW3)(TEQ)
-;LFA22 NW2:
+FA20 : 20 09      bra LFA2B           ;branch always NW3(TEQ)
+;NW2:
 FA22 : 7F 00 92   clr $0092           ;clear addr 0092 (CYCNT)
 FA25 : 96 91      ldaa $91            ;load A with value in addr 91 (NAMP)
 FA27 : 90 90      suba $90            ;subtract A with value in addr 90 (DECAY)
 FA29 : 97 91      staa $91            ;store A in addr 91 (NAMP)
-;LFA2B NW3:
+;NW3:
 FA2B : 39         rts                 ;return subroutine
 ;*
 ;NOISE WITH WHISTLE MAIN LOOP
@@ -2805,49 +2792,49 @@ FA32 : 86 0E      ldaa #$0E           ;load A with value 0Eh (CYCLE OFFSET FOR W
 FA34 : 97 A0      staa $A0            ;store A in addr A0 (WCNT)
 FA36 : 7F 00 A5   clr $00A5           ;clear addr 00A5 (CURVAL)(CLR WHISTLE VALUES)
 ;NINIT2
-FA39 : 8D 9F      bsr LF9DA           ;branch sub PRMSYNBSR1 (NSUB)(CLR CYCNT AND INIT FREQ)
-;LFA3B WIN:
-FA3B : 8D A8      bsr LF9E5           ;branch sub PRMSYNBSR2 (NOISE1)
-FA3D : BD FA C2   jsr LFAC2           ;jump sub SYNTH BSR (TRIDR)
-FA40 : 8D B0      bsr LF9F2           ;branch sub PRMSYNBSR3 (NOISE2)
-FA42 : BD FA C2   jsr LFAC2           ;jump sub SYNTH BSR (TRIDR)
-FA45 : 8D BD      bsr LFA04           ;branch sub PRMSYNBSR4 (RNT)
-FA47 : 8D 79      bsr LFAC2           ;jump sub SYNTH BSR (TRIDR)
-FA49 : 8D CD      bsr LFA18           ;branch sub PRMSYNBSR5 (RNA)
-FA4B : 8D 75      bsr LFAC2           ;jump sub SYNTH BSR (TRIDR)
-FA4D : 8D 0A      bsr LFA59           ;branch sub PRMSYNBSR6 (TRICNT)
-FA4F : 8D 71      bsr LFAC2           ;jump sub SYNTH BSR (TRIDR)
-FA51 : 8D 1D      bsr LFA70           ;branch sub PRMSYNBSR7 (TRIFRQ)
-FA53 : 8D 6D      bsr LFAC2           ;jump sub SYNTH BSR (TRIDR)
-FA55 : 8D 52      bsr LFAA9           ;branch sub PRMSYNBSR8 (NNW)
-FA57 : 20 E2      bra LFA3B           ;branch always LFA3B (WIN)
+FA39 : 8D 9F      bsr LF9DA           ;branch sub NSUB(CLR CYCNT AND INIT FREQ)
+;WIN:
+FA3B : 8D A8      bsr LF9E5           ;branch sub NOISE1
+FA3D : BD FA C2   jsr LFAC2           ;jump sub TRIDR
+FA40 : 8D B0      bsr LF9F2           ;branch sub NOISE2
+FA42 : BD FA C2   jsr LFAC2           ;jump sub TRIDR
+FA45 : 8D BD      bsr LFA04           ;branch sub RNT
+FA47 : 8D 79      bsr LFAC2           ;jump sub TRIDR
+FA49 : 8D CD      bsr LFA18           ;branch sub RNA
+FA4B : 8D 75      bsr LFAC2           ;jump sub TRIDR
+FA4D : 8D 0A      bsr LFA59           ;branch sub TRICNT
+FA4F : 8D 71      bsr LFAC2           ;jump sub TRIDR
+FA51 : 8D 1D      bsr LFA70           ;branch sub TRIFRQ
+FA53 : 8D 6D      bsr LFAC2           ;jump sub TRIDR
+FA55 : 8D 52      bsr LFAA9           ;branch sub NNW
+FA57 : 20 E2      bra LFA3B           ;branch always WIN
 ;*
 ;TRICNT
 FA59 : 96 A4      ldaa $A4            ;load A with value in addr A4 (WCNT2)(#CYCLES AT WHISTLE FREQ)
 FA5B : 7A 00 A0   dec $00A0           ;decr addr 00A0 (WCNT)
-FA5E : 27 07      beq LFA67           ;branch Z=1 LFA67 (NW4)
+FA5E : 27 07      beq LFA67           ;branch Z=1 NW4
 FA60 : B6 00 91   ldaa $0091          ;load A with value in addr 0091 (FCB $B6)(LDAA EXTENDED)
 ;                                     ;FDB NAMP
-FA63 : 26 0A      bne LFA6F           ;branch Z=0 LFA6F (NW5)(TEQ)
-FA65 : 20 68      bra LFACF           ;branch always LFA6F (NSEND)(END NOISE)
-;LFA67 NW4:
+FA63 : 26 0A      bne LFA6F           ;branch Z=0 NW5(TEQ)
+FA65 : 20 68      bra LFACF           ;branch always NSEND(END NOISE)
+;NW4:
 FA67 : 97 A0      staa $A0            ;store A in addr A0 (WCNT)
 FA69 : 96 9F      ldaa $9F            ;load A with value in addr 9F (WFRQ)
 FA6B : 9B A9      adda $A9            ;add A with value in addr A9 (DFRQ)
 FA6D : 97 9F      staa $9F            ;store A in addr 9F (WFRQ)
 ;*
-;LFA6F NW5:
+;NW5:
 FA6F : 39         rts                 ;return subroutine
 ;*
 ;TRIFRQ
 FA70 : 96 9F      ldaa $9F            ;load A with value in addr 9F (WFRQ)(WHISTLE END TEST)
 FA72 : 91 A7      cmpa $A7            ;compare A with value in addr A7 (MINWIS)
-FA74 : 27 07      beq LFA7D           ;branch Z=1 LFA7D (NW6)
+FA74 : 27 07      beq LFA7D           ;branch Z=1 NW6
 FA76 : 08         inx                 ;incr X (TEQ)
 FA77 : 96 91      ldaa $91            ;load A with value in addr 91 (NAMP)(END TEST)
-FA79 : 26 2A      bne LFAA5           ;branch Z=0 LFAA5 (NW7)(TEQ)
-FA7B : 20 29      bra LFAA6           ;branch always (PEND)(END NOISE)
-;LFA7D NW6:
+FA79 : 26 2A      bne LFAA5           ;branch Z=0 NW7(TEQ)
+FA7B : 20 29      bra LFAA6           ;branch always PEND(END NOISE)
+;NW6:
 FA7D : 7F 00 9F   clr $009F           ;clear addr 009F (WFRQ)(TURN OFF WHISTLE)
 FA80 : 7F 00 A9   clr $00A9           ;clear addr 00A9 (DFRQ)
 FA83 : 7F 00 A5   clr $00A5           ;clear addr 00A5 (CURVAL)
@@ -2855,7 +2842,7 @@ FA86 : DE A1      ldx $A1             ;load X with value in addr A1 (PTRHI)(SET 
 ;WISLD
 FA88 : A6 00      ldaa $00,x          ;load A with value in addr X + 00h
 FA8A : 97 9E      staa $9E            ;store A in addr 9E (WHIS)
-FA8C : 27 17      beq LFAA5           ;branch Z=1 LFAA5 (NW7)
+FA8C : 27 17      beq LFAA5           ;branch Z=1 NW7
 FA8E : A6 01      ldaa $01,x          ;load A with value in addr X + 01h
 FA90 : 97 A3      staa $A3            ;store A in addr A3 (WFRQ2)
 FA92 : A6 02      ldaa $02,x          ;load A with value in addr X + 02h
@@ -2865,10 +2852,10 @@ FA98 : 97 A4      staa $A4            ;store A in addr A4 (WCNT2)
 FA9A : A6 04      ldaa $04,x          ;load A with value in addr X + 04h
 FA9C : 97 A7      staa $A7            ;store A in addr A7 (MINWIS)
 FA9E : 86 05      ldaa #$05           ;load A with value 05h
-FAA0 : BD E1 89   jsr LE189           ;jump sub CALCOS (ADDX)
+FAA0 : BD E1 89   jsr LE189           ;jump sub ADDX
 FAA3 : DF A1      stx $A1             ;store X in addr A1 (PTRHI)
 ;*
-;LFAA5 NW7:
+;NW7:
 FAA5 : 39         rts                 ;return subroutine
 ;PEND
 FAA6 : 32         pula                ;SP + 1 pull stack into A
@@ -2877,14 +2864,14 @@ FAA8 : 39         rts                 ;return subroutine
 ;*
 ;NNW
 FAA9 : 96 9E      ldaa $9E            ;load A with value in addr 9E (WHIS)(WHISTLE INIT)
-FAAB : 27 06      beq LFAB3           ;branch Z=1 LFAB3 (NW8)(ALREADY INITED)
+FAAB : 27 06      beq LFAB3           ;branch Z=1 NW8(ALREADY INITED)
 FAAD : 91 91      cmpa $91            ;compare A with value in addr 91 (NAMP)
-FAAF : 26 04      bne LFAB5           ;branch Z=0 LFAB5 (NW9)
-FAB1 : 20 03      bra LFAB6           ;branch always PARAM9 (WINIT)(GO INIT WHISTLE)
-;LFAB3 NW8:
+FAAF : 26 04      bne LFAB5           ;branch Z=0 NW9
+FAB1 : 20 03      bra LFAB6           ;branch always WINIT(GO INIT WHISTLE)
+;NW8:
 FAB3 : 08         inx                 ;incr X
 FAB4 : 09         dex                 ;decr X (TEQ)
-;LFAB5 NW9:
+;NW9:
 FAB5 : 39         rts                 ;return subroutine
 ;WINIT
 FAB6 : 7F 00 9E   clr $009E           ;clear addr 009E (WHIS)
@@ -2898,16 +2885,24 @@ FAC1 : 39         rts                 ;return subroutine
 FAC2 : 96 A5      ldaa $A5            ;load A with value in addr A5 (CURVAL)
 FAC4 : 9B 9F      adda $9F            ;add A with value in addr 9F (WFRQ)
 FAC6 : 97 A5      staa $A5            ;store A in addr A5 (CURVAL)
-FAC8 : 2A 01      bpl LFACB           ;branch N=0 LFACB (GO)
+FAC8 : 2A 01      bpl LFACB           ;branch N=0 GO
 FACA : 43         coma                ;complement 1s A
-;LFACB GO:
+;GO:
 FACB : 1B         aba                 ;A = A + B
 FACC : B7 20 02   staa $2002          ;store A in DAC output SOUND
-;LFACF NSEND:
+;NSEND:
 FACF : 39         rts                 ;return subroutine
 ;*************************************;
-;SYNTH21 (needs a PARAM mem/nop writer? param14,15?)(similar to Hyperball SYNTH1)
+;* NAM WALSH FUNCTION SOUND MACHINE V2
 ;*************************************;
+;
+;* T. MURPHY  11/10/81
+;
+;       SUBTTL WAVE PLAYER AND PITCH MODIFICATION
+;
+;* PLAY A SAMPLE, REMAINING DELAY IN B.  TOTAL DELAY = MIN (60,B*6) MICS.
+;
+;NTHRVC
 FAD0 : C0 0D      subb #$0D           ;subtract B with value 0Dh
 FAD2 : 37         pshb                ;push B into stack then SP - 1
 FAD3 : BD 00 AC   jsr $00AC           ;jump sub 00AC (mem location as in NMI ORGAN?)
@@ -2933,9 +2928,12 @@ FAF2 : E6 00      ldab $00,x          ;load B with value in addr X + 00h
 FAF4 : F7 20 02   stab $2002          ;store B in DAC output SOUND
 FAF7 : 84 0F      anda #$0F           ;and A with value 0Fh
 FAF9 : 39         rts                 ;return subroutine
-;*************************************;
-;PARAM10
-;*************************************;
+;
+;* PLAYS WAVE AND ALTERS PITCH ACCORDING TO PITCH CMDS.
+;* SMPPER IS INITIAL PITCH,  PCMDPT IS START PITCH PROGRAM,
+;* FCMDPT IS START WAVE MODIFIER (FILTER) PROGRAM.
+;
+;WSM
 FAFA : 4F         clra                ;clear A
 FAFB : CE 00 90   ldx #$0090          ;load X with value 0090h
 FAFE : C6 61      ldab #$61           ;load B with value 61h
@@ -3034,10 +3032,13 @@ FB99 : 5F         clrb                ;clear B
 FB9A : DE AA      ldx $AA             ;load X with value in addr AA
 FB9C : EE 00      ldx $00,x           ;load X with value in addr X + 00h
 FB9E : 6E 00      jmp $00,x           ;jump addr X + 00h (? FC5E FDBdata23) JMPTBL
-;*************************************;
-;PARAM12
-;*************************************;
-;LFBA0
+;
+;* PITCH COMMAND ROUTINES.  UNLESS OTHERWISE STATED, N IS A SIGNED 8 BIT
+;* NUMBER = BYTE FOLLOWING OPCODE.
+;
+;* LDP N  IS  SMPPER := N,  ADP N  IS SMPPER := SMPPER + N
+;
+;LDPR
 FBA0 : 96 A9      ldaa $A9            ;load A with addr A9
 FBA2 : 47         asra                ;arith shift left A
 FBA3 : C2 00      sbcb #$00           ;
@@ -3051,7 +3052,10 @@ FBAD : 08         inx                 ;
 FBAE : D6 A3      ldab $A3            ;
 FBB0 : C0 0A      subb #$0A           ;
 FBB2 : 7E FB 1D   jmp LFB1D           ;jump PRM103
-;PRM122 LFBB5
+;
+;* LDO N IS  GLBPRO := N,  ADO N IS  GLBPRO := GLBPRO + N
+;
+;LDOR
 FBB5 : 96 A9      ldaa $A9            ;
 FBB7 : 47         asra                ;
 FBB8 : C2 00      sbcb #$00           ;
@@ -3061,23 +3065,23 @@ FBBD : 10         sba                 ;
 FBBE : 9B A2      adda $A2            ;
 FBC0 : 97 A2      staa $A2            ;
 FBC2 : 20 EA      bra LFBAE           ;branch always PRM121
-;PRM123 LFBC4
+;
+;* ESC EXECUTES MACHINE LANGUAGE IMMEDIATELY FOLLOWING
+;
+;ESCR
 FBC4 : 32         pula                ;
 FBC5 : DE 8A      ldx $8A             ;
 FBC7 : 09         dex                 ;
 FBC8 : 6E 00      jmp $00,x           ;jump addr X
-;*************************************;
-;PRMLDA
-;*************************************;
-;LFBCA:
+;
+;* STOP EITHER REPEATS A CALL, RETURNS FROM A CALL, OR ENDS SOUND.
+;
+;STOPR
 FBCA : 96 A6      ldaa $A6            ;load A with value in addr A6
 FBCC : 81 DF      cmpa #$DF           ;compare A with value DFh
 FBCE : 2B 01      bmi LFBD1           ;branch N=1 PARAM16
 FBD0 : 39         rts                 ;return subroutine
-;*************************************;
-;PARAM13
-;*************************************;
-;LFBD1:
+;
 FBD1 : D6 A3      ldab $A3            ;
 FBD3 : C0 07      subb #$07           ;
 FBD5 : BD FA D7   jsr LFAD7           ;jump sub SYN211
@@ -3107,9 +3111,12 @@ FBFD : C0 07      subb #$07           ;
 ;XFBFF:
 FBFF : 01         nop                 ;
 FC00 : 7E FB 1B   jmp LFB1B           ;jump PARM102
-;*************************************;
-;PARAM14
-;*************************************;
+;
+;* LDV N IS  PERVEL := N,  ADV N IS  PERVEL := PERVEL + N
+;* IN THIS CASE  N IS A 12 BIT NUMBER, THE UPPER 4 BITS OF WHICH
+;* ARE LO 4 BITS OF THE OPCODE BYTE.
+;
+;ADVR
 FC03 : 08         inx                 ;
 FC04 : 20 04      bra LFC0A           ;
 ;PRM141 LFC06:
@@ -3125,10 +3132,14 @@ FC13 : 9B A1      adda $A1            ;
 FC15 : D9 A0      adcb $A0            ;
 FC17 : 97 A1      staa $A1            ;
 FC19 : D7 A0      stab $A0            ;
+;    : F6 00 23    "  #"    ldab  X0023   ;<- disasm error (FCB -10,0,TMPPER)
 FC1B : F6 00 A3   ldab $00A3          ;
 FC1E : C0 09      subb #$09           ;
 FC20 : 7E FB 1B   jmp LFB1B           ;jump PARAM102
-;PRM143 LFC23
+;
+;* DO R,N  CALLS RTN AT *+N  R TIMES.
+;
+;PDOR
 FC23 : 96 A6      ldaa $A6            ;
 FC25 : 80 03      suba #$03           ;
 FC27 : 97 A6      staa $A6            ;
@@ -3151,7 +3162,10 @@ FC45 : 08         inx                 ;
 FC46 : 08         inx                 ;
 FC47 : 5F         clrb                ;
 FC48 : 01         nop                 ;
-;PRM145 LFC49
+;
+;* TO N  SETS LOC TO BE *+N.
+;
+;PTOR
 FC49 : 32         pula                ;
 FC4A : 47         asra                ;
 FC4B : 49         rola                ;
@@ -3164,9 +3178,13 @@ FC57 : D6 A3      ldab $A3            ;
 FC59 : C0 07      subb #$07           ;
 FC5B : 7E FB 1B   jmp LFB1B           ;jump PRM102
 ;*************************************;
-;FDBdata23 - JMPTBL2
+; JMPTBL1
 ;*************************************;
-;LFC5E
+;PCMDJT	FDB	LDPR,LDOR,LDVR,ADVR,LDPR,ESCR,PDOR,PTOR
+;*		   0    1    2    3    4    5  	 6    7
+;FCMDJT	FDB	ADHR,LDTR,ETBR,HIDR,FINR,ZTBR,FDOR,FTOR
+;
+;PCMDJT FDB (Pitch Command Jump Table)
 FC5E : FB A0                          ;PARAM12
 FC60 : FB B5                          ;PRM122
 FC62 : FC 06                          ;PRM141
@@ -3175,6 +3193,7 @@ FC66 : FB A0                          ;PARAM12
 FC68 : FB C4                          ;PRM123
 FC6A : FC 23                          ;PRM143
 FC6C : FC 49                          ;PRM145
+;FCMDJT FDB (Filter Command Jump Table)
 FC6E : FD E2                          ;valid
 FC70 : FE 6B                          ;valid
 FC72 : FD 1A                          ;PARAM19
@@ -3183,10 +3202,13 @@ FC76 : FC 95                          ;PARAM16
 FC78 : FE 24                          ;valid
 FC7A : FC C0                          ;PARAM17
 FC7C : FD 57                          ;valid
-;*************************************;
-;PARAM15
-;*************************************;
-;LFC7E
+;
+;
+;SUBTTL	WAVE MODIFICATION
+;
+;* FENDR OVERLAY GETS RETURN ADDR FROM STACK.
+;
+;FRTURN
 FC7E : DE AF      ldx X00AF
 FC80 : EE 03      ldx $03,x
 FC82 : 08         inx
@@ -3194,17 +3216,20 @@ FC83 : DF 88      stx X0088
 FC85 : BD FD 51   jsr LFD51
 FC88 : 08         inx
 FC89 : 39         rts
-;LFC8A:
+;
+;* REPEAT CALL.
+;
+;FDOAGN
 FC8A : EE 00      ldx $00,x
 FC8C : DF 88      stx X0088
 FC8E : CE FD 57   ldx #$FD57
 FC91 : DF AD      stx X00AD
 FC93 : 01         nop
 FC94 : 39         rts
-;*************************************;
-;PARAM16
-;*************************************;
-;LFC95
+;
+;* FIN DOES  REPEAT CALL, RETURN TO CALLER, STOP RTN DEPENDING ON STACK.
+;
+;FINR
 FC95 : 96 B0  "  "  ldaa X00B0
 FC97 : 81 B7  "  "  cmpa #$B7
 FC99 : 23 12  "# "  bls LFCAD
@@ -3234,10 +3259,12 @@ FCBC : 6D 00  "m "  tst $00,x
 FCBE : 01  " "  nop
 ;LFCBF:
 FCBF : 39  "9"  rts
-;*************************************;
-;PARAM17
-;*************************************;
-;LFCC0
+;
+;* CALL WITH REPEAT. REPEAT CNT 0(=1) TO 15 (=16) IS LO 4 BITS OF OPCODE.
+;* NEXT BYTE IS DISPLACEMENT AS IN GO INSTRUCTION.  THE CTR AND RETURN
+;* ADDRESS ARE SAVED ON A STACK.
+;
+;FDOR
 FCC0 : DE AF  "  "  ldx X00AF
 FCC2 : 96 88  "  "  ldaa X0088
 FCC4 : A7 03  "  "  staa $03,x
@@ -3250,10 +3277,10 @@ FCD0 : 08  " "  inx
 FCD1 : CE FC D7  "   "  ldx #$FCD7
 FCD4 : DF AD  "  "  stx X00AD
 FCD6 : 39  "9"  rts
-;*************************************;
-;PARAM18
-;*************************************;
-;LFCD7
+;
+;* OVERLAY FOR CALL RTN.
+;
+;1$
 FCD7 : 96 B0  "  "  ldaa X00B0
 FCD9 : 8B 03  "  "  adda #$03
 FCDB : 97 B0  "  "  staa X00B0
@@ -3262,6 +3289,9 @@ FCE0 : DF AD  "  "  stx X00AD
 FCE2 : 01  " "  nop
 FCE3 : 20 D5  "  "  bra LFCBA
 ;
+;* GET NEXT FILTER COMMAND
+;
+;NXTFCM
 FCE5 : 7D 00 AF  "}  "  tst X00AF
 FCE8 : 26 CE  "& "  bne LFCB8
 FCEA : DE 88  "  "  ldx X0088
@@ -3275,12 +3305,12 @@ FCF7 : A6 00  "  "  ldaa $00,x
 FCF9 : 39  "9"  rts
 ;LFCFA:
 FCFA : CE FD 01  "   "  ldx #$FD01
+;    : FF 00 2D    "  -"    stx  X002D   ;<- disasm error (FCB -1,0,FVECT+1)
 FCFD : FF 00 AD  "   "  stx X00AD
 FD00 : 39  "9"  rts
-;*************************************;
-; ??
-;*************************************;
-;LFD01
+;
+;
+;EXFCMD
 FD01 : 5F  "_"  clrb
 FD02 : 96 B9  "  "  ldaa X00B9
 FD04 : 84 70  " p"  anda #$70
@@ -3296,30 +3326,36 @@ FD13 : EE 00  "  "  ldx $00,x
 FD15 : DF AD  "  "  stx X00AD
 FD17 : DF AD  "  "  stx X00AD
 FD19 : 39  "9"  rts
-;*************************************;
-;PARAM19
-;*************************************;
-;LFD1A
+;
+;* SET UP FOR REPEATED TABLE ADD.
+;
+;ETBR
 FD1A : 96 B9  "  "  ldaa X00B9
 FD1C : 84 0F  "  "  anda #$0F
 FD1E : 4C  "L"  inca
 FD1F : 4C  "L"  inca
 FD20 : 97 AF  "  "  staa X00AF
 FD22 : 20 1D  "  "  bra LFD41
-    ;
+;
+;* LOOK FOR A NONZERO HARMONIC CHANGE AND PERFORM IT.  IF ENTIRE TABLE
+;* IS ZERO WE HAVE FINISHED THE LAST COMMAND AND PICK UP THE NEXT ONE.
+;
+;FINDHA
 FD24 : 7C 00 B2  "|  "  inc X00B2
 FD27 : DE B1  "  "  ldx X00B1
 FD29 : 8C 00 E8  "   "  cpx #$00E8
 FD2C : 27 13  "' "  beq LFD41
+;
 FD2E : A6 00  "  "  ldaa $00,x
 FD30 : CE FD 6B  "  k"  ldx #$FD6B
 FD33 : 97 B5  "  "  staa X00B5
 FD35 : 27 03  "' "  beq LFD3A
 FD37 : 7E FD 3D  "~ ="  jmp LFD3D
-    ;
-FD3A    LFD3A:
+;
+;FHA1:
 FD3A : CE FD 24  "  $"  ldx #$FD24
 FD3D    LFD3D:
+;    : B7 00 32    "  2"    staa  X0032   ;<- disasm error (FCB $B7,0,HAPTR+1)
 FD3D : DF AD  "  "  stx X00AD
 FD3F : 08  " "  inx
 FD40 : 39  "9"  rts
@@ -3337,10 +3373,10 @@ FD51 : CE FC E5  "   "  ldx #$FCE5
 FD54    LFD54:
 FD54 : DF AD  "  "  stx X00AD
 FD56 : 39  "9"  rts
-;*************************************;
 ;
-;*************************************;
-;LFD57
+;* RELATIVE JUMP.
+;
+;FTOR
 FD57 : DE 88  "  "  ldx X0088
 FD59 : 5F  "_"  clrb
 FD5A : A6 00  "  "  ldaa $00,x
@@ -3353,7 +3389,10 @@ FD63 : D9 88  "  "  adcb X0088
 FD65 : 97 89  "  "  staa X0089
 FD67 : D7 88  "  "  stab X0088
 FD69 : 20 E6  "  "  bra LFD51
-;LFD6B
+;
+;* SET UP FOR ADD OF HAMP * HARMONIC TO WAVE.
+;
+;ADDINI
 FD6B : 96 B2  "  "  ldaa X00B2
 FD6D : 80 DF  "  "  suba #$DF
 FD6F : 48  "H"  asla
@@ -3369,7 +3408,7 @@ FD80 : DF AD  "  "  stx X00AD
 FD82 : CE 00 90  "   "  ldx #$0090
 FD85 : DF B3  "  "  stx X00B3
 FD87 : 39  "9"  rts
-    ;
+;
 FD88 : DE B7  "  "  ldx X00B7
 FD8A : EE 00  "  "  ldx $00,x
 FD8C : DF B7  "  "  stx X00B7
@@ -3381,7 +3420,10 @@ FD97 : 9B B5  "  "  adda X00B5
 FD99 : A7 09  "  "  staa $09,x
 FD9B : 08  " "  inx
 FD9C : 39  "9"  rts
-    ;
+;
+;* ADD HAMP * HARMONIC FN TO WAVEFORM.
+;
+;ADDLP
 FD9D : 96 B6  "  "  ldaa X00B6
 FD9F : 27 1D  "' "  beq LFDBE
 FDA1 : 74 00 B6  "t  "  lsr X00B6
@@ -3389,45 +3431,43 @@ FDA4 : DE B3  "  "  ldx X00B3
 FDA6 : E6 00  "  "  ldab $00,x
 FDA8 : 94 B7  "  "  anda X00B7
 FDAA : 26 09  "& "  bne LFDB5
+;    : FB 00 35    "  5"    addb  X0035   ;<- disasm error (FCB -5,0,HAMP)
 FDAC : FB 00 B5  "   "  addb X00B5
 FDAF : E7 00  "  "  stab $00,x
 FDB1 : 7C 00 B4  "|  "  inc X00B4
 FDB4 : 39  "9"  rts
-    ;
-FDB5    LFDB5:
+;2$:
+;    : F0 00 35    "  5"    subb  X0035   ;<- disasm error (FCB -16,0,HAMP)
 FDB5 : F0 00 B5  "   "  subb X00B5
 FDB8 : E7 00  "  "  stab $00,x
 FDBA : 7C 00 B4  "|  "  inc X00B4
 FDBD : 39  "9"  rts
-    ;
-FDBE    LFDBE:
+;1$:
 FDBE : D6 B4  "  "  ldab X00B4
 FDC0 : C1 A0  "  "  cmpb #$A0
 FDC2 : 27 0B  "' "  beq LFDCF
 FDC4 : D6 B8  "  "  ldab X00B8
 FDC6 : D7 B7  "  "  stab X00B7
 FDC8 : C6 80  "  "  ldab #$80
+;    : F7 00 36    "  6"    stab  X0036   ;<- disasm error (FCB -9,0,FMSK)
 FDCA : F7 00 B6  "   "  stab X00B6
 FDCD : 20 0F  "  "  bra LFDDE
-    ;
-FDCF    LFDCF:
+;3$:
 FDCF : CE FC E5  "   "  ldx #$FCE5
 FDD2 : D6 AF  "  "  ldab X00AF
 FDD4 : 26 03  "& "  bne LFDD9
 FDD6 : 7E FD DC  "~  "  jmp LFDDC
-    ;
-FDD9    LFDD9:
 FDD9 : CE FD 24  "  $"  ldx #$FD24
-FDDC    LFDDC:
 FDDC : DF AD  "  "  stx X00AD
-FDDE    LFDDE:
+;16$:
 FDDE : 6D 00  "m "  tst $00,x
 FDE0 : 08  " "  inx
 FDE1 : 39  "9"  rts
-;*************************************;
 ;
-;*************************************;
-;LFDE2
+;* ADH H,N  LDH H,N  USE SAME RTN
+;
+;ADHR
+;LDHR
 FDE2 : 96 B9  "  "  ldaa X00B9
 FDE4 : 84 07  "  "  anda #$07
 FDE6 : 8B E0  "  "  adda #$E0
@@ -3459,10 +3499,10 @@ FE0F : 08  " "  inx
 FE10 : 08  " "  inx
 FE11 : 01  " "  nop
 FE12 : 39  "9"  rts
-;*************************************;
 ;
-;*************************************;
-;LFE13
+;* HARMONIC INCREMENT OR DECREMENT
+;
+;HIDR
 FE13 : D6 B9  "  "  ldab X00B9
 FE15 : 54  "T"  lsrb
 FE16 : C4 07  "  "  andb #$07
@@ -3473,10 +3513,10 @@ FE1C : C6 FF  "  "  ldab #$FF
 FE1E : C9 00  "  "  adcb #$00
 FE20 : C9 00  "  "  adcb #$00
 FE22 : 20 E4  "  "  bra LFE08
-;*************************************;
 ;
-;*************************************;
-;LFE24
+;* CLEAR ADD2HA OR ALTER 0TH AMPLITUDE.
+;
+;ZTBR
 FE24 : 96 B9  "  "  ldaa X00B9
 FE26 : 47  "G"  asra
 FE27 : 25 13  "% "  bcs LFE3C
@@ -3486,11 +3526,14 @@ FE2E : DF E2  "  "  stx X00E2
 FE30 : DF E4  "  "  stx X00E4
 FE32 : DF E6  "  "  stx X00E6
 FE34 : 08  " "  inx
+;
+;ATBRE
 FE35 : CE FC E5  "   "  ldx #$FCE5
+;    : FF 00 2D    "  -"    stx  X002D   ;<- disasm error (FCB -1,0,FVECT+1)
 FE38 : FF 00 AD  "   "  stx X00AD
 FE3B : 39  "9"  rts
-    ;
-FE3C    LFE3C:
+;
+;ADCR:
 FE3C : 85 02  "  "  bita #$02
 FE3E : 26 0C  "& "  bne LFE4C
 FE40 : C6 DF  "  "  ldab #$DF
@@ -3499,11 +3542,13 @@ FE44 : CE FE 51  "  Q"  ldx #$FE51
 FE47    LFE47:
 FE47 : DF AD  "  "  stx X00AD
 FE49 : 7E FC BC  "~  "  jmp LFCBC
-    ;
-FE4C    LFE4C:
+;
+;ESC1:
+;    : FE 00 08    "   "    ldx  X0008   ;<- disasm error (FCB -2,0,FCMDPT)
 FE4C : FE 00 88  "   "  ldx X0088
 FE4F : 20 F6  "  "  bra LFE47
-    ;
+;
+;ADCRO
 FE51 : 5F  "_"  clrb
 FE52 : 96 B9  "  "  ldaa X00B9
 FE54 : 8B AE  "  "  adda #$AE
@@ -3516,12 +3561,13 @@ FE5F : DF 88  "  "  stx X0088
 FE61 : 10  " "  sba
 FE62 : 97 B5  "  "  staa X00B5
 FE64 : CE FD 6B  "  k"  ldx #$FD6B
+;    : FF 00 2D    "  -"    stx  X002D   ;<- disasm error (FCB -1,0,FVECT+1)
 FE67 : FF 00 AD  "   "  stx X00AD
 FE6A : 39  "9"  rts
-;*************************************;
 ;
-;*************************************;
-;LFE6B
+;* CHANGE SOME ADD2HA ENTRIES.
+;
+;LDTR
 FE6B : C6 E0  "  "  ldab #$E0
 FE6D : D7 B2  "  "  stab X00B2
 FE6F : DE 88  "  "  ldx X0088
@@ -3535,7 +3581,7 @@ FE7B : 24 18  "$ "  bcc LFE95
 FE7D : CE FE AF  "   "  ldx #$FEAF
 FE80 : DF AD  "  "  stx X00AD
 FE82 : 39  "9"  rts
-    ;
+;4$
 FE83 : 5F  "_"  clrb
 FE84 : 96 B8  "  "  ldaa X00B8
 FE86 : 47  "G"  asra
@@ -3543,32 +3589,30 @@ FE87 : C2 00  "  "  sbcb #$00
 FE89 : DE B1  "  "  ldx X00B1
 FE8B : E4 00  "  "  andb $00,x
 FE8D : 1B  " "  aba
-FE8E    LFE8E:
 FE8E : A7 00  "  "  staa $00,x
 FE90 : 7C 00 B2  "|  "  inc X00B2
 FE93 : A6 00  "  "  ldaa $00,x
-FE95    LFE95:
+;5$:
 FE95 : CE FE 9B  "   "  ldx #$FE9B
 FE98    LFE98:
 FE98 : DF AD  "  "  stx X00AD
 FE9A : 39  "9"  rts
-    ;
+;1$
 FE9B : 78 00 B7  "x  "  asl X00B7
 FE9E    LFE9E:
 FE9E : 25 13  "% "  bcs LFEB3
 FEA0 : 27 06  "' "  beq LFEA8
 FEA2 : 7C 00 B2  "|  "  inc X00B2
 FEA5 : 7E FC BA  "~  "  jmp LFCBA
-    ;
-FEA8    LFEA8:
+;3$:
 FEA8 : BD FD 51  "  Q"  jsr LFD51
 FEAB : 6D 00  "m "  tst $00,x
 FEAD : 01  " "  nop
 FEAE : 39  "9"  rts
-;
+;6$:
 FEAF : 7A 00 B2   dec X00B2
 FEB2 : 08         inx
-;LFEB3:
+;2$:
 FEB3 : A6 00      ldaa $00,x
 FEB5 : DE 88      ldx X0088
 FEB7 : A6 00      ldaa $00,x
@@ -3579,10 +3623,60 @@ FEBE : CE FE 83   ldx #$FE83
 FEC1 : DF AD      stx X00AD
 FEC3 : 39         rts
 ;*************************************;
-;FDBdata24 - not fdb ?
+;
+;SUBTTL SOUND PROGRAMS
+;
+;* OPCODES ( ! SEPERATES NYBBLES  SPACES SEPERATE BYTES)
+;
+;* COMMON
+;* WAIT N -N  ( 1<= N<= 127)
+;* DO R,RTN $6!(R-1)  RTN - NEXT LOC
+;* TO RTN $70   RTN - NEXT LOC
+;* ESC  $55
+;
+;* FREQUENCY CONTROL
+;* STOP          $80
+;* LDP N         $01 N
+;* ADP N         $00 N
+;* LDV N         $2!(N&$F00) N&255
+;* ADV N         $3!(N&$F00) N&255
+;* LDO N         $11 N
+;* ADO N         $10 N
+
+;* WAVE CONTROL
+;* FIN           $40
+;* ZT            $50
+;* ADH 0,N       $51 N
+;* LDH 0,N       $53 N
+;*        ( IN WHAT FOLLOWS 1<=H<=8  HHH = 8-H, A 3 BIT NUMBER)
+;* ADH H,N       $0!0HHH
+;* LDH H,N       $0!1HHH
+;* IH H          $3!HHH1
+;* DH H          $3!HHH0
+;* DT R          $2!(R-1)
+;* LT A0,...,A8  $1!000C 8765!4321 B0,...,B8
+;*               WHERE C=1 IF ENTRY 0 IS ALTERED
+;*                     N=1 IF ENTRY N IS ALTERED (N=1,...,8)
+;*               BN=AN+AN+P WHERE P=1 IF AN IS TO BE ADDED TO ENTRY N
+;*                                P=0 IF AN REPLACES ENTRY N
+;*               BN IS PRESENT ONLY IF ENTRY N IS TO BE ALTERED
+
+;* HARMONIC FUNCTIONS.  EACH BIT POSITION CORRESPONDS TO A WAVEFORM
+;* POSITION.  IF THE BIT = 0, THE VALUE IS +1  IF THE BIT = 1, THE
+;* VALUE IS -1.
+;
+;* THE HARMONICS ARE TREATED IN ORDER OF DECREASING AVERAGE FREQUENCY.
+;
 ;*************************************;
-FEC4 : 00 00 55 55
-FEC8 : 33 33 25 DA DA 25 C7 31
+;ODDTBL
+;*************************************; 
+FEC4 : 0000 
+FEC6 : 5555
+FEC8 : 3333 
+FECA : 25DA 
+FECC : DA25 
+FECE : C731
+
 FED0 : 00 00 FF FF 01 FE 53 00
 FED8 : 66 16 66 1A 66 1E 66 21
 FEE0 : 66 24 08 FF E2 66 1F 66 
@@ -3609,9 +3703,9 @@ FF80 : FE 0A 00 0B 1E FE 70 F4
 FF88 : 96 2F D0 D0 20 00 EC EC 
 FF90 : EC 70 FB 80
 ;*************************************;
-;Siren Air Raid (PARAM11)
+;Siren Air Raid 
 ;*************************************;
-;LFF94 ZIREN:
+;ZIREN:
 FF94 : 86 FF      ldaa #$FF           ;load A with value FFh
 FF96 : 97 90      staa $90            ;store A in addr 90 (TOP)
 FF98 : CE FE C0   ldx #$FEC0          ;load X with value FEC0h
@@ -3621,13 +3715,13 @@ FF9F : CE FF E0   ldx #$FFE0          ;load X with value FFE0h
 FFA2 : 8D 05      bsr LFFA9           ;branch sub ZIREN0
 FFA4 : 86 01      ldaa #$01           ;load A with value 01h
 FFA6 : CE 00 44   ldx #$0044          ;load X with value 0044h
-;LFFA9 ZIREN0:
+;ZIREN0:
 FFA9 : 97 94      staa $94            ;store A in addr 94 (SLOPE)
 FFAB : DF 95      stx $95             ;store X in addr 95 (END)
-;LFFAD ZIREN1:
+;ZIREN1:
 FFAD : CE 00 10   ldx #$0010          ;load X with value 0010h
-;LFFB0 ZIREN2:
-FFB0 : 8D 21      bsr LFFD3           ;branch sub SYNTH9 (ZIRLOP)
+;ZIREN2:
+FFB0 : 8D 21      bsr LFFD3           ;branch sub ZIRTRI
 FFB2 : 96 91      ldaa $91            ;load A with value in addr 91 (TOP+1)
 FFB4 : 9B 93      adda $93            ;and A with value in addr 93 (SWEEP+1)
 FFB6 : 97 91      staa $91            ;store A in addr 91 (TOP+1)
@@ -3641,37 +3735,37 @@ FFC3 : 9B 94      adda $94            ;add A with value in addr 94 (SLOPE)
 FFC5 : 97 93      staa $93            ;store A in addr 93 (SWEEP+1)
 FFC7 : 24 03      bcc LFFCC           ;branch C=0 ZIREN5
 FFC9 : 7C 00 92   inc $0092           ;incr addr 0092 (SWEEP)
-;LFFCC ZIREN5:
+;ZIREN5:
 FFCC : DE 92      ldx $92             ;load X with value in addr 92 (SWEEP)
 FFCE : 9C 95      cpx $95             ;compare X with value in addr 95 (END2)
 FFD0 : 26 DB      bne LFFAD           ;branch Z=0 ZIREN1
 FFD2 : 39         rts                 ;return subroutine
-;* Flat Triangle Loop (SYNTH9)
-;ZIRLOP
+;* Flat Triangle Loop 
+;ZIRTRI
 FFD3 : 4F         clra                ;clear A
-;LFFD4 ZIRLP1:
+;ZIRLP1:
 FFD4 : B7 20 02   staa $2002          ;store A in DAC output SOUND
 FFD7 : 8B 20      adda #$20           ;add A with value 20h
 FFD9 : 24 F9      bcc LFFD4           ;branch C=0 ZIRLP1
 FFDB : 8D 09      bsr LFFE6           ;branch sub ZIRT
 FFDD : 86 E0      ldaa #$E0           ;load A with value E0h
-;LFFDF ZIRLP4:
+;ZIRLP4:
 FFDF : B7 20 02   staa $2002          ;store A in DAC output SOUND
 FFE2 : 80 20      suba #$20           ;subtract A with value 20h
 FFE4 : 24 F9      bcc LFFDF           ;branch C=0 ZIRLP4
-;LFFE6 ZIRT:
+;ZIRT:
 FFE6 : D6 90      ldab $90            ;load B with value in addr 90 (TOP)
-;LFFE8 ZIRLP2:
+;ZIRLP2:
 FFE8 : 86 02      ldaa #$02           ;load A with value 02h
-;LFFEA ZIRLP3:
+;ZIRLP3:
 FFEA : 4A         deca                ;decr A
 FFEB : 26 FD      bne LFFEA           ;branch Z=0 ZIRLP3
 FFED : 5A         decb                ;decr B
 FFEE : 26 F8      bne LFFE8           ;branch Z=0  ZIRLP2
 FFF0 : 39         rts                 ;return subroutine
 ;*************************************;
-;
-;*************************************;
+;zero padding
+;*
 FFF1 : 00 00 00 00 00 00 00
 ;*************************************;
 ;Motorola vector table
