@@ -30,7 +30,7 @@
         ;
         ;ENDRAM is $00FF(255 bytes) and not $007F(127 bytes)
         ;
-        ; update 26 May 2021
+        ; update 27 May 2021
         ;
 ;Mapping of ROM addresses and key functions:
 ; ROM   ADDR 

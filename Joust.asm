@@ -20,7 +20,7 @@
         ;
         ;TODO figure out the Walsh Function Sound Machine V2 source to 6800 machine code
         ;
-        ; 22 April 2021
+        ; 27 May 2021
         ;
 ;NAM  JOUST SOUND ROM STARTED 06/15/1982
 ;SUBTTL   
