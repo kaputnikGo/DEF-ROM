@@ -16,13 +16,15 @@
         ;
         ;Arcade Video game, 1984, upright.
         ;KLOV says similar hardware to Joust 2,Mystic Marathon and Turkey Shoot games
+        ;
         ; PIA addr $2000, flipped ports, output SOUND $2002, Sound Select $2000
+        ; same as Rat Race
         ;
         ;include FNOISE, GWAVE routines and their loaders
         ;
         ;yes I know LABELS should be 6 chars long...
         ;
-        ;updated 8 May 2021
+        ;updated 27 May 2021
         ;
         ;
           org  $E000
@@ -46,9 +48,10 @@ E000 : AD                             ;checksum byte
 ;RESET
 E001 : 0F         sei                 ;set interrupt mask   
 E002 : 8E 00 7F   lds  #$007F         ;load stack pointer with 007Fh 
-E005 : 8D 02      bsr  LE009          ;branch sub
-E007 : 20 FE      bra  LE007          ;branch always here, wait
-;RESET1 LE009:
+E005 : 8D 02      bsr  LE009          ;branch sub RESET1
+;STDBY
+E007 : 20 FE      bra  LE007          ;branch always STDBY
+;RESET1
 E009 : CE 20 00   ldx  #$2000         ;load X with 2000h (PIA addr)
 E00C : 6F 01      clr  $01,x          ;clear addr X + 01h (2001 PIA1 CR port A)
 E00E : 6F 03      clr  $03,x          ;clear addr X + 03h (2003 PIA1 CR port B)
@@ -66,15 +69,15 @@ E023 : 86 C6      ldaa  #$C6          ;load A with C6h
 E025 : 97 64      staa  $64           ;store A in addr 64
 E027 : 39         rts                 ;return subroutine
 ;*************************************;
-;LE028 - no call yet (no rts for stack means code falls thru here from reset?)
+;LE028 - no call yet
 ;*************************************;
 ;PARAM1
-E028 : 7F 00 59   clr  X0059
-E02B : 7F 00 5A   clr  X005A
-E02E : CE EE 89   ldx  #$EE89         ;FDB below FDBTBL1 (6 byte blocks)
-E031 : DF 6B      stx  X006B          ;store X in addr 6B (#FDBPTR1)
-E033 : CE EF 4B   ldx  #$EF4B         ;FDB below FDBTBL2 (14 byte blocks)
-E036 : DF 6D      stx  X006D          ;store X in addr 6D (#FDBPTR2)
+E028 : 7F 00 59   clr  $0059          ;clear addr 0059
+E02B : 7F 00 5A   clr  $005A          ;clear addr 005A
+E02E : CE EE 89   ldx  #$EE89         ;load X with EE89h FDBTBL1 (6 byte blocks)
+E031 : DF 6B      stx  $6B            ;store X in addr 6B (#FDBPTR1)
+E033 : CE EF 4B   ldx  #$EF4B         ;load X with EF4Bh FDBTBL2 (14 byte blocks)
+E036 : DF 6D      stx  $6D            ;store X in addr 6D (#FDBPTR2)
 E038 : BD E7 F8   jsr  LE7F8          ;jump sub TBLLD1
 ;PRM1X LE03B:
 E03B : 20 FE      bra  LE03B          ;branch always PRM1X
@@ -84,13 +87,13 @@ E03B : 20 FE      bra  LE03B          ;branch always PRM1X
 ;PARAM2
 E03D : BD E7 80   jsr  LE780          ;jump sub PARAM9
 E040 : BD E7 B7   jsr  LE7B7          ;jump sub PRMDL3
-E043 : CE 00 00   ldx  #$0000
-E046 : DF 5E      stx  X005E
-E048 : 7F 00 60   clr  X0060
-E04B : CE 00 20   ldx  #$0020
-E04E : DF 5C      stx  X005C
+E043 : CE 00 00   ldx  #$0000         ;load X with 0000h
+E046 : DF 5E      stx  $5E            ;store X in addr 5E
+E048 : 7F 00 60   clr  $0060          ;clear addr 0060
+E04B : CE 00 20   ldx  #$0020         ;load X with 0020h
+E04E : DF 5C      stx  $5C            ;store X in addr 5C
 ;PRM2X LE050:
-E050 : 7A 00 41   dec  X0041
+E050 : 7A 00 41   dec  $0041          ;decr addr 0041
 E053 : 27 03      beq  LE058          ;branch Z=1 SYNTH1
 E055 : 7E E1 31   jmp  LE131          ;jump PRM51
 ;*************************************;
@@ -1061,7 +1064,6 @@ E616 : E623                           ;THRUST
 ;*************************************;
 ;Cannon FCB table
 ;*************************************;
-;mem   18 14 17 11 Xh Xl
 E618 : 01 01 01 FF 03 E8              ;
 ;*************************************;
 ;CANNON
@@ -1080,7 +1082,6 @@ E628 : 20 10      bra  LE63A          ;branch always FNOISE
 ;FNOISE loader
 ;*************************************;
 ;FNOSLD:
-;LE62A:
 E62A : A6 00      ldaa  $00,x
 E62C : 97 10      staa  X0010
 E62E : A6 01      ldaa  $01,x
@@ -1095,7 +1096,6 @@ E638 : 20 00      bra  LE63A          ;branch always FNOISE
 ;*X=SAMPLE COUNT, ACCB=INITIAL MAX FREQ
 ;*ACCA=FREQ DECAY FLAG ,DSFLG=DISTORTION FLAG
 ;FNOISE
-;LE63A:
 E63A : 97 0F    "  "    staa  X000F
 E63C : D7 0A    "  "    stab  X000A
 E63E : DF 0D    "  "    stx  X000D
@@ -1104,10 +1104,10 @@ E643 : 86 AF    "  "    ldaa  #$AF
 E645 : B7 20 02    "   "    staa  X2002   ;SOUND
 E648 : 97 00    "  "    staa  X0000
 E64A : 97 01    "  "    staa  X0001
-;FNOIS0 LE64C:
+;FNOIS0
 E64C : DE 0D    "  "    ldx  X000D
 E64E : B6 20 02    "   "    ldaa  X2002   ;SOUND
-;FNOIS1 LE651:
+;FNOIS1
 E651 : 16    " "    tab
 E652 : 54    "T"    lsrb
 E653 : 54    "T"    lsrb
@@ -1621,35 +1621,35 @@ E949 : 44         lsra                ;left shift right A (0->bit7, bit0-> C)( e
 E94A : 24 06      bcc  LE952          ;branch C=0 PMINC1
 E94C : 7C 00 40   inc  $0040          ;incr addr 0040
 E94F : 7C 00 41   inc  $0041          ;incr addr 0041
-;PMINC1 LE952:
+;PMINC1
 E952 : 44         lsra                ;(0010 0000)
 E953 : 24 06      bcc  LE95B          ;branch C=0 PMINC2
 E955 : 7C 00 42   inc  $0042          ;incr addr 0042
 E958 : 7C 00 43   inc  $0043          ;incr addr 0043
-;PMINC2 LE95B:
+;PMINC2
 E95B : 44         lsra                ;(0001 0000)
 E95C : 24 06      bcc  LE964          ;branch C=0 PMINC3
 E95E : 7C 00 44   inc  $0044          ;incr addr 0044
 E961 : 7C 00 45   inc  $0045          ;incr addr 0045
-;PMINC3 LE964:
+;PMINC3
 E964 : 44         lsra                ;(0000 1000)
 E965 : 24 06      bcc  LE96D          ;branch C=0 PMINC4
 E967 : 7C 00 46   inc  $0046          ;incr addr 0046
 E96A : 7C 00 47   inc  $0047          ;incr addr 0047
-;PMINC4 LE96D:
+;PMINC4
 E96D : 44         lsra                ;(0000 0100)
 E96E : 24 06      bcc  LE976          ;branch C=0 PMINC5
 E970 : 7C 00 48   inc  $0048          ;incr addr 0048
 E973 : 7C 00 49   inc  $0049          ;incr addr 0049
-;PMINC5 LE976:
+;PMINC5 
 E976 : 44         lsra                ;(0000 0010)
 E977 : 24 03      bcc  LE97C          ;branch C=0 PMINC6
 E979 : 7C 00 4C   inc  $004C          ;incr addr 004C
-;PMINC6 LE97C:
+;PMINC6
 E97C : 44         lsra                ;(0000 0001)
 E97D : 24 03      bcc  LE982          ;branch C=0 PMINCX
 E97F : 7C 00 4D   inc  $004D          ;incr addr 004D
-;PMINCX LE982:
+;PMINCX
 E982 : 39         rts                 ;return subroutine
 ;*************************************;
 ;LE983 - params (similar to synth6)
@@ -1663,27 +1663,27 @@ E98D : 97 61      staa  X0061
 E98F : D7 62      stab  X0062
 E991 : 96 64      ldaa  X0064
 E993 : 97 63      staa  X0063
-;PM10LP1 LE995 main loop
+;PM10LP1 main loop
 E995 : 96 60      ldaa  X0060
 E997 : D6 61      ldab  X0061
 E999 : 53         comb
 E99A : C5 09      bitb  #$09
 E99C : 26 05      bne  LE9A3          ;branch Z=0 PRM101
 E99E : 53         comb
-;PM10LP2 LE99F:
+;PM10LP2
 E99F : 46         rora
 E9A0 : 56         rorb
 E9A1 : 20 09      bra  LE9AC          ;branch always PRM103
-;PRM101 LE9A3:
+;PRM101
 E9A3 : 53         comb
 E9A4 : C5 09      bitb  #$09
 E9A6 : 26 02      bne  LE9AA          ;branch Z=0 PRM102
 E9A8 : 27 F5      beq  LE99F          ;branch Z=1 PM10LP2
 ;
-;PRM102 LE9AA:
+;PRM102
 E9AA : 44         lsra
 E9AB : 56         rorb
-;PRM103 LE9AC:
+;PRM103
 E9AC : 97 60      staa  X0060
 E9AE : D7 61      stab  X0061
 E9B0 : A7 00      staa  $00,x
@@ -2767,7 +2767,7 @@ F451 : F9 42 0F 06 02 F7 09 DF        ;
 F459 : D9 01 00 00 00 F9 42           ;
 ;*************************************;
 ; FDBPTR2 13 bytes
-F$60 : 14 08 02 F7 FF DF D9 00        ;
+F460 : 14 08 02 F7 FF DF D9 00        ;
 F468 : 00 00 00 FF 8F                 ;
 ;*************************************;
 ; FDBPTR2 - 60 bytes
@@ -3097,86 +3097,86 @@ F9B2 : 02 30 00 0D 00                 ;
 ;*************************************;
 ;call by PRMLDR2 - 4 byte blocks - jump table for FDBPTR1, FDBPTR2
 ;*************************************;
-;FDBTBL12
-;      PTR1   PTR2  
-F9B7 : EE 28 F4 60 
-F9BB : ED EE F6 4B 
-F9BF : ED EE F7 57 
-F9C3 : ED EE F7 64 
-F9C7 : ED EE F7 9A 
+;FDBTBL12 - hmmmm....
+;      PTR1   PTR2                    ;b1   b2
+F9B7 : EE 28 F4 60                    ;12   13
+F9BB : ED EE F6 4B                    ;4
+F9BF : ED EE F7 57                    ;4
+F9C3 : ED EE F7 64                    ;4
+F9C7 : ED EE F7 9A                    ;4
 F9CB : EE 54 F7 4A 
 F9CF : EE 12 F4 6D 
 F9D3 : EE 3C F4 A9 
 F9D7 : EE 00 F5 10 
-F9DB : ED EE F7 3D 
-F9DF : ED EE F6 5A 
-F9E3 : ED EE F6 74 
-F9E7 : ED EE F6 81 
+F9DB : ED EE F7 3D                    ;4
+F9DF : ED EE F6 5A                    ;4
+F9E3 : ED EE F6 74                    ;4
+F9E7 : ED EE F6 81                    ;4
 F9EB : EE 34 F6 8E 
-F9EF : ED EE F6 CF 
-F9F3 : ED EE F6 DC 
-F9F7 : ED EE F6 E9 
-F9FB : ED EE F6 2F 
-F9FF : ED EE F6 3C 
-FA03 : ED EE F3 EB 
-FA07 : ED EE F3 F8 
-FA0B : ED EE F4 05 
-FA0F : ED EE F4 12 
-FA13 : ED EE F4 1F 
-FA17 : ED EE F4 2C 
-FA1B : ED F2 F4 39 
-FA1F : ED F8 F4 39 
-FA23 : ED EE F7 8B 
-FA27 : ED EE F6 67 
+F9EF : ED EE F6 CF                    ;4
+F9F3 : ED EE F6 DC                    ;4
+F9F7 : ED EE F6 E9                    ;4
+F9FB : ED EE F6 2F                    ;4
+F9FF : ED EE F6 3C                    ;4
+FA03 : ED EE F3 EB                    ;4
+FA07 : ED EE F3 F8                    ;4
+FA0B : ED EE F4 05                    ;4
+FA0F : ED EE F4 12                    ;4
+FA13 : ED EE F4 1F                    ;4
+FA17 : ED EE F4 2C                    ;4
+FA1B : ED F2 F4 39                    ;4
+FA1F : ED F8 F4 39                    ;4
+FA23 : ED EE F7 8B                    ;4
+FA27 : ED EE F6 67                    ;4
 FA2B : EE 48 F6 67 
 FA2F : EE 62 F7 4A 
 FA33 : EE 12 F5 1F 
 FA37 : EE 00 F5 6D 
-FA3B : ED EE F5 87
+FA3B : ED EE F5 87                    ;4
 FA3F : EE 12 F4 A9 
-FA43 : ED EE F6 9B 
-FA47 : ED EE F6 A8 
-FA4B : ED EE F6 C2 
-FA4F : ED EE F6 F6 
-FA54 : ED EE F7 12 
-FA57 : ED EE F7 A9 
-FA5B : ED EE F7 B6 
-FA5F : ED EE F7 C3 
-FA63 : ED EE F7 D0 
-FA67 : ED EE F7 DD 
-FA6B : ED EE F7 EA 
-FA6F : ED EE F7 F7 
-FA73 : ED EE F8 04 
-FA77 : ED EE F8 11 
-FA7B : ED EE F8 1E 
-FA7F : ED EE F8 2B 
-FA83 : ED EE F8 38 
-FA87 : ED EE F8 45 
-FA8B : ED EE F8 52 
-FA8F : ED EE F8 5F 
-FA93 : ED EE F8 6C 
-FA97 : ED EE F8 79 
-FA9B : ED EE F8 86 
-FA9F : ED EE F8 93 
-FAA3 : ED EE F8 BE 
-FAA7 : ED EE F8 CB 
-FAAB : ED EE F8 D8 
-FAAF : ED EE F8 E5 
-FAB3 : ED EE F8 F2 
-FAB7 : ED EE F8 FF 
-FABB : ED EE F9 0C 
-FABF : ED EE F9 19 
-FAC3 : ED EE F9 26 
-FAC7 : ED EE F9 33 
-FACB : ED EE F9 40 
-FACF : ED EE F9 4D 
-FAD3 : ED EE F9 5A 
-FAD7 : ED EE F9 69 
-FADB : ED EE F9 76 
-FADF : ED EE F9 83 
-FAE3 : ED EE F9 90 
-FAE7 : ED EE F9 9D 
-FAEB : ED EE F9 AA 
+FA43 : ED EE F6 9B                    ;4
+FA47 : ED EE F6 A8                    ;4
+FA4B : ED EE F6 C2                    ;4
+FA4F : ED EE F6 F6                    ;4
+FA54 : ED EE F7 12                    ;4
+FA57 : ED EE F7 A9                    ;4
+FA5B : ED EE F7 B6                    ;4
+FA5F : ED EE F7 C3                    ;4
+FA63 : ED EE F7 D0                    ;4
+FA67 : ED EE F7 DD                    ;4
+FA6B : ED EE F7 EA                    ;4
+FA6F : ED EE F7 F7                    ;4
+FA73 : ED EE F8 04                    ;4
+FA77 : ED EE F8 11                    ;4
+FA7B : ED EE F8 1E                    ;4
+FA7F : ED EE F8 2B                    ;4
+FA83 : ED EE F8 38                    ;4
+FA87 : ED EE F8 45                    ;4
+FA8B : ED EE F8 52                    ;4
+FA8F : ED EE F8 5F                    ;4
+FA93 : ED EE F8 6C                    ;4
+FA97 : ED EE F8 79                    ;4
+FA9B : ED EE F8 86                    ;4
+FA9F : ED EE F8 93                    ;4
+FAA3 : ED EE F8 BE                    ;4
+FAA7 : ED EE F8 CB                    ;4
+FAAB : ED EE F8 D8                    ;4
+FAAF : ED EE F8 E5                    ;4
+FAB3 : ED EE F8 F2                    ;4
+FAB7 : ED EE F8 FF                    ;4
+FABB : ED EE F9 0C                    ;4
+FABF : ED EE F9 19                    ;4
+FAC3 : ED EE F9 26                    ;4
+FAC7 : ED EE F9 33                    ;4
+FACB : ED EE F9 40                    ;4
+FACF : ED EE F9 4D                    ;4
+FAD3 : ED EE F9 5A                    ;4
+FAD7 : ED EE F9 69                    ;4
+FADB : ED EE F9 76                    ;4
+FADF : ED EE F9 83                    ;4
+FAE3 : ED EE F9 90                    ;4
+FAE7 : ED EE F9 9D                    ;4
+FAEB : ED EE F9 AA                    ;4
 ;*************************************;
 ;*WAVE TABLE
 ;*************************************;
@@ -3208,16 +3208,17 @@ FB50 : FF FF FF FF 00 00 00 00        ;Sqr Wave
 FB58 : 10 
 FB59 : FF FF FF FF 00 00 00 00        ;GSQ22 (16)
 FB61 : FF FF FF FF 00 00 00 00        ;Sqr Wave 
-        ;
-FB69 : 48 8A 95 A0 AB B5 BF C8        ;GS72 (72)
-FB71 : D1 DA E1 E8 EE F3 F7 FB        ;Sine wave
-FB79 : FD FE FF FE FD FB F7 F3        ;
-FB81 : EE E8 E1 DA D1 C8 BF B5        ;
-FB89 : AB A0 95 8A 7F 75 6A 5F        ;
-FB92 : 4A 40 37 2E 25 1E 17 11        ;
+;
+FB69 : 48                             ;GS72 (72)
+FB6A : 8A 95 A0 AB B5 BF C8 D1        ;Sine Wave
+FB72 : DA E1 E8 EE F3 F7 FB FD        ;
+FB7A : FE FF FE FD FB F7 F3 EE        ;
+FB82 : E8 E1 DA D1 C8 BF B5 AB        ;
+FB8A : A0 95 8A 7F 75 6A 5F 4A        ;
+FB92 : 40 40 37 2E 25 1E 17 11        ;
 FB9A : 0C 08 04 02 01 00 01 02        ;
 FBA2 : 04 08 0C 11 17 1E 25 2E        ;
-FBAA : 37 40 4A 54 5F 6A 75 7F        ; (may incl byte at FBB2)
+FBAA : 37 40 4A 54 5F 6A 75 7F        ;
 ;*************************************;
 ;*GWAVE SOUND VECTOR TABLE
 ;*************************************;
@@ -3243,7 +3244,7 @@ FBCE : 01 14 00 00 00 08 1A           ;(8)
 ;
 FBD5 : 81 25 00 00 00 16 22           ;(22)HBDSND
 ;
-FBDC : 01 16 01 01 01 01 38           ;(20)BBSND <-- length of 1 ??
+FBDC : 01 16 01 01 01 01 38           ;(20)BBSND 
 ;
 FBE3 : FE 10 00 00 00 20 4C           ;(32)
 ;
@@ -3292,299 +3293,110 @@ FC8A : 0C 0C 0D 0D 0E 0E 0F 06        ;
 FC92 : 06 06 07 07 08 08 09 02        ;
 FC9A : 02 02 03 03 04 04 05           ;
 ;*************************************;
-;zero padding (FF)
-FCA1 : FF FF FF    "   "    stx  XFFFF
-FCA4 : FF FF FF    "   "    stx  XFFFF
-FCA7 : FF FF FF    "   "    stx  XFFFF
-FCAA : FF FF FF    "   "    stx  XFFFF
-FCAD : FF FF FF    "   "    stx  XFFFF
-FCB0 : FF FF FF    "   "    stx  XFFFF
-FCB3 : FF FF FF    "   "    stx  XFFFF
-FCB6 : FF FF FF    "   "    stx  XFFFF
-FCB9 : FF FF FF    "   "    stx  XFFFF
-FCBC : FF FF FF    "   "    stx  XFFFF
-FCBF : FF FF FF    "   "    stx  XFFFF
-FCC2 : FF FF FF    "   "    stx  XFFFF
-FCC5 : FF FF FF    "   "    stx  XFFFF
-FCC8 : FF FF FF    "   "    stx  XFFFF
-FCCB : FF FF FF    "   "    stx  XFFFF
-FCCE : FF FF FF    "   "    stx  XFFFF
-FCD1 : FF FF FF    "   "    stx  XFFFF
-FCD4 : FF FF FF    "   "    stx  XFFFF
-FCD7 : FF FF FF    "   "    stx  XFFFF
-FCDA : FF FF FF    "   "    stx  XFFFF
-FCDD : FF FF FF    "   "    stx  XFFFF
-FCE0 : FF FF FF    "   "    stx  XFFFF
-FCE3 : FF FF FF    "   "    stx  XFFFF
-FCE6 : FF FF FF    "   "    stx  XFFFF
-FCE9 : FF FF FF    "   "    stx  XFFFF
-FCEC : FF FF FF    "   "    stx  XFFFF
-FCEF : FF FF FF    "   "    stx  XFFFF
-FCF2 : FF FF FF    "   "    stx  XFFFF
-FCF5 : FF FF FF    "   "    stx  XFFFF
-FCF8 : FF FF FF    "   "    stx  XFFFF
-FCFB : FF FF FF    "   "    stx  XFFFF
-FCFE : FF FF FF    "   "    stx  XFFFF
-FD01 : FF FF FF    "   "    stx  XFFFF
-FD04 : FF FF FF    "   "    stx  XFFFF
-FD07 : FF FF FF    "   "    stx  XFFFF
-FD0A : FF FF FF    "   "    stx  XFFFF
-FD0D : FF FF FF    "   "    stx  XFFFF
-FD10 : FF FF FF    "   "    stx  XFFFF
-FD13 : FF FF FF    "   "    stx  XFFFF
-FD16 : FF FF FF    "   "    stx  XFFFF
-FD19 : FF FF FF    "   "    stx  XFFFF
-FD1C : FF FF FF    "   "    stx  XFFFF
-FD1F : FF FF FF    "   "    stx  XFFFF
-FD22 : FF FF FF    "   "    stx  XFFFF
-FD25 : FF FF FF    "   "    stx  XFFFF
-FD28 : FF FF FF    "   "    stx  XFFFF
-FD2B : FF FF FF    "   "    stx  XFFFF
-FD2E : FF FF FF    "   "    stx  XFFFF
-FD31 : FF FF FF    "   "    stx  XFFFF
-FD34 : FF FF FF    "   "    stx  XFFFF
-FD37 : FF FF FF    "   "    stx  XFFFF
-FD3A : FF FF FF    "   "    stx  XFFFF
-FD3D : FF FF FF    "   "    stx  XFFFF
-FD40 : FF FF FF    "   "    stx  XFFFF
-FD43 : FF FF FF    "   "    stx  XFFFF
-FD46 : FF FF FF    "   "    stx  XFFFF
-FD49 : FF FF FF    "   "    stx  XFFFF
-FD4C : FF FF FF    "   "    stx  XFFFF
-FD4F : FF FF FF    "   "    stx  XFFFF
-FD52 : FF FF FF    "   "    stx  XFFFF
-FD55 : FF FF FF    "   "    stx  XFFFF
-FD58 : FF FF FF    "   "    stx  XFFFF
-FD5B : FF FF FF    "   "    stx  XFFFF
-FD5E : FF FF FF    "   "    stx  XFFFF
-FD61 : FF FF FF    "   "    stx  XFFFF
-FD64 : FF FF FF    "   "    stx  XFFFF
-FD67 : FF FF FF    "   "    stx  XFFFF
-FD6A : FF FF FF    "   "    stx  XFFFF
-FD6D : FF FF FF    "   "    stx  XFFFF
-FD70 : FF FF FF    "   "    stx  XFFFF
-FD73 : FF FF FF    "   "    stx  XFFFF
-FD76 : FF FF FF    "   "    stx  XFFFF
-FD79 : FF FF FF    "   "    stx  XFFFF
-FD7C : FF FF FF    "   "    stx  XFFFF
-FD7F : FF FF FF    "   "    stx  XFFFF
-FD82 : FF FF FF    "   "    stx  XFFFF
-FD85 : FF FF FF    "   "    stx  XFFFF
-FD88 : FF FF FF    "   "    stx  XFFFF
-FD8B : FF FF FF    "   "    stx  XFFFF
-FD8E : FF FF FF    "   "    stx  XFFFF
-FD91 : FF FF FF    "   "    stx  XFFFF
-FD94 : FF FF FF    "   "    stx  XFFFF
-FD97 : FF FF FF    "   "    stx  XFFFF
-FD9A : FF FF FF    "   "    stx  XFFFF
-FD9D : FF FF FF    "   "    stx  XFFFF
-FDA0 : FF FF FF    "   "    stx  XFFFF
-FDA3 : FF FF FF    "   "    stx  XFFFF
-FDA6 : FF FF FF    "   "    stx  XFFFF
-FDA9 : FF FF FF    "   "    stx  XFFFF
-FDAC : FF FF FF    "   "    stx  XFFFF
-FDAF : FF FF FF    "   "    stx  XFFFF
-FDB2 : FF FF FF    "   "    stx  XFFFF
-FDB5 : FF FF FF    "   "    stx  XFFFF
-FDB8 : FF FF FF    "   "    stx  XFFFF
-FDBB : FF FF FF    "   "    stx  XFFFF
-FDBE : FF FF FF    "   "    stx  XFFFF
-FDC1 : FF FF FF    "   "    stx  XFFFF
-FDC4 : FF FF FF    "   "    stx  XFFFF
-FDC7 : FF FF FF    "   "    stx  XFFFF
-FDCA : FF FF FF    "   "    stx  XFFFF
-FDCD : FF FF FF    "   "    stx  XFFFF
-FDD0 : FF FF FF    "   "    stx  XFFFF
-FDD3 : FF FF FF    "   "    stx  XFFFF
-FDD6 : FF FF FF    "   "    stx  XFFFF
-FDD9 : FF FF FF    "   "    stx  XFFFF
-FDDC : FF FF FF    "   "    stx  XFFFF
-FDDF : FF FF FF    "   "    stx  XFFFF
-FDE2 : FF FF FF    "   "    stx  XFFFF
-FDE5 : FF FF FF    "   "    stx  XFFFF
-FDE8 : FF FF FF    "   "    stx  XFFFF
-FDEB : FF FF FF    "   "    stx  XFFFF
-FDEE : FF FF FF    "   "    stx  XFFFF
-FDF1 : FF FF FF    "   "    stx  XFFFF
-FDF4 : FF FF FF    "   "    stx  XFFFF
-FDF7 : FF FF FF    "   "    stx  XFFFF
-FDFA : FF FF FF    "   "    stx  XFFFF
-FDFD : FF FF FF    "   "    stx  XFFFF
-FE00 : FF FF FF    "   "    stx  XFFFF
-FE03 : FF FF FF    "   "    stx  XFFFF
-FE06 : FF FF FF    "   "    stx  XFFFF
-FE09 : FF FF FF    "   "    stx  XFFFF
-FE0C : FF FF FF    "   "    stx  XFFFF
-FE0F : FF FF FF    "   "    stx  XFFFF
-FE12 : FF FF FF    "   "    stx  XFFFF
-FE15 : FF FF FF    "   "    stx  XFFFF
-FE18 : FF FF FF    "   "    stx  XFFFF
-FE1B : FF FF FF    "   "    stx  XFFFF
-FE1E : FF FF FF    "   "    stx  XFFFF
-FE21 : FF FF FF    "   "    stx  XFFFF
-FE24 : FF FF FF    "   "    stx  XFFFF
-FE27 : FF FF FF    "   "    stx  XFFFF
-FE2A : FF FF FF    "   "    stx  XFFFF
-FE2D : FF FF FF    "   "    stx  XFFFF
-FE30 : FF FF FF    "   "    stx  XFFFF
-FE33 : FF FF FF    "   "    stx  XFFFF
-FE36 : FF FF FF    "   "    stx  XFFFF
-FE39 : FF FF FF    "   "    stx  XFFFF
-FE3C : FF FF FF    "   "    stx  XFFFF
-FE3F : FF FF FF    "   "    stx  XFFFF
-FE42 : FF FF FF    "   "    stx  XFFFF
-FE45 : FF FF FF    "   "    stx  XFFFF
-FE48 : FF FF FF    "   "    stx  XFFFF
-FE4B : FF FF FF    "   "    stx  XFFFF
-FE4E : FF FF FF    "   "    stx  XFFFF
-FE51 : FF FF FF    "   "    stx  XFFFF
-FE54 : FF FF FF    "   "    stx  XFFFF
-FE57 : FF FF FF    "   "    stx  XFFFF
-FE5A : FF FF FF    "   "    stx  XFFFF
-FE5D : FF FF FF    "   "    stx  XFFFF
-FE60 : FF FF FF    "   "    stx  XFFFF
-FE63 : FF FF FF    "   "    stx  XFFFF
-FE66 : FF FF FF    "   "    stx  XFFFF
-FE69 : FF FF FF    "   "    stx  XFFFF
-FE6C : FF FF FF    "   "    stx  XFFFF
-FE6F : FF FF FF    "   "    stx  XFFFF
-FE72 : FF FF FF    "   "    stx  XFFFF
-FE75 : FF FF FF    "   "    stx  XFFFF
-FE78 : FF FF FF    "   "    stx  XFFFF
-FE7B : FF FF FF    "   "    stx  XFFFF
-FE7E : FF FF FF    "   "    stx  XFFFF
-FE81 : FF FF FF    "   "    stx  XFFFF
-FE84 : FF FF FF    "   "    stx  XFFFF
-FE87 : FF FF FF    "   "    stx  XFFFF
-FE8A : FF FF FF    "   "    stx  XFFFF
-FE8D : FF FF FF    "   "    stx  XFFFF
-FE90 : FF FF FF    "   "    stx  XFFFF
-FE93 : FF FF FF    "   "    stx  XFFFF
-FE96 : FF FF FF    "   "    stx  XFFFF
-FE99 : FF FF FF    "   "    stx  XFFFF
-FE9C : FF FF FF    "   "    stx  XFFFF
-FE9F : FF FF FF    "   "    stx  XFFFF
-FEA2 : FF FF FF    "   "    stx  XFFFF
-FEA5 : FF FF FF    "   "    stx  XFFFF
-FEA8 : FF FF FF    "   "    stx  XFFFF
-FEAB : FF FF FF    "   "    stx  XFFFF
-FEAE : FF FF FF    "   "    stx  XFFFF
-FEB1 : FF FF FF    "   "    stx  XFFFF
-FEB4 : FF FF FF    "   "    stx  XFFFF
-FEB7 : FF FF FF    "   "    stx  XFFFF
-FEBA : FF FF FF    "   "    stx  XFFFF
-FEBD : FF FF FF    "   "    stx  XFFFF
-FEC0 : FF FF FF    "   "    stx  XFFFF
-FEC3 : FF FF FF    "   "    stx  XFFFF
-FEC6 : FF FF FF    "   "    stx  XFFFF
-FEC9 : FF FF FF    "   "    stx  XFFFF
-FECC : FF FF FF    "   "    stx  XFFFF
-FECF : FF FF FF    "   "    stx  XFFFF
-FED2 : FF FF FF    "   "    stx  XFFFF
-FED5 : FF FF FF    "   "    stx  XFFFF
-FED8 : FF FF FF    "   "    stx  XFFFF
-FEDB : FF FF FF    "   "    stx  XFFFF
-FEDE : FF FF FF    "   "    stx  XFFFF
-FEE1 : FF FF FF    "   "    stx  XFFFF
-FEE4 : FF FF FF    "   "    stx  XFFFF
-FEE7 : FF FF FF    "   "    stx  XFFFF
-FEEA : FF FF FF    "   "    stx  XFFFF
-FEED : FF FF FF    "   "    stx  XFFFF
-FEF0 : FF FF FF    "   "    stx  XFFFF
-FEF3 : FF FF FF    "   "    stx  XFFFF
-FEF6 : FF FF FF    "   "    stx  XFFFF
-FEF9 : FF FF FF    "   "    stx  XFFFF
-FEFC : FF FF FF    "   "    stx  XFFFF
-FEFF : FF FF FF    "   "    stx  XFFFF
-FF02 : FF FF FF    "   "    stx  XFFFF
-FF05 : FF FF FF    "   "    stx  XFFFF
-FF08 : FF FF FF    "   "    stx  XFFFF
-FF0B : FF FF FF    "   "    stx  XFFFF
-FF0E : FF FF FF    "   "    stx  XFFFF
-FF11 : FF FF FF    "   "    stx  XFFFF
-FF14 : FF FF FF    "   "    stx  XFFFF
-FF17 : FF FF FF    "   "    stx  XFFFF
-FF1A : FF FF FF    "   "    stx  XFFFF
-FF1D : FF FF FF    "   "    stx  XFFFF
-FF20 : FF FF FF    "   "    stx  XFFFF
-FF23 : FF FF FF    "   "    stx  XFFFF
-FF26 : FF FF FF    "   "    stx  XFFFF
-FF29 : FF FF FF    "   "    stx  XFFFF
-FF2C : FF FF FF    "   "    stx  XFFFF
-FF2F : FF FF FF    "   "    stx  XFFFF
-FF32 : FF FF FF    "   "    stx  XFFFF
-FF35 : FF FF FF    "   "    stx  XFFFF
-FF38 : FF FF FF    "   "    stx  XFFFF
-FF3B : FF FF FF    "   "    stx  XFFFF
-FF3E : FF FF FF    "   "    stx  XFFFF
-FF41 : FF FF FF    "   "    stx  XFFFF
-FF44 : FF FF FF    "   "    stx  XFFFF
-FF47 : FF FF FF    "   "    stx  XFFFF
-FF4A : FF FF FF    "   "    stx  XFFFF
-FF4D : FF FF FF    "   "    stx  XFFFF
-FF50 : FF FF FF    "   "    stx  XFFFF
-FF53 : FF FF FF    "   "    stx  XFFFF
-FF56 : FF FF FF    "   "    stx  XFFFF
-FF59 : FF FF FF    "   "    stx  XFFFF
-FF5C : FF FF FF    "   "    stx  XFFFF
-FF5F : FF FF FF    "   "    stx  XFFFF
-FF62 : FF FF FF    "   "    stx  XFFFF
-FF65 : FF FF FF    "   "    stx  XFFFF
-FF68 : FF FF FF    "   "    stx  XFFFF
-FF6B : FF FF FF    "   "    stx  XFFFF
-FF6E : FF FF FF    "   "    stx  XFFFF
-FF71 : FF FF FF    "   "    stx  XFFFF
-FF74 : FF FF FF    "   "    stx  XFFFF
-FF77 : FF FF FF    "   "    stx  XFFFF
-FF7A : FF FF FF    "   "    stx  XFFFF
-FF7D : FF FF FF    "   "    stx  XFFFF
-FF80 : FF FF FF    "   "    stx  XFFFF
-FF83 : FF FF FF    "   "    stx  XFFFF
-FF86 : FF FF FF    "   "    stx  XFFFF
-FF89 : FF FF FF    "   "    stx  XFFFF
-FF8C : FF FF FF    "   "    stx  XFFFF
-FF8F : FF FF FF    "   "    stx  XFFFF
-FF92 : FF FF FF    "   "    stx  XFFFF
-FF95 : FF FF FF    "   "    stx  XFFFF
-FF98 : FF FF FF    "   "    stx  XFFFF
-FF9B : FF FF FF    "   "    stx  XFFFF
-FF9E : FF FF FF    "   "    stx  XFFFF
-FFA1 : FF FF FF    "   "    stx  XFFFF
-FFA4 : FF FF FF    "   "    stx  XFFFF
-FFA7 : FF FF FF    "   "    stx  XFFFF
-FFAA : FF FF FF    "   "    stx  XFFFF
-FFAD : FF FF FF    "   "    stx  XFFFF
-FFB0 : FF FF FF    "   "    stx  XFFFF
-FFB3 : FF FF FF    "   "    stx  XFFFF
-FFB6 : FF FF FF    "   "    stx  XFFFF
-FFB9 : FF FF FF    "   "    stx  XFFFF
-FFBC : FF FF FF    "   "    stx  XFFFF
-FFBF : FF FF FF    "   "    stx  XFFFF
-FFC2 : FF FF FF    "   "    stx  XFFFF
-FFC5 : FF FF FF    "   "    stx  XFFFF
-FFC8 : FF FF FF    "   "    stx  XFFFF
-FFCB : FF FF FF    "   "    stx  XFFFF
-FFCE : FF FF FF    "   "    stx  XFFFF
-FFD1 : FF FF FF    "   "    stx  XFFFF
-FFD4 : FF FF FF    "   "    stx  XFFFF
-FFD7 : FF FF FF    "   "    stx  XFFFF
-FFDA : FF FF FF    "   "    stx  XFFFF
-FFDD : FF FF FF    "   "    stx  XFFFF
-FFE0 : FF FF FF    "   "    stx  XFFFF
-FFE3 : FF FF FF    "   "    stx  XFFFF
-FFE6 : FF FF FF    "   "    stx  XFFFF
-FFE9 : FF FF FF    "   "    stx  XFFFF
-FFEC : FF FF FF    "   "    stx  XFFFF
-FFEF : FF FF FF    "   "    stx  XFFFF
-FFF2 : FF FF FF    "   "    stx  XFFFF
-FFF5 : FF FF FF    "   "    stx  XFFFF
+;zero padding (FF) 
+;- disam'd in 3x FCB lines, hence 9 byte rows
+FCA1 : FFFF FFFF FFFF FFFF FF
+FCAA : FFFF FFFF FFFF FFFF FF
+FCB3 : FFFF FFFF FFFF FFFF FF
+FCBC : FFFF FFFF FFFF FFFF FF
+FCC5 : FFFF FFFF FFFF FFFF FF
+FCCE : FFFF FFFF FFFF FFFF FF
+FCD7 : FFFF FFFF FFFF FFFF FF
+FCE0 : FFFF FFFF FFFF FFFF FF
+FCE9 : FFFF FFFF FFFF FFFF FF
+FCF2 : FFFF FFFF FFFF FFFF FF
+FCFB : FFFF FFFF FFFF FFFF FF
+FD04 : FFFF FFFF FFFF FFFF FF
+FD0D : FFFF FFFF FFFF FFFF FF
+FD16 : FFFF FFFF FFFF FFFF FF
+FD1F : FFFF FFFF FFFF FFFF FF
+FD28 : FFFF FFFF FFFF FFFF FF
+FD31 : FFFF FFFF FFFF FFFF FF
+FD3A : FFFF FFFF FFFF FFFF FF
+FD43 : FFFF FFFF FFFF FFFF FF
+FD4C : FFFF FFFF FFFF FFFF FF
+FD55 : FFFF FFFF FFFF FFFF FF
+FD5E : FFFF FFFF FFFF FFFF FF
+FD67 : FFFF FFFF FFFF FFFF FF
+FD70 : FFFF FFFF FFFF FFFF FF
+FD79 : FFFF FFFF FFFF FFFF FF
+FD82 : FFFF FFFF FFFF FFFF FF
+FD8B : FFFF FFFF FFFF FFFF FF
+FD94 : FFFF FFFF FFFF FFFF FF
+FD9D : FFFF FFFF FFFF FFFF FF
+FDA6 : FFFF FFFF FFFF FFFF FF
+FDAF : FFFF FFFF FFFF FFFF FF
+FDB8 : FFFF FFFF FFFF FFFF FF
+FDC1 : FFFF FFFF FFFF FFFF FF
+FDCA : FFFF FFFF FFFF FFFF FF
+FDD3 : FFFF FFFF FFFF FFFF FF
+FDDC : FFFF FFFF FFFF FFFF FF
+FDE5 : FFFF FFFF FFFF FFFF FF
+FDEE : FFFF FFFF FFFF FFFF FF
+FDF7 : FFFF FFFF FFFF FFFF FF
+FE00 : FFFF FFFF FFFF FFFF FF
+FE09 : FFFF FFFF FFFF FFFF FF
+FE12 : FFFF FFFF FFFF FFFF FF
+FE1B : FFFF FFFF FFFF FFFF FF
+FE24 : FFFF FFFF FFFF FFFF FF
+FE2D : FFFF FFFF FFFF FFFF FF
+FE36 : FFFF FFFF FFFF FFFF FF
+FE3F : FFFF FFFF FFFF FFFF FF
+FE48 : FFFF FFFF FFFF FFFF FF
+FE51 : FFFF FFFF FFFF FFFF FF
+FE5A : FFFF FFFF FFFF FFFF FF
+FE63 : FFFF FFFF FFFF FFFF FF
+FE6C : FFFF FFFF FFFF FFFF FF
+FE75 : FFFF FFFF FFFF FFFF FF
+FE7E : FFFF FFFF FFFF FFFF FF
+FE87 : FFFF FFFF FFFF FFFF FF
+FE90 : FFFF FFFF FFFF FFFF FF
+FE99 : FFFF FFFF FFFF FFFF FF
+FEA2 : FFFF FFFF FFFF FFFF FF
+FEAB : FFFF FFFF FFFF FFFF FF
+FEB4 : FFFF FFFF FFFF FFFF FF
+FEBD : FFFF FFFF FFFF FFFF FF
+FEC6 : FFFF FFFF FFFF FFFF FF
+FECF : FFFF FFFF FFFF FFFF FF
+FED8 : FFFF FFFF FFFF FFFF FF
+FEE1 : FFFF FFFF FFFF FFFF FF
+FEEA : FFFF FFFF FFFF FFFF FF
+FEF3 : FFFF FFFF FFFF FFFF FF
+FEFC : FFFF FFFF FFFF FFFF FF
+FF05 : FFFF FFFF FFFF FFFF FF
+FF0E : FFFF FFFF FFFF FFFF FF
+FF17 : FFFF FFFF FFFF FFFF FF
+FF20 : FFFF FFFF FFFF FFFF FF
+FF29 : FFFF FFFF FFFF FFFF FF
+FF32 : FFFF FFFF FFFF FFFF FF
+FF3B : FFFF FFFF FFFF FFFF FF
+FF44 : FFFF FFFF FFFF FFFF FF
+FF4D : FFFF FFFF FFFF FFFF FF
+FF56 : FFFF FFFF FFFF FFFF FF
+FF5F : FFFF FFFF FFFF FFFF FF
+FF68 : FFFF FFFF FFFF FFFF FF
+FF71 : FFFF FFFF FFFF FFFF FF
+FF7A : FFFF FFFF FFFF FFFF FF
+FF83 : FFFF FFFF FFFF FFFF FF
+FF8C : FFFF FFFF FFFF FFFF FF
+FF95 : FFFF FFFF FFFF FFFF FF
+FF9E : FFFF FFFF FFFF FFFF FF
+FFA7 : FFFF FFFF FFFF FFFF FF
+FFB0 : FFFF FFFF FFFF FFFF FF
+FFB9 : FFFF FFFF FFFF FFFF FF
+FFC2 : FFFF FFFF FFFF FFFF FF
+FFCB : FFFF FFFF FFFF FFFF FF
+FFD4 : FFFF FFFF FFFF FFFF FF
+FFDD : FFFF FFFF FFFF FFFF FF
+FFE6 : FFFF FFFF FFFF FFFF FF
+FFEF : FFFF FFFF FFFF FFFF FF
 ;*************************************;
 ;Motorola vector table
 ;*************************************; 
-FFF8 : E9 B9                  ;IRQ 
-FFFA : E0 01                  ;RESET SWI (software)  
-FFFC : E9 DD                  ;NMI  
-FFFE : E0 01                  ;RESET (hardware)
+FFF8 : E9 B9                          ;IRQ 
+FFFA : E0 01                          ;RESET SWI (software)  
+FFFC : E9 DD                          ;NMI  
+FFFE : E0 01                          ;RESET (hardware)
 
 ;--------------------------------------------------------------
 
