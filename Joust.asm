@@ -30,9 +30,9 @@
 ;*      AND A CAST OF THOUSANDS......
 ;*
 ;
-;*
+;*************************************;
 ;*SYSTEM CONSTANTS
-;*
+;*************************************;
 ROM     EQU  $F000
 SOUND   SET  $400
 CKORG   EQU  $EF00   ;CHECKSUM PROG ORG
@@ -203,9 +203,9 @@ NNOIS   RMB  1       ;NEXT NOISE VALUE
 NFRQ    RMB  1       ;NOISE FREQ
 NFRQ2   RMB  1       ;INIT NOISE FREQ
 RCNT2   RMB  1
-;*
+;*************************************;
 ;* CHECKSUM CALCULATOR (& RELOCATOR)
-;*
+;*************************************;
         ORG  CKORG
 CKSUM   LDX  #$FFFF  ;INDEX TO END OF ROM
         CLRB         ;ZERO CHECKSUM
@@ -215,18 +215,15 @@ CKSUM1  ADCB  0,X    ;ADD IN PROGRAM BYTE
         BNE  CKSUM1  ;NOPE...
         STAB  0,X    ;SAVE CHECKSUM AT BEGINNING
         WAI          ;TURN OFF LEDS
+;*************************************;
 FROM    RMB  2
 TO      RMB  2       ;FOR POINTER
-;*
+;*************************************;
 ;* MAIN PROGRAM
-;*
+;*************************************;
 org  $F000
         ;
-;
-;LABEL
-;NUM : HEX        OPCODE              ;(VAR) COMMENT AND NOTES
-;
-;ORG  ROM
+ORG  ROM
 ;*
 F000 : 58                             ;CHECKSUM BYTE
 ;*************************************;
@@ -248,10 +245,9 @@ F018 : A7 01      staa  $01,x         ;PROGRAM A SIDE
 F01A : 97 00      staa  $00           ;(HI) START RANDOM GENERATOR
 F01C : 0E         cli                 ;CLEAR INTERRUPTS
 F01D : 20 FE      bra  LF01D          ;(*) WAIT FOR INTERRUPT
-;*
-;*
+;*************************************;
 ;* THREE OSCILLATOR SOUND GENERATOR
-;*
+;*************************************;
 ;PLAY:
 F01F : DF 07      stx  $07            ;(XPLAY) SAVE CURRENT INDEX
 F021 : CE F0 C4   ldx  #$F0C4         ;(#XDECAYZ) SET TO MAXIMUM AMPLITUDE
@@ -345,9 +341,9 @@ F0B6 : 7E F0 28   jmp  LF028          ;(PLAY1) REPEAT
 ;PLAY12:
 F0B9 : DE 07      ldx  $07            ;(XPLAY) RESTORE INDEX
 F0BB : 39         rts
-;*
+;*************************************;
 ;* ECHO AND DECAY ROUTINE
-;*
+;*************************************;
 ;RDECAY
 F0BC : 54         lsrb                ;
 F0BD : 54         lsrb                ;
@@ -359,9 +355,9 @@ F0C2 : 54         lsrb                ;
 F0C3 : 54         lsrb                ;
 F0C4 : F7 04 00   stab  $0400         ;(DECAYZ) SOUND
 F0C7 : 39         rts                 ;
-;*
+;*************************************;
 ;* 3 OSCILLATOR CALLING ROUTINES
-;*
+;*************************************;
 ;THNDR
 F0C8 : CE F2 9C   ldx  #$F29C         ;(#VEC01) THUNDER SOUND
 ;THNDR1:
@@ -375,10 +371,9 @@ F0D7 : 20 F2      bra  LF0CB          ;(THNDR1)
 ;SND5
 F0D9 : CE F3 0C   ldx  #$F30C         ;(#VEC05) SOUND 5
 F0DC : 20 ED      bra  LF0CB          ;(THNDR1)
-;*
-;*
-;*
+;*************************************;
 ;* THE BOMB OOOOOH NOOOOO!
+;*************************************;
 ;WHIST
 F0DE : 86 80      ldaa  #$80          ;
 F0E0 : 97 10      staa  $10           ;(FREQZ)
@@ -410,19 +405,20 @@ F10B : 96 10      ldaa  $10           ;(FREQZ)
 F10D : 81 20      cmpa  #$20          ;
 F10F : 26 D5      bne  LF0E6          ;(WHIST0)
 F111 : 39         rts                 ;
+;*************************************;
 ;*     SINE TABLE
-;SINTBL
-F112 : 80 8C 98 A5 B0 BC C6 D0 
-F11A : DA E2 EA F0 F5 FA FD FE 
-F122 : FF FE FD FA F5 F0 EA E2 
-F12A : DA D0 C6 BC B0 A5 98 8C 
-F132 : 80 73 67 5A 4F 43 39 2F 
-F13A : 25 1D 15 0F 0A 05 02 01
-F142 : 00 01 02 05 0A 0F 15 1D 
-F14A : 25 2F 39 43 4F 5A 67 73 
-;*
+;*************************************;
+F112 : 80 8C 98 A5 B0 BC C6 D0        ;SINTBL
+F11A : DA E2 EA F0 F5 FA FD FE        ;
+F122 : FF FE FD FA F5 F0 EA E2        ;
+F12A : DA D0 C6 BC B0 A5 98 8C        ;
+F132 : 80 73 67 5A 4F 43 39 2F        ;
+F13A : 25 1D 15 0F 0A 05 02 01        ;
+F142 : 00 01 02 05 0A 0F 15 1D        ;
+F14A : 25 2F 39 43 4F 5A 67 73        ;
+;*************************************;
 ;* KNOCKER ROUTINE
-;*
+;*************************************;
 ;KNOCK:
 F152 : 7F 04 02   clr  $0402          ;(SOUND+2) FULL BLAST
 F155 : CE F1 99   ldx  #$F199         ;(#KNKTAB)
@@ -467,18 +463,15 @@ F191 : 20 C7      bra  LF15A          ;(SQLP)
 F193 : 86 80      ldaa  #$80          ;OVERRIDE OFF
 F195 : B7 04 02   staa  $0402         ;(SOUND+2)
 F198 : 39         rts                 ;
-;*
-;*
+;*************************************;
 ;* KNOCKER PATTERN
-;*
-;KNKTAB
-F199 : 01FC 02FC 03F8 04F8 06F8 08F4 0CF4 ;FDB
-F1A7 : 10F4 20F2 40F1 60F1 80F1 A0F1 C0F1 ;FDB
-F1B5 : 0000                               ;FDB
-;*
-;*
+;*************************************;
+F199 : 01FC 02FC 03F8 04F8 06F8 08F4  ;KNKTAB
+F1A5 : 0CF4 10F4 20F2 40F1 60F1 80F1  ;
+F1B1 : A0F1 C0F1 0000                 ;
+;*************************************;
 ;* SINGLE OSCILLATOR SOUND CALLS
-;*
+;*************************************;
 ;PERK1:
 F1B7 : BD F1 FA   jsr  LF1FA          ;(MOVE)
 F1BA : BD F2 13   jsr  LF213          ;(SING)
@@ -495,9 +488,9 @@ F1C9 : 86 FF      ldaa  #$FF          ;
 F1CB : 97 04      staa  $04           ;(AMP0)
 F1CD : CE F3 9A   ldx  #$F39A         ;(#VEC06X)
 F1D0 : 20 F1      bra  LF1C3          ;(PERK$1)
-;*
+;*************************************;
 ;* RANDOM SQUIRTS
-;*
+;*************************************;
 ;SQRT
 F1D2 : C6 30      ldab  #$30          ;
 F1D4 : CE F3 AC   ldx  #$F3AC         ;(#VEC09X)
@@ -516,9 +509,9 @@ F1E8 : 8D 29      bsr  LF213          ;(SING)
 F1EA : 5A         decb                ;
 F1EB : 26 EC      bne  LF1D9          ;(SQRT2)
 F1ED : 39         rts                 ;
-;*
+;*************************************;
 ;* ECHO FUNCTION
-;*
+;*************************************;
 ;ECHO
 F1EE : 96 04      ldaa  $04           ;(AMP0)
 F1F0 : 80 08      suba  #$08          ;
@@ -529,9 +522,9 @@ F1F6 : 39         rts                 ;
 F1F7 : 32         pula                ;
 F1F8 : 32         pula                ;
 F1F9 : 39         rts                 ;
-;*
+;*************************************;
 ;* MOVE PARAMETERS
-;*
+;*************************************;
 ;MOVE:
 F1FA : A6 00      ldaa  $00,x         ;(0,X)
 F1FC : 97 0E      staa  $0E           ;(FREQ$)
@@ -546,9 +539,9 @@ F20C : 97 12      staa  $12           ;(C$AMP)
 F20E : A6 05      ldaa  $05,x         ;(5,X)
 F210 : 97 13      staa  $13           ;(D$AMP)
 F212 : 39         rts
-;*
+;*************************************;
 ;* DELTA F, DELTA A ROUTINE
-;*
+;*************************************;
 ;SING:
 F213 : 96 04      ldaa  $04           ;(AMP0) GET STARTING AMPLITUDE
 ;SING$
@@ -608,72 +601,76 @@ F26A : 20 B8      bra  LF224          ;(SING2) JUMP INTO COUNTDOWN LOOP
 ;SING6:
 F26C : 33         pulb                ;RESTORE B
 F26D : 39         rts                 ;
-;*
-;*
-;SNDTBL
-F26E : DA FF DA 80 26 01 26 80        ;FCB
+;*************************************;
+;data tables for PULSE
+;*************************************;
+F26E : DA FF DA 80 26 01 26 80        ;SNDTBL
 F276 : 07 0A 07 00 F9 F6 F9 00        ;
-;NOTTBL
-F27E : 3A 3E 50 46 33 2C 27 20        ;FCB
+;
+F27E : 3A 3E 50 46 33 2C 27 20        ;NOTTBL
 F286 : 25 1C 1A 17 14 11 10 33        ;
-;WAVFRM
-F28E : 08 03 02 01 02 03 04 05        ;FCB
+;
+F28E : 08 03 02 01 02 03 04 05        ;WAVFRM
 F296 : 06 0A 1E 32 70 00              ;
-;VEC01
-F29C : FFFF FF90 FFFF FFFF FFFF       ;FDB
+;*************************************;
+;data tables for PLAY (Three Osc) - 28 bytes
+;*************************************;
+F29C : FFFF FF90 FFFF FFFF FFFF       ;VEC01
 F2A6 : FF90 FFFF FFFF FFFF FFFF       ;
 F2B0 : 0000 0000 0000 0000            ;
-;VEC02
-F2B8 : 4801 0000 3F3F 0000 4801       ;FDB
+;
+F2B8 : 4801 0000 3F3F 0000 4801       ;VEC02
 F2C2 : 0000 0108 0000 8101 0000       ;
 F2CC : 01FF 0000 0108 0000            ;
-;VEC03
-F2D4 : 0110 0000 3F3F 0000 0110       ;FDB
+;
+F2D4 : 0110 0000 3F3F 0000 0110       ;VEC03
 F2DE : 0000 0505 0000 0101 0000       ;
 F2E8 : 31FF 0000 0505 0000            ;
-;VEC04
-F2F0 : 3000 0000 7F00 0000 3000       ;FDB
+;
+F2F0 : 3000 0000 7F00 0000 3000       ;VEC04
 F2FA : 0000 0100 0000 7F00 0000       ;
 F304 : 0200 0000 0100 0000            ;
-;VEC05
-F30C : 0400 0004 7F00 007F 0400       ;FDB
+;
+F30C : 0400 0004 7F00 007F 0400       ;VEC05
 F316 : 0004 FF00 00A0 0000 0000       ;
 F320 : 0000 0000 FF00 00A0            ;
-;VEC06
-F328 : 0C68 6800 071F 0F00 0C80       ;FDB
+;
+F328 : 0C68 6800 071F 0F00 0C80       ;VEC06
 F332 : 8000 FFFF FF00 0000 0000       ;
 F33C : 0000 0000 FFFF FF00            ;
-;VEC016
-F344 : 0104 0000 3F7F 0000 0104       ;FDB
+;
+F344 : 0104 0000 3F7F 0000 0104       ;VEC016
 F34E : 0000 05FF 0000 0100 0000       ;
 F358 : 4800 0000 05FF 0000            ;
-;VEC017
-F360 : 0280 0030 0A7F 007F 0280       ;FDB
+;
+F360 : 0280 0030 0A7F 007F 0280       ;VEC017
 F36A : 0030 C080 0020 0110 0015       ;
 F374 : C010 0000 C080 0000            ;
-;VEC01X
-F37C : FF01 02C3 FF00                 ;FDB
-;VEC02X
-F381 : 0103 FF80 FF00                 ;FDB
-;VEC03X
-F388 : 2003 FF50 FF00                 ;FDB
-;VEC04X
-F38E : 5003 0120 FF00                 ;FDB
-;VEC05X
-F394 : FE04 0204 FF00                 ;FDB
-;VEC06X
-F39A : 4803 010C FF00                 ;FDB
-;VEC07X
-F3A0 : 4802 010C FF00                 ;FDB
-;VEC08X
-F3A6 : E001 0210 FF00                 ;FDB
-;VEC09X
-F3AC : 50FF 0000 6080                 ;FDB
-;VEC10X
-F3B2 : FF02 0106 FF00                 ;FDB
-;*
+;*************************************;
+; data tables for SING (Single Osc)
+;*************************************;
+F37C : FF01 02C3 FF00                 ;VEC01X
+;
+F381 : 0103 FF80 FF00                 ;VEC02X
+;
+F388 : 2003 FF50 FF00                 ;VEC03X
+;
+F38E : 5003 0120 FF00                 ;VEC04X
+;
+F394 : FE04 0204 FF00                 ;VEC05X
+;
+F39A : 4803 010C FF00                 ;VEC06X
+;
+F3A0 : 4802 010C FF00                 ;VEC07X
+;
+F3A6 : E001 0210 FF00                 ;VEC08X
+;
+F3AC : 50FF 0000 6080                 ;VEC09X
+;
+F3B2 : FF02 0106 FF00                 ;VEC10X
+;*************************************;
 ;*VARI LOADER
-;*
+;*************************************;
 ;VARILD
 F3B8 : 16         tab                 ;
 F3B9 : 48         asla                ;X2
@@ -687,9 +684,9 @@ F3C5 : BD F7 E1   jsr  LF7E1          ;(ADDX)
 F3C8 : C6 09      ldab  #$09          ;(#9) GET COUNT
 ;VTRAN
 F3CA : BD F6 2E   jsr  LF62E          ;(TRANS)
-;*
+;*************************************;
 ;*VARIABLE DUTY CYCLE SQUARE WAVE ROUTINE
-;*
+;*************************************;
 ;VARI
 F3CD : 96 15      ldaa  $15           ;(VAMP)
 F3CF : B7 04 00   staa  $0400         ;(SOUND)
@@ -738,16 +735,16 @@ F415 : 97 0D      staa  $0D           ;(LOPER)
 F417 : 26 B9      bne  LF3D2          ;(VAR0)
 ;VARX:
 F419 : 39         rts                 ;
-;*
+;*************************************;
 ;*LIGHTNING
-;*
+;*************************************;
 ;LITE
 F41A : 86 01      ldaa  #$01          ;(#1)
 F41C : 97 14      staa  $14           ;(DFREQ)
 F41E : C6 03      ldab  #$03          ;(#3)
-;*
+;*************************************;
 ;*LIGHTNING+APPEAR NOISE ROUTINE
-;*
+;*************************************;
 ;LITEN
 F420 : 97 13      staa  $13           ;(LFREQ)
 F422 : 86 FF      ldaa  #$FF          ;HIGHEST AMP
@@ -778,14 +775,13 @@ F448 : 9B 14      adda  $14           ;(DFREQ)
 F44A : 97 13      staa  $13           ;(LFREQ)
 F44C : 26 DB      bne  LF429          ;(LITE0)
 F44E : 39         rts
-;*
-;*
+;*************************************;
 ;*WHITE NOISE ROUTINE
+;*************************************;
 ;*NFRQ=INIT PERIOD, NAMP=INIT AMP, DECAY AMPLITUDE RATE
 ;*CYCNT=CYCLE COUNT, NFFLG= FREQ DECAY FLAG
 ;*NFFLG=0 NO FREQ CHANGE;=POS DECAY;=MINUS INC FREQ
 ;*NOISE LOAD PROG-ENTER WITH XREG POINTING TO DATA
-;*
 ;NOISLD LF44F:
 F44F : A6 00      ldaa  $00,x         ;(X)
 F451 : 97 25      staa  $25           ;(CY2)
@@ -799,20 +795,20 @@ F45F : A6 04      ldaa  $04,x         ;(4,X)
 F461 : 97 2A      staa  $2A           ;(NFRQ2)
 ;NEND:
 F463 : 39         rts                 ;
-;*
+;*************************************;
 ;*LOAD NOISE AND GO
-;*
+;*************************************;
 ;NOISLG:
 F464 : 8D E9      bsr  LF44F          ;(NOISLD)
-;*
+;*************************************;
 ;*NOISE INIT
-;*
+;*************************************;
 ;NOIN
 F466 : 8D 30      bsr  LF498          ;(NSUB) CY2&NFRQ2 TO CYCNT&NFRQ
-;*
+;*************************************;
 ;*NOISE LOOP
-;*
-;NO1 LF468:
+;*************************************;
+;NO1
 F468 : 8D 58      bsr  LF4C2          ;(RNT) FREQ CHECK
 F46A : 96 29      ldaa  $29           ;(NFRQ) FREQ REINITED
 F46C : 91 2A      cmpa  $2A           ;(NFRQ2)
@@ -841,6 +837,7 @@ F49B : 96 2A      ldaa  $2A           ;(NFRQ2)
 F49D : 97 29      staa  $29           ;(NFRQ) NOISE FREQ
 F49F : 7F 00 28   clr  $0028          ;(NNOIS)
 F4A2 : 39         rts
+;*************************************;
 ;* 23 CYCLES FOR EACH SUBROUTINE PLUS CALLING OVERHEAD
 ;*
 ;*
@@ -900,8 +897,9 @@ F4E7 : 97 0E      staa  $0E           ;(NAMP)
 ;*
 ;NW3:
 F4E9 : 39         rts
-;*
+;*************************************;
 ;* NOISE WITH WHISTLE MAIN LOOP
+;*************************************;
 ;NINIT
 F4EA : 7F 00 1C   clr  $001C          ;(WFRQ)
 F4ED : 7F 00 26   clr  $0026          ;(DFRQ)
@@ -925,7 +923,7 @@ F50F : 8D 1D      bsr  LF52E          ;(TRIFRQ)
 F511 : 8D 6D      bsr  LF580          ;(TRIDR)
 F513 : 8D 52      bsr  LF567          ;(NNW)
 F515 : 20 E2      bra  LF4F9          ;(WIN)
-;*
+;*************************************;
 ;TRICNT:
 F517 : 96 21      ldaa  $21           ;(WCNT2) #CYCLES AT WHISTLE FREQ
 F519 : 7A 00 1D   dec  $001D          ;(WCNT)
@@ -941,7 +939,6 @@ F525 : 97 1D      staa  $1D           ;(WCNT)
 F527 : 96 1C      ldaa  $1C           ;(WFRQ)
 F529 : 9B 26      adda  $26           ;(DFRQ)
 F52B : 97 1C      staa  $1C           ;(WFRQ)
-;*
 ;NW5:
 F52D : 39         rts                 ;
 ;*
@@ -973,9 +970,9 @@ F55A : 97 24      staa  $24           ;(MINWIS)
 F55C : 86 05      ldaa  #$05          ;(#5)
 F55E : BD F7 E1   jsr  LF7E1          ;(ADDX)
 F561 : DF 1E      stx  $1E            ;(PTRHI)
-;*
 ;NW7:
 F563 : 39         rts                 ;
+;
 ;PEND:
 F564 : 32         pula                ;
 F565 : 32         pula                ;STACK ADJ
@@ -987,11 +984,13 @@ F569 : 27 06      beq  LF571          ;(NW8) ALREADY INITED
 F56B : 91 0E      cmpa  $0E           ;(NAMP)
 F56D : 26 04      bne  LF573          ;(NW9)
 F56F : 20 03      bra  LF574          ;(WINIT) GO INIT WHISTLE
+;
 ;NW8:
 F571 : 08         inx                 ;
 F572 : 09         dex                 ;(TEQ)
 ;NW9:
 F573 : 39         rts                 ;
+;
 ;WINIT:
 F574 : 7F 00 1B   clr  $001B          ;(WHIS)
 F577 : 96 20      ldaa  $20           ;(WFRQ2)
@@ -1011,20 +1010,20 @@ F589 : 1B         aba                 ;
 F58A : B7 04 00   staa  $0400         ;(SOUND)
 ;NSEND LF58D:
 F58D : 39         rts                 ;
-;*
-
-;* (same as SYNTH10 in Sound 15 ROM)
-;LF58E:
+;*************************************;
+; Tilt, buzz saw down 
+;*************************************;
+;TILT
 F58E : 0E         cli                 ;
 F58F : CE 00 E0   ldx  #$00E0         ;
-;LF592:
+;TILT1
 F592 : 86 20      ldaa  #$20          ;
 F594 : BD F7 E1   jsr  LF7E1          ;
-;LF597:
+;TILT2
 F597 : 09         dex                 ;
 F598 : 26 FD      bne  LF597          ;
 F59A : 7F 04 00   clr  $0400          ;
-;LF59D:
+;TILT3
 F59D : 5A         decb                ;
 F59E : 26 FD      bne  LF59D          ;
 F5A0 : 73 04 00   com  $0400          ;
@@ -1032,9 +1031,9 @@ F5A3 : DE 07      ldx  $07            ;
 F5A5 : 8C 10 00   cpx  #$1000         ;
 F5A8 : 26 E8      bne  LF592          ;
 F5AA : 39         rts                 ;
-;*
+;*************************************;
 ;*CANNON
-;*
+;*************************************;
 ;CANNON:
 F5AB : 86 01      ldaa  #$01          ;(#1)
 F5AD : 97 14      staa  $14           ;(DSFLG)
@@ -1042,11 +1041,11 @@ F5AF : CE 03 E8   ldx  #$03E8         ;(#1000)
 F5B2 : 86 01      ldaa  #$01          ;(#1)
 F5B4 : C6 FF      ldab  #$FF          ;(#$FF)
 F5B6 : 20 00      bra  LF5B8          ;(FNOISE)
-;*
+;*************************************;
 ;*FILTERED NOISE ROUTINE
+;*************************************;
 ;*X=SAMPLE COUNT, ACCB=INITIAL MAX FREQ
 ;*ACCA=FREQ DECAY FLAG ,DSFLG=DISTORTION FLAG
-;*
 ;FNOISE:
 F5B8 : 97 13      staa  $13           ;(FDFLG)
 F5BA : D7 0D      stab  $0D           ;(FMAX)
@@ -1118,10 +1117,9 @@ F627 : 26 98      bne  LF5C1          ;(FNOIS0)
 F629 : C1 07      cmpb  #$07          ;(#7)
 F62B : 26 94      bne  LF5C1          ;(FNOIS0)
 F62D : 39         rts                 ;
-;*
-;*
+;*************************************;
 ;*PARAMETER TRANSFER
-;*
+;*************************************;
 ;TRANS:
 F62E : 36         psha                ;
 ;TRANS1:
@@ -1137,10 +1135,9 @@ F63D : 5A         decb                ;
 F63E : 26 EF      bne  LF62F          ;(TRANS1)
 F640 : 32         pula                ;
 F641 : 39         rts                 ;
-;*
-;*
+;*************************************;
 ;*GWAVE LOADER
-;*
+;*************************************;
 ;GWLD:
 F642 : 16         tab                 ;MULKT BY 7
 F643 : 58         aslb                ;
@@ -1199,10 +1196,10 @@ F69F : 7F 00 1D   clr  $001D          ;(FOFSET)
 F6A2 : BD F7 E1   jsr  LF7E1          ;(ADDX)
 F6A5 : DF 17      stx  $17            ;(FRQEND)
 F6A7 : 39         rts                 ;
-;*
+;*************************************;
 ;*GWAVE ROUTINE
+;*************************************;
 ;*ACCA= FREQ PATTERN LENGTH, X= FREQ PAT ADDR
-;*
 ;GWAVE:
 F6A8 : 96 0D      ldaa  $0D           ;(GECHO)
 F6AA : 97 1C      staa  $1C           ;(GECNT)
@@ -1301,9 +1298,9 @@ F72E : 8D 16      bsr  LF746          ;(WVDECA)
 F730 : 7E F6 A8   jmp  LF6A8          ;(GWAVE)
 ;GEND1:
 F733 : 39         rts                 ;TERMINATE
-;*
+;*************************************;
 ;*WAVE TRANSFER ROUTINE
-;*
+;*************************************;
 ;WVTRAN:
 F734 : CE 00 1E   ldx  #$001E         ;(#GWTAB)
 F737 : DF 09      stx  $09            ;(XPTR)
@@ -1314,9 +1311,9 @@ F73E : BD F6 2E   jsr  LF62E          ;(TRANS)
 F741 : DE 09      ldx  $09            ;(XPTR)
 F743 : DF 19      stx  $19            ;(WVEND) GET END ADDR
 F745 : 39         rts                 ;
-;*
+;*************************************;
 ;*WAVE DECAY ROUTINE/ DECAY AMOUNT IN ACCA(1/16 PER DECAY)
-;*
+;*************************************;
 ;WVDECA:
 F746 : 4D         tsta                ;
 F747 : 27 2B      beq  LF774          ;(WVDCX) NO DECAY
@@ -1348,9 +1345,9 @@ F770 : 9C 19      cpx  $19            ;(WVEND) END OF WAVE?
 F772 : 26 DE      bne  LF752          ;(WVDLP) NO
 ;WVDCX:
 F774 : 39         rts                 ;
-;*
+;*************************************;
 ;* INTERRUPT PROCESSING
-;*
+;*************************************;
 ;IRQ
 F775 : 8E 00 7F   lds  #$007F         ;(#ENDRAM) RE-INITIALIZE STACK
 F778 : B6 04 02   ldaa  $0402         ;(SOUND+2) GET INPUT TRIGGER
@@ -1411,9 +1408,9 @@ F7DA : 86 00      ldaa  #$00          ;
 F7DC : BD F3 B8   jsr  LF3B8          ;(VARILD)
 ;IRQ3:
 F7DF : 20 FE      bra  LF7DF          ;(*)
-;*
+;*************************************;
 ;* ADD A TO INDEX REGISTER
-;*
+;*************************************;
 ;ADDX:
 F7E1 : DF 07      stx  $07            ;(XPLAY)
 F7E3 : 9B 08      adda  $08           ;(XPLAY+1)
@@ -1423,9 +1420,9 @@ F7E9 : 7C 00 07   inc  $0007          ;(XPLAY)
 ;ADDX1:
 F7EC : DE 07      ldx  $07            ;(XPLAY)
 F7EE : 39         rts                 ;
-;*
+;*************************************;
 ;* DIAGNOSTIC PROCESSING HERE
-;*
+;*************************************;
 ;NMI:
 F7EF : 0F         sei                 ;
 F7F0 : 8E 00 7F   lds  #$007F         ;(#ENDRAM) RESET THE STACK
@@ -1442,9 +1439,9 @@ F803 : 3E         wai                 ;
 ;NMI2:
 F804 : BD F1 52   jsr  LF152          ;(KNOCK)
 F807 : 20 E6      bra  LF7EF          ;(NMI) KEEP LOOPING
-;*
+;*************************************;
 ;*SPECIAL ROUTINE JUMP TABLE
-;*
+;*************************************;
 ;JMPTBL
 F809 : F4 1A                          ;(LITE) $14
 F80B : F0 D4                          ;(SND4) 15
@@ -1457,59 +1454,69 @@ F817 : F1 52                          ;(KNOCK) 1B
 F819 : F0 DE                          ;(WHIST) 1C
 F81B : F0 01                          ;(SETUP) 1D
 F81D : FF 34                          ;(WINGDN) 1E
-;
-;*
+;*************************************;
 ;*VARI VECTORS
-;*
-VVECT   EQU  *
+;*************************************;
+;VVECT   EQU  *
 F81F : 28 01 00 08 81 02 00 FF FF     ;FOSHIT
-;*
-;*
+;*************************************;
 ;*WAVE TABLE
+;*************************************;
 ;*1ST BYTE= WAVELENGTH
-;*
-GWVTAB  EQU  *
-;GS2
-F828 : 08 7F D9 FF D9 7F 24 00 24     ;FCB
-;GSSQ2
-F831 : 08 00 40 80 00 FF 00 80 40     ;FCB
-;GS1:
-F83A : 10 7F B0 D9 F5 FF F5 D9 B0     ;FCB
+;GWVTAB  EQU  *
+F828 : 08                             ;GS2
+F829 : 7F D9 FF D9 7F 24 00 24        ;
+;
+F831 : 08                             ;GSSQ2
+F832 : 00 40 80 00 FF 00 80 40        ;
+;
+F83A : 10                             ;GS1:
+F83B : 7F B0 D9 F5 FF F5 D9 B0        ;
 F843 : 7F 4E 24 09 00 09 24 4E        ;
-;GS12
-F84B : 10 7F C5 EC E7 BF 8D 6D 6A     ;FCB
+;
+F84B : 10                             ;GS12
+F84C : 7F C5 EC E7 BF 8D 6D 6A        ;
 F854 : 7F 94 92 71 40 17 12 39        ;
-;GSQ22
-F85C : 10 FF FF FF FF 00 00 00 00     ;FCB
+;
+F85C : 10                             ;GSQ22
+F85D : FF FF FF FF 00 00 00 00        ;
 F865 : FF FF FF FF 00 00 00 00        ;
-;GS72
-F86D : 48 8A 95 A0 AB B5 BF C8 D1     ;FCB
-F876 : DA E1 E8 EE F3 F7 FB FD FE FF  ;
-F880 : FE FD FB F7 F3 EE E8 E1 DA     ;
-F889 : D1 C8 BF B5 AB A0 95 8A 7F     ;
-F892 : 75 6A 5F 54 4A 40 37 2E 25 1E 17 11 0C ;
-F89F : 08 04 02 01 00                 ;
-F8A4 : 01 02 04 08 0C 11 17 1E 25 2E 37 40 4A 54 ;
-F8B2 : 5F 6A 75 7F                    ;
-;GS1.7
-F8B6 : 10 59 7B 98 AC B3 AC 98 7B     ;FCB
+;
+F86D : 48                             ;GS72
+F86E : 8A 95 A0 AB B5 BF C8 D1        ;
+F876 : DA E1 E8 EE F3 F7 FB FD        ;
+F87E : FE FF FE FD FB F7 F3 EE        ;
+F886 : E8 E1 DA D1 C8 BF B5 AB        ;
+F88E : A0 95 8A 7F 75 6A 5F 54        ;
+F896 : 4A 40 37 2E 25 1E 17 11        ;
+F89E : 0C 08 04 02 01 00 01 02        ;
+F8A6 : 04 08 0C 11 17 1E 25 2E        ;
+F8AE : 37 40 4A 54 5F 6A 75 7F        ;
+;
+F8B6 : 10                             ;GS1.7
+F8B7 : 59 7B 98 AC B3 AC 98 7B        ;
 F8BF : 59 37 19 06 00 06 19 37        ;
-;*****************************************************
-;GSQ2
-F8C7 : 08 FF FF FF FF 00 00 00 00     ;FCB
-;GS1234
-F8D0 : 10 76 FF B8 D0 9D E6 6A 82     ;FCB
+;
+F8C7 : 08                             ;GSQ2
+F8C8 : FF FF FF FF 00 00 00 00        ;
+;
+F8D0 : 10                             ;GS1234
+F8D1 : 76 FF B8 D0 9D E6 6A 82        ;
 F8D9 : 76 EA 81 86 4E 9C 32 63        ;
-;MW1
-F8E1 : 10 00 F4 00 E8 00 DC 00 E2     ;FCB
+;
+F8E1 : 10                             ;MW1
+F8E2 : 00 F4 00 E8 00 DC 00 E2        ;
 F8EA : 00 DC 00 E8 00 F4 00 00        ;
-;SIN3.CR
-F8F2 : 24                             ;(36) WAVE C
-F8F3 : 7F B0 D6 E8 E3 C9 A3 7B 5E 54 5E 7B ;FCB
-F8FF : A3 C9 E3 E8 D6 B0 7F 4C 26 14 19 33 ;
-F90B : 5A 81 9E A8 9E 81 5A 33 19 14 26 4C ;FCB
-;*
+;
+F8F2 : 24                             ;SIN3.CR
+F8F3 : 7F B0 D6 E8 E3 C9 A3 7B        ;WAVE C
+F8FB : 5E 54 5E 7B A3 C9 E3 E8        ;
+F803 : D6 B0 7F 4C 26 14 19 33        ;
+F90B : 5A 81 9E A8 9E 81 5A 33        ;
+F913 : 19 14 26 4C                    ;
+;*************************************;
 ;*GWAVE SOUND VECTOR TABLE
+;*************************************;
 ;*VECTOR FORMAT
 ;*BYTE 0: GECHO,GCCNT
 ;*BYTE 1: GECDEC,WAVE#
@@ -1518,8 +1525,7 @@ F90B : 5A 81 9E A8 9E 81 5A 33 19 14 26 4C ;FCB
 ;*BYTE 4: VARIABLE FREQ COUNT
 ;*BYTE 5: FREQ PATTERN LENGTH
 ;*BYTE 6: FREQ PATTERN OFFSET
-;*
-SVTAB   EQU  *
+;SVTAB   EQU  *
 ;DP1V
 F917 : 11 05 11 01 0F 01 3A           ;1
 ;PROTV
@@ -1560,58 +1566,58 @@ F995 : 11 10 00 0A 00 01 80           ;13
 F99C : 21 30 00 FF 00 1B 00           ;14
 ;WIRDV2
 F9A3 : 22 21 00 FE 00 1B 00           ;15
-;
+;*************************************;
 ;*GWAVE FREQ PATTERN TABLE
-;*
-GFRTAB  EQU  *
+;*************************************;
+;GFRTAB  EQU  *
 ;*HUNDRED POINT SOUND
-;HBTSND
-F9AA : 01 01 02 02 04 04 08 08 10 10 30 60 C0 E0 ;FCB
+F9AA : 01 01 02 02 04 04 08 08        ;HBTSND
+F9B2 : 10 10 30 60 C0 E0              ;
 ;*SPINNER SOUND
-;SPNSND
-F9B8 : 01 01 02 02 03 04 05 06 07 08 09 0A 0C ;FCB
+F9B8 : 01 01 02 02 03 04 05 06        ;SPNSND
+F9C0 : 07 08 09 0A 0C                 ;
 ;*TURBINE START UP
-;TRBPAT
-F9C5 : 80 7C 78 74 70 74 78 7C 80     ;FCB
+F9C5 : 80 7C 78 74 70 74 78 7C        ;TRBPAT
+F9CD : 80                             ;
 ;*HEARTBEAT DISTORTO
-;HBDSND
-F9CE : 01 01 02 02 04 04 08 08 10 20 28 ;FCB
-F9D9 : 30 38 40 48 50 60 70 80 A0 B0 C0 ;
+F9CE : 01 01 02 02 04 04 08 08        ;HBDSND
+F9D6 : 10 20 28 30 38 40 48 50        ;
+F9DE : 60 70 80 A0 B0 C0              ;
 ;*SWEEP PATTERN
-SWPAT  EQU  *
+;SWPAT  EQU  *
 ;*BIGBEN SOUNDS
-;BBSND
-F9E4 : 08 40 08 40 08 40 08 40 08 40  ;FCB
-F9EE : 08 40 08 40 08 40 08 40 08 40  ;
+F9E4 : 08 40 08 40 08 40 08 40        ;BBSND
+F9EC : 08 40 08 40 08 40 08 40        ;
+F9F4 : 08 40 08 40                    ;
 ;*SPINNER SOUND "DRIP"
-;SPNR
-F9F8 : 40                             ;FCB
+F9F8 : 40                             ;SPNR
 ;*COOL DOWNER
-;COOLDN
-F9F9 : 10 08 01                       ;FCB
+F9F9 : 10 08 01                       ;COOLDN
 ;*START DISTORTO SOUND
-;STDSND
-F9FC : 01 01 01 01 02 02 03 03 04 04 05 06 08 0A 0C 10 ;FCB
+F9FC : 01 01 01 01 02 02 03 03        ;STDSND
+F904 : 04 04 05 06 08 0A 0C 10        ;
 FA0C : 14 18 20 30 40 50 40 30        ;
-FA14 : 20 10 0C 0A 08 07 06 05 04 03 02 02 01 01 01 ;
+FA14 : 20 10 0C 0A 08 07 06 05        ;
+FA1C : 04 03 02 02 01 01 01           ;
 ;*ED'S SOUND 10
-;ED10FP
-FA23 : 07 08 09 0A 0C 08              ;FCB
-;GV27
-FA29 : 0C                             ;FCB
-;YUKSND
-FA2A : 08 80 10 78 18 70 20 60 28 58 30 ;FCB
-FA35 : 50 40 48 00                    ;
-;BWSSND
-FA39 : 01 40 02 42 03 43 04 44 05 45 06 46 07 47 ;FCB
-FA47 : 08 48 09 49 0A 4A 0B 4B 00     ;
-;GVA1
-FA50 : 14 18 20 30 40 50 40 30        ;FCB
-FA58 : 20 10 0C 0A 08 07 06 05        ;
-;GVB1
-FA60 : CC BB 60 10 EE AA 50 00        ;FCB
+FA23 : 07 08 09 0A 0C 08              ;ED10FP
 ;
+FA29 : 0C                             ;GV27
+;
+FA2A : 08 80 10 78 18 70 20 60        ;YUKSND
+FA32 : 28 58 30 50 40 48 00           ;
+;
+FA39 : 01 40 02 42 03 43 04 44        ;BWSSND
+FA41 : 05 45 06 46 07 47 08 48        ;
+FA49 : 09 49 0A 4A 0B 4B 00           ;
+;
+FA50 : 14 18 20 30 40 50 40 30        ;GVA1
+FA58 : 20 10 0C 0A 08 07 06 05        ;
+;
+FA60 : CC BB 60 10 EE AA 50 00        ;GVB1
+;*************************************;
 ;*  AND THE EVER POPULAR COPYRIGHT MESSAGE
+;*************************************;
 FA68 : 28 43    "(C"                  ;(C)
 FA6A : 29 31    ")1"                  ;1982
 FA6C : 39    "9"                      ;
@@ -1636,9 +1642,9 @@ FA80 : 4E    "N"                      ;
 FA81 : 49    "I"                      ;
 FA82 : 43    "C"                      ;
 FA83 : 53    "S"                      ;
-;
+;*************************************;
 ;* NAM WALSH FUNCTION SOUND MACHINE V2
-;
+;*************************************;
 ;* T. MURPHY  11/10/81
 ;
 MINPER  EQU  25      ;6*25 = 150 MICROSECS IS MIN SAMPLE PERIOD
@@ -1692,9 +1698,9 @@ CURHA   RMB  8       ;CURHA(8-I) = <WAVE!HARM(I)>
 ENDRAM  SET  127
 ;
         ORG  WORG
-;
-;       SUBTTL WAVE PLAYER AND PITCH MODIFICATION
-;
+;*************************************;
+; SUBTTL WAVE PLAYER AND PITCH MODIFICATION
+;*************************************;
 ;* PLAY A SAMPLE, REMAINING DELAY IN B.  TOTAL DELAY = MIN (60,B*6) MICS.
 ;
 ;NTHRVC
@@ -1728,6 +1734,9 @@ FAA8 : F7 04 00   stab  $0400         ;(SOUND)
 FAAB : 84 0F      anda  #$0F          ;(#15) 0 IFF RESTARTING WAVE
 FAAD : 39         rts                 ;
 ;
+;*************************************;
+; Walsh Machine
+;*************************************;
 ;* PLAYS WAVE AND ALTERS PITCH ACCORDING TO PITCH CMDS.
 ;* SMPPER IS INITIAL PITCH,  PCMDPT IS START PITCH PROGRAM,
 ;* FCMDPT IS START WAVE MODIFIER (FILTER) PROGRAM.
@@ -1850,8 +1859,10 @@ FB4D : 5F         clrb                ;
 FB4E : DE 2A      ldx  $2A            ;(PTEMP) EXECUTE CMD
 FB50 : EE 00      ldx  $00,x          ;(,X)
 FB52 : 6E 00      jmp  $00,x          ;(,X 16)
-;
-;* PITCH COMMAND ROUTINES.  UNLESS OTHERWISE STATED, N IS A SIGNED 8 BIT
+;*************************************;
+;* PITCH COMMAND ROUTINES. 
+;*************************************;
+;  UNLESS OTHERWISE STATED, N IS A SIGNED 8 BIT
 ;* NUMBER = BYTE FOLLOWING OPCODE.
 ;
 ;* LDP N  IS  SMPPER := N,  ADP N  IS SMPPER := SMPPER + N
@@ -1870,7 +1881,7 @@ FB61 : 08         inx                 ;
 FB62 : D6 23      ldab  $23           ;(TMPPER)
 FB64 : C0 0A      subb  #$0A          ;(#10)
 FB66 : 7E FA D1   jmp  LFAD1          ;(PPLPE2 51)
-;
+;*************************************;
 ;* LDO N IS  GLBPRO := N,  ADO N IS  GLBPRO := GLBPRO + N
 ;
 ;LDOR
@@ -1883,7 +1894,7 @@ FB71 : 10         sba                 ;
 FB72 : 9B 22      adda  $22           ;(GLBPRO)
 FB74 : 97 22      staa  $22           ;(GLBPRO)
 FB76 : 20 EA      bra  LFB62          ;(LDPRE)
-;
+;*************************************;
 ;* ESC EXECUTES MACHINE LANGUAGE IMMEDIATELY FOLLOWING
 ;
 ;ESCR
@@ -1891,7 +1902,7 @@ FB78 : 32         pula                ;
 FB79 : DE 0A      ldx  $0A            ;(PCMDPT)
 FB7B : 09         dex                 ;
 FB7C : 6E 00      jmp  $00,x          ;(,X 32)
-;
+;*************************************;
 ;* STOP EITHER REPEATS A CALL, RETURNS FROM A CALL, OR ENDS SOUND.
 ;
 ;STOPR
@@ -1934,8 +1945,8 @@ FBAD : 97 26      staa  $26           ;(PSTK+1)
 FBAF : D6 23      ldab  $23           ;(TMPPER)
 FBB1 : C0 07      subb  #$07          ;(#7)
 FBB3 : 01         nop                 ;
-FBB4 : 7E FA CF  jmp  LFACF           ;(PPLPE1 49)
-;
+FBB4 : 7E FA CF   jmp  LFACF          ;(PPLPE1 49)
+;*************************************;
 ;* LDV N IS  PERVEL := N,  ADV N IS  PERVEL := PERVEL + N
 ;* IN THIS CASE  N IS A 12 BIT NUMBER, THE UPPER 4 BITS OF WHICH
 ;* ARE LO 4 BITS OF THE OPCODE BYTE.
@@ -1965,7 +1976,7 @@ FBD0 : 00                             ;0
 FBD1 : 23                             ;TMPPER
 FBD2 : C0 09      subb  #$09          ;(#9)
 FBD4 : 7E FA CF   jmp  LFACF          ;(PPLPE1 61)
-;
+;*************************************;
 ;* DO R,N  CALLS RTN AT *+N  R TIMES.
 ;
 ;PDOR
@@ -2005,7 +2016,7 @@ FC00 : C2 00      sbcb  #$00          ;(#0)
 FC02 : 9B 0B      adda  $0B           ;(PCMDPT+1)
 FC04 : D9 0A      adcb  $0A           ;(PCMDPT)
 FC06 : 97 0B      staa  $0B           ;(PCMDPT+1)
-FC08 : F7 00 0A   stab  X000A         ;<- disasm error (FCB -9,0,PCMDPT 41)
+;FC08 : F7 00 0A   stab  X000A         ;<- disasm error (FCB -9,0,PCMDPT 41)
 FC08 : F7                             ;-9
 FC09 : 00                             ;0
 FC0A : 0A                             ;PCMDPT
@@ -2013,9 +2024,9 @@ FC0A : 0A                             ;PCMDPT
 FC0B : D6 23      ldab  $23           ;(TMPPER)
 FC0D : C0 07      subb  #$07          ;(#7)
 FC0F : 7E FA CF   jmp  LFACF          ;(PPLPE1 49)
-;
-;
-;
+;*************************************;
+;jump table
+;*************************************;
 ;PCMDJT FDB
 FC12 : FB 54                          ;LDPR 0
 FC14 : FB 69                          ;LDOR 1
@@ -2035,9 +2046,9 @@ FC2C : FD D8                          ;ZTBR 5
 FC2E : FC 74                          ;FDOR 6
 FC30 : FD 0B                          ;FTOR 7
 ;
-;
+;*************************************;
 ;SUBTTL	WAVE MODIFICATION
-;
+;*************************************;
 ;* FENDR OVERLAY GETS RETURN ADDR FROM STACK.
 ;
 ;FRTURN
@@ -2048,7 +2059,7 @@ FC37 : DF 08      stx  $08            ;(FCMDPT 49)
 FC39 : BD FD 05   jsr  LFD05          ;(FCMDNX 41)
 FC3C : 08         inx                 ;
 FC3D : 39         rts                 ;
-;
+;*************************************;
 ;* REPEAT CALL.
 ;
 ;FDOAGN
@@ -2058,7 +2069,7 @@ FC42 : CE FD 0B   ldx  #$FD0B         ;(#FTOR) JUMP RTN IS NEXT
 FC45 : DF 2D      stx  $2D            ;(FVECT+1)
 FC47 : 01         nop                 ;
 FC48 : 39         rts                 ;(50)
-;
+;*************************************;
 ;* FIN DOES  REPEAT CALL, RETURN TO CALLER, STOP RTN DEPENDING ON STACK.
 ;
 ;FINR
@@ -2076,7 +2087,7 @@ FC59 : CE FC 32   ldx  #$FC32         ;(#FRTURN) ELSE RETURN
 FC5C : DF 2D      stx  $2D            ;(FVECT+1 38)
 FC5E : 6D 00      tst  $00,x          ;(,X)
 FC60 : 39         rts                 ;
-;
+;*************************************;
 ;ALLDON
 FC61 : CE FC 69   ldx  #$FC69         ;(#WAST50)
 FC64 : DF 2D      stx  $2D            ;(FVECT+1)
@@ -2097,7 +2108,7 @@ FC70 : 6D 00      tst  $00,x          ;(,X)
 FC72 : 01         nop                 ;
 ;WAST5
 FC73 : 39         rts                 ;
-;
+;*************************************;
 ;* CALL WITH REPEAT. REPEAT CNT 0(=1) TO 15 (=16) IS LO 4 BITS OF OPCODE.
 ;* NEXT BYTE IS DISPLACEMENT AS IN GO INSTRUCTION.  THE CTR AND RETURN
 ;* ADDRESS ARE SAVED ON A STACK.
@@ -2116,7 +2127,7 @@ FC84 : 08         inx                 ;
 FC85 : CE FC 8B   ldx  #$FC8B         ;(#1$)
 FC88 : DF 2D      stx  $2D            ;(FVECT+1)
 FC8A : 39         rts                 ;(50)
-;
+;*************************************;
 ;* OVERLAY FOR CALL RTN.
 ;
 ;1$
@@ -2128,7 +2139,7 @@ FC94 : DF 2D      stx  $2D            ;(FVECT+1 17) GET READY TO JUMP
 FC96 : 01         nop                 ;
 FC97 : 20 D5      bra  LFC6E          ;(WAST27)
 FC97 : 20 D5      bra  LFC6E          ;(WAST27)
-;
+;*************************************;
 ;* GET NEXT FILTER COMMAND
 ;
 ;NXTFCM
@@ -2152,7 +2163,7 @@ FCB1 : FF                             ;-1
 FCB2 : 00                             ;0
 FCB3 : 2D                             ;FVECT+1
 FCB4 : 39         rts                 ;
-;
+;*************************************;
 ;
 ;EXFCMD
 FCB5 : 5F         clrb                ;
@@ -2171,7 +2182,7 @@ FCC7 : EE 00      ldx  $00,x          ;(,X)
 FCC9 : DF 2D      stx  $2D            ;(FVECT+1)
 FCCB : DF 2D      stx  $2D            ;(FVECT+1)
 FCCD : 39         rts                 ;(50)
-;
+;*************************************;
 ;* SET UP FOR REPEATED TABLE ADD.
 ;
 ;ETBR
@@ -2181,7 +2192,7 @@ FCD2 : 4C         inca                ;
 FCD3 : 4C         inca                ;
 FCD4 : 97 2F      staa  $2F           ;(FCNT)
 FCD6 : 20 1D      bra  LFCF5          ;(FHA1 17)
-;
+;*************************************;
 ;* LOOK FOR A NONZERO HARMONIC CHANGE AND PERFORM IT.  IF ENTIRE TABLE
 ;* IS ZERO WE HAVE FINISHED THE LAST COMMAND AND PICK UP THE NEXT ONE.
 ;
@@ -2200,7 +2211,7 @@ FCEE : CE FC D8   ldx  #$FCD8         ;(#FINDHA) LOOK AGAIN IF 0
 FCF1 : DF 2D      stx  $2D            ;(FVECT+1) SET FOR ADD IF <>0
 FCF3 : 08         inx                 ;
 FCF4 : 39         rts                 ;
-;
+;*************************************;
 ;FHA1:
 FCF5 : 86 5E      ldaa  #$5E          ;(#ADD2HA-2) RESTART TABLE
 ;FCF7 : B7 00 32   staa  X0032         ;<- disasm error (FCB $B7,0,HAPTR+1)
@@ -2215,7 +2226,7 @@ FD02 : 7E FD 08   jmp  LFD08          ;(*+6)
 FD05 : CE FC 99   ldx  #$FC99         ;(#NXTFCM 40)
 FD08 : DF 2D      stx  $2D            ;(FVECT+1)
 FD0A : 39         rts                 ;
-;
+;*************************************;
 ;* RELATIVE JUMP.
 ;
 ;FTOR
@@ -2232,7 +2243,7 @@ FD19 : 97 09      staa  $09           ;(FCMDPT+1)
 FD1B : D7 08      stab  $08           ;(FCMDPT)
 ;
 FD1D : 20 E6      bra  LFD05          ;(FCMDNX 37)
-;
+;*************************************;
 ;* SET UP FOR ADD OF HAMP * HARMONIC TO WAVE.
 ;
 ;ADDINI
@@ -2267,7 +2278,7 @@ FD4B : 9B 35      adda  $35           ;(HAMP)
 FD4D : A7 09      staa  $09,x         ;(9,X 41) RECORD CHANGE
 FD4F : 08         inx                 ;
 FD50 : 39         rts                 ;
-;
+;*************************************;
 ;* ADD HAMP * HARMONIC FN TO WAVEFORM.
 ;
 ;ADDLP
@@ -2317,7 +2328,7 @@ FD90 : DF 2D      stx  $2D            ;(FVECT+1 34)
 FD92 : 6D 00      tst  $00,x          ;(,X)
 FD94 : 08         inx                 ;
 FD95 : 39         rts                 ;
-;
+;*************************************;
 ;* ADH H,N  LDH H,N  USE SAME RTN
 ;
 ;ADHR
@@ -2354,7 +2365,7 @@ FDC3 : 08         inx                 ;
 FDC4 : 08         inx                 ;
 FDC5 : 01         nop                 ;
 FDC6 : 39         rts                 ;
-;
+;*************************************;
 ;* HARMONIC INCREMENT OR DECREMENT
 ;
 ;HIDR
@@ -2368,7 +2379,7 @@ FDD0 : C6 FF      ldab  #$FF          ;(#-1) CARRY IF INCREMENT (BIT 0 OF FCMD =
 FDD2 : C9 00      adcb  #$00          ;(#0)
 FDD4 : C9 00      adcb  #$00          ;(#0)
 FDD6 : 20 E4      bra  LFDBC          ;(ADHRE 23)
-;
+;*************************************;
 ;* CLEAR ADD2HA OR ALTER 0TH AMPLITUDE.
 ;
 ;ZTBR
@@ -2427,7 +2438,7 @@ FE1B : FF                             ;-1
 FE1C : 00                             ;0
 FE1D : 2D                             ;FVECT+1
 FE1E : 39         rts                 ;
-;
+;*************************************;
 ;* CHANGE SOME ADD2HA ENTRIES.
 ;
 ;LDTR
@@ -2483,9 +2494,9 @@ FE70 : 97 38      staa  $38           ;(FNLO)
 FE72 : CE FE 37   ldx  #$FE37         ;(#4$)
 FE75 : DF 2D      stx  $2D            ;(FVECT+1)
 FE77 : 39         rts                 ;
-;
+;*************************************;
 ;SUBTTL SOUND PROGRAMS
-;
+;*************************************;
 ;* OPCODES ( ! SEPERATES NYBBLES  SPACES SEPERATE BYTES)
 ;
 ;* COMMON
@@ -2526,7 +2537,7 @@ FE77 : 39         rts                 ;
 ;* VALUE IS -1.
 ;
 ;* THE HARMONICS ARE TREATED IN ORDER OF DECREASING AVERAGE FREQUENCY.
-;
+;*************************************;
 ;ODDTBL
 FE78 : 0000                           ;FDB %0000000000000000  0  CONSTANT IS WEIRDO FOR NOW
 FE7A : 5555                           ;FDB %0101010101010101  8
@@ -2537,9 +2548,9 @@ FE82 : 6666                           ;FDB %0110011001100110  4
 FE84 : CC33                           ;FDB %1100110000110011  3
 FE86 : 3C3C                           ;FDB %0011110000111100  2
 FE88 : 0FF0                           ;FDB %0000111111110000  1
-;
+;*************************************;
 ;* WAVE PROGRAMS
-;
+;*************************************;
 ;NLIST
 ;
 ;LBL SCREMW,<FPF>
@@ -2640,21 +2651,21 @@ FF14 : 31                             ;(NOT 49)
 FF15 : 20 06                          ;(LDV 6)
 FF17 : 60 DE                          ;(DO 1,PPVB)
 FF19 : 70 D7                          ;(TO PPVC)
-;
+;*************************************;
 ;LIST
-;
+;*************************************;
 ;JNOIST
 FF1B : 0D 40 F0 FF 12                 ;$1F WING UP
 FF20 : 08 A8 18 01 08                 ; 20 CLIP
 FF25 : 04 A8 18 01 10                 ; 21 CLOP
 FF2A : 04 20 F8 FF 20                 ; 1E WING DOWN PART 1
 FF2F : 10 F0 10 01 01                 ;  "            "   2
-;
+;*************************************;
 ;WINGDN
 FF34 : 86 03      ldaa  #$03          ;(#3)
 FF36 : 8D 02      bsr  LFF3A          ;(JKNOIS)
 FF38 : 86 04      ldaa  #$04          ;(#4)
-;
+;*************************************;
 ;JKNOIS:
 FF3A : CE D9 39   ldx  #$D939         ;(#$D939) GOOD SEED
 FF3D : DF 00      stx  $00            ;(HI)
@@ -2665,7 +2676,7 @@ FF42 : 1B         aba                 ;
 FF43 : CE FF 1B   ldx  #$FF1B         ;(#JNOIST)
 FF46 : BD F7 E1   jsr  LF7E1          ;(ADDX)
 FF49 : 7E F4 64   jmp  LF464          ;(NOISLG)
-;
+;*************************************;
 ;WALSHT
 FF4C : FE 8A                          ;(SCREMW) $22 PTERODACTYL SCREAM
 FF4E : FE D0                          ;(SCREMP)
@@ -2678,7 +2689,7 @@ FF56 : FE EF                          ;(SKIDP)
 ;
 FF58 : FE E3                          ;(SKIDW) 25 END SKID FOR SHORT ONES
 FF5A : FF 14                          ;(SKIDEP)
-;
+;*************************************;
 ;WALSH
 FF5C : 5F         clrb                ;
 FF5D : D7 0D      stab  $0D           ;(SMPPER+1)
@@ -2700,49 +2711,37 @@ FF78 : DF 0A      stx  $0A            ;(PCMDPT)
 FF7A : CE FE 78   ldx  #$FE78         ;(#ODDTBL)
 FF7D : DF 0E      stx  $0E            ;(HRMTBL)
 FF7F : 7E FA AE   jmp  LFAAE          ;(WSM)
-;
+;*************************************;
 ; zero padding
-FF82 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FF86 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FF8A : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FF8E : 00 00      db  $00, $00
-FF90 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FF94 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FF98 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FF9C : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFA0 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFA4 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFA8 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFAC : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFB0 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFB4 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFB8 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFBC : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFC0 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFC4 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFC8 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFCC : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFD0 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFD4 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFD8 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFDC : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFE0 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFE4 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFE8 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFEC : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFF0 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-FFF4 : 00 00 00 00   db  $00, $00, $00
+FF82 : 00 00 00 00 00 00 00 00 
+FF8A : 00 00 00 00 00 00 
+FF90 : 00 00 00 00 00 00 00 00 
+FF98 : 00 00 00 00 00 00 00 00 
+FFA0 : 00 00 00 00 00 00 00 00 
+FFA8 : 00 00 00 00 00 00 00 00 
+FFB0 : 00 00 00 00 00 00 00 00 
+FFB8 : 00 00 00 00 00 00 00 00 
+FFC0 : 00 00 00 00 00 00 00 00 
+FFC8 : 00 00 00 00 00 00 00 00 
+FFD0 : 00 00 00 00 00 00 00 00 
+FFD8 : 00 00 00 00 00 00 00 00 
+FFE0 : 00 00 00 00 00 00 00 00 
+FFE8 : 00 00 00 00 00 00 00 00 
+FFF0 : 00 00 00 00 00 00 00 00 
 ;*************************************;
 ;Motorola vector table
 ;*************************************;
-;IRQV
-FFF8 : F775                           ;IRQ
-;SWIV
-FFFA : F001                           ;SETUP
-;NMIV
-FFFC : F7EF                           ;NMI
-;RESETV 
-FFFE : F001                           ;SETUP
+FFF8 : F775                           ;IRQV
+FFFA : F001                           ;SWIV 
+FFFC : F7EF                           ;NMIV
+FFFE : F001                           ;RESETV
+;
 END  CKSUM
 
 ;--------------------------------------------------------------
+
+
+
+
+
+
