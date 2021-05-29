@@ -14,7 +14,11 @@
         ;
         ;  CPU:    Motorola 6800 (6800/6802/6808 family)
         ;
-        ;Defender, Video Sound ROM, September 1980, Red Label
+        ;Defender, Video Sound ROM 1, September 1980, Red Label
+        ;
+        ; Video Games sound boards have W4 jumpered to allow PB5 Status (input sound select #6)
+        ; so IOJ3 pin 1 key, 2-7 sound select, 8 not used, 9 N/C
+        ; IRQ mask 1Fh is 0001 1111
         ;
         ;
           org  $F800
@@ -894,10 +898,10 @@ FCB5 : 39         rts
 ;*************************************;
 ;IRQ
 FCB6 : 8E 00 7F   lds  #$007F         ;load SP with value 007Fh (#ENDRAM)
-FCB9 : B6 04 02   ldaa  $0402         ;load A with addr 0402 (PIA sound select)
+FCB9 : B6 04 02   ldaa  $0402         ;load A with addr 0402 (PIA sound select)(
 FCBC : 0E         cli                 ;clear interrupt (I=0) (NOW ALLOW IRQS)
 FCBD : 43         coma                ;complement 1s A (INVERT INPUT)
-FCBE : 84 1F      anda  #$1F          ;and A with value 1F (MASK GARB)
+FCBE : 84 1F      anda  #$1F          ;and A with value 1F (MASK GARB) (0001 1111)
 FCC0 : D6 08      ldab  $08           ;load B with value at addr 08(ORGFLG)
 FCC2 : 27 09      beq  LFCCD          ;branch Z=1 IRQ2
 FCC4 : 2A 03      bpl  LFCC9          ;branch N=0 IRQ1
