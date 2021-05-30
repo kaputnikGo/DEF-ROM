@@ -1081,11 +1081,11 @@ F601 : F2 C4                          ;HYPER
 F603 : F2 E3                          ;SCREAM
 F605 : F1 75                          ;TURBO
 F607 : FE 8A                          ;SYNTHZ1
-F609 : FF 3B                          ;low2
-F60B : FF 6A                          ;low3
-F60D : FF 54                          ;low4
-F60F : FF 80                          ;low5
-F611 : FE FF                          ;low6
+F609 : FF 3B                          ;SNZ2LD2
+F60B : FF 6A                          ;SNZ3LD3
+F60D : FF 54                          ;SNZ3LD2
+F60F : FF 80                          ;SNZ3LD4
+F611 : FE FF                          ;SNZ2LD1
 F613 : F1 88                          ;TURBO2
 F615 : F0 46                          ;PLANE
 F617 : F1 2C                          ;APPEAR1
@@ -2915,22 +2915,17 @@ FE78        LFE78:
 FE78 : F5 01 46    "  F"    bitb  X0146
 FE7B : FA 70 F5    " p "    orab  X70F5
 ;*************************************;
-; table 
-FE7E : F6 F9 FC    "   "    ldab  XF9FC
-FE81 : FF 3F C1    " ? "    stx  X3FC1
-
-FE84 : 3F    "?"    swi
-FE85 : C1 FF    "  "    cmpb  #$FF
-FE87 : FF FF FF    "   "    stx  XFFFF
+; synthZ-1 table 
+FE7E : F6 F9 FC FF 3F C1              ;SZ1TAB
+FE84 : 3F C1 FF FF FF FF              ;
 ;*************************************;
 ;
 ; last 3 synths of the system 3-7 boards ROMs
 ;
-;
 ; synthZ-1
 ;*************************************;
 ;SYNTHZ1
-FE8A : CE FE 7E   ldx  #$FE7E         ;load X with FE7Eh 
+FE8A : CE FE 7E   ldx  #$FE7E         ;load X with FE7Eh (SZ1TAB)
 FE8D : C6 15      ldab  #$15          ;load B with 15h
 FE8F : 4F         clra                ;clear A
 FE90 : 97 0D      staa  $0D           ;store A in addr 0D
@@ -2939,7 +2934,7 @@ FE94 : C6 0C      ldab  #$0C          ;load B with 0Ch
 FE96 : BD F3 A8   jsr  LF3A8          ;jump sub TRANS
 FE99 : 7C 00 04   inc  $0004          ;incr addr 0004
 FE9C : D6 04      ldab  $04           ;load B with addr 04
-;SNZINC - inc #1
+;SZ1PRM - inc #1
 FE9E : 96 15      ldaa  $15           ;load A with addr 15
 FEA0 : 9B 1D      adda  $1D           ;add A with addr 1D
 FEA2 : 97 15      staa  $15           ;store A in addr 15
@@ -2957,48 +2952,48 @@ FEB2 : 9B 20      adda  $20           ;add A with addr 20
 FEB4 : 97 18      staa  $18           ;store A in addr 18
 ;loop
 FEB6 : 5A         decb                ;decr B
-FEB7 : 26 E5      bne  LFE9E          ;branch Z=0 SNZINC
-;SNZXLD - X load/store
+FEB7 : 26 E5      bne  LFE9E          ;branch Z=0 SZ1PRM
+;SNZ1XLD - X load/store
 FEB9 : DE 15      ldx  $15            ;load X with addr 15
 FEBB : DF 11      stx  $11            ;store X in addr 11
 FEBD : DE 17      ldx  $17            ;load X with addr 17
 FEBF : DF 13      stx  $13            ;store X in addr 13
-;SNZOUT
+;SNZ1OUT
 FEC1 : F7 04 00   stab  $0400         ;store B in DAC output SOUND
-;ZPROC1
+;Z1PROC1
 FEC4 : 7A 00 11   dec  $0011          ;decr addr 11
-FEC7 : 26 09      bne  LFED2          ;branch Z=0 ZPROC2
+FEC7 : 26 09      bne  LFED2          ;branch Z=0 Z1PROC2
 FEC9 : 96 15      ldaa  $15           ;load A with addr 15
 FECB : 97 11      staa  $11           ;store A in addr 11
 FECD : 70 00 19   neg  $0019          ;negate addr 0019
 FED0 : DB 19      addb  $19           ;add B with addr 19
-;ZPROC2
+;Z1PROC2
 FED2 : 7A 00 12   dec  $0012          ;decr addr 12
-FED5 : 26 09      bne  LFEE0          ;branch Z=0 ZPROC3
+FED5 : 26 09      bne  LFEE0          ;branch Z=0 Z1PROC3
 FED7 : 96 16      ldaa  $16           ;load A with addr 16
 FED9 : 97 12      staa  $12           ;store A in addr 12
 FEDB : 70 00 1A   neg  $001A          ;negate addr 001A
 FEDE : DB 1A      addb  $1A           ;add B with addr 1A
-;ZPROC3
+;Z1PROC3
 FEE0 : 7A 00 13   dec  $0013          ;decr addr 13
-FEE3 : 26 09      bne  LFEEE          ;branch Z=0 ZPROC4
+FEE3 : 26 09      bne  LFEEE          ;branch Z=0 Z1PROC4
 FEE5 : 96 17      ldaa  $17           ;load A with addr 17
 FEE7 : 97 13      staa  $13           ;store A in addr 13
 FEE9 : 70 00 1B   neg  $001B          ;negate addr 001B
 FEEC : DB 1B      addb  $1B           ;add B with addr 1B
-;ZPROC4
+;Z1PROC4
 FEEE : 7A 00 14   dec  $0014          ;decr addr 14
-FEF1 : 26 CE      bne  LFEC1          ;branch Z=0 SNZOUT
+FEF1 : 26 CE      bne  LFEC1          ;branch Z=0 SNZ1OUT
 FEF3 : 96 18      ldaa  $18           ;load A with addr 18
 FEF5 : 97 14      staa  $14           ;store A in addr 14
 FEF7 : 70 00 1C   neg  $001C          ;negate addr 001C
 FEFA : DB 1C      addb  $1C           ;add B with addr 1C
 ;
-FEFC : 7E FE C1   jmp  LFEC1          ;jump SNZOUT
+FEFC : 7E FE C1   jmp  LFEC1          ;jump SNZ1OUT
 ;*************************************;
-;low6 synthZ-2 loader #1
+;synthZ-2 loader #1
 ;*************************************;
-;5 bytes: A5 85 10 80 FF
+;7 bytes: A5 85 01 80 FF 0400
 ;SNZ2LD1
 FEFF : 86 A5      ldaa  #$A5          ;load A with A5h
 FF01 : 97 11      staa  $11           ;store A in addr 11
@@ -3010,127 +3005,137 @@ FF0B : 86 80      ldaa  #$80          ;load A with 80h
 FF0D : 97 1D      staa  $1D           ;store A in addr 1D
 FF0F : 86 FF      ldaa  #$FF          ;load A with FFh
 FF11 : 97 14      staa  $14           ;store A in addr 14
-FF13 : CE 04 00   ldx  #$0400         ;load X with addr 0400 DAC
+FF13 : CE 04 00   ldx  #$0400         ;load X with 0400h
 ;*************************************;
-;low6 synthZ-2
-;*
+;synthZ-2
+;*************************************;
 ;SYNTHZ2
-;LFF16:
 FF16 : DF 15      stx  $15            ;store X in addr 15
 FF18 : 96 11      ldaa  $11           ;load A with addr 11
-;LFF1A:
+;Z2LP
 FF1A : 48         asla                ;arith shift left A
-FF1B : 24 02      bcc  LFF1F          ;branch C=0
+FF1B : 24 02      bcc  LFF1F          ;branch C=0 SZ2OUT
 FF1D : 98 12      eora  $12           ;exclusive or A with addr 12
-;LFF1F:
+;SZ2OUT
 FF1F : B7 04 00   staa  $0400         ;store A in DAC output SOUND
 FF22 : D6 13      ldab  $13           ;load B with addr 13
-;LFF24:
+;SYNZ21
 FF24 : 09         dex                 ;decr X
-FF25 : 27 05      beq  LFF2C          ;branch Z=1
+FF25 : 27 05      beq  LFF2C          ;branch Z=1 SYNZ22
 FF27 : 5A         decb                ;decr B
-FF28 : 26 FA      bne  LFF24          ;branch Z=0 
-FF2A : 20 EE      bra  LFF1A          ;branch always 
-;LFF2C:
+FF28 : 26 FA      bne  LFF24          ;branch Z=0 SYNZ21
+FF2A : 20 EE      bra  LFF1A          ;branch always Z2LP
+;SYNZ22
 FF2C : D6 13      ldab  $13           ;load B with addr 13
 FF2E : D0 14      subb  $14           ;sub B with addr 14
 FF30 : D7 13      stab  $13           ;store B in addr 13
 FF32 : D1 1D      cmpb  $1D           ;compare B with 1D
 FF34 : 27 04      beq  LFF3A          ;branch Z=1 SNZ2X
 FF36 : DE 15      ldx  $15            ;load X with addr 15
-FF38 : 20 E0      bra  LFF1A          ;branch always 
+FF38 : 20 E0      bra  LFF1A          ;branch always Z2LP
 ;SNZ2X
 FF3A : 39         rts                 ;return subroutine
 ;*************************************;
-;low2 - paramZ1 - synthZ-2 loader #2
+;synthZ-2 loader #2
 ;*************************************;
-FF3B : 86 A5    "  "    ldaa  #$A5
-FF3D : 97 11    "  "    staa  X0011
-FF3F : 86 85    "  "    ldaa  #$85
-FF41 : 97 12    "  "    staa  X0012
-FF43 : 86 03    "  "    ldaa  #$03
-FF45 : 97 13    "  "    staa  X0013
-FF47 : 86 80    "  "    ldaa  #$80
-FF49 : 97 1D    "  "    staa  X001D
-FF4B : 86 FF    "  "    ldaa  #$FF
-FF4D : 97 14    "  "    staa  X0014
-FF4F : CE 03 00    "   "    ldx  #$0300
-FF52 : 20 C2    "  "    bra  LFF16
+;7 bytes: A5 85 03 80 FF 0300
+;SNZ2LD2
+FF3B : 86 A5      ldaa  #$A5          ;load A with A5h
+FF3D : 97 11      staa  $11           ;store A in addr 11
+FF3F : 86 85      ldaa  #$85          ;load A with 85h
+FF41 : 97 12      staa  $12           ;store A in addr 12
+FF43 : 86 03      ldaa  #$03          ;load A with 03h
+FF45 : 97 13      staa  $13           ;store A in addr 13
+FF47 : 86 80      ldaa  #$80          ;load A with 80h
+FF49 : 97 1D      staa  $1D           ;store A in addr 1D
+FF4B : 86 FF      ldaa  #$FF          ;load A with FFh
+FF4D : 97 14      staa  $14           ;store A in addr 14
+FF4F : CE 03 00   ldx  #$0300         ;load X with 0300h
+FF52 : 20 C2      bra  LFF16
 ;*************************************;
-;low4 - paramZ2 - synthZ-3 loader #2
+;synthZ-3 loader #2
 ;*************************************;
-FF54 : 86 01    "  "    ldaa  #$01
-FF56 : 97 19    "  "    staa  X0019
-FF58 : 86 01    "  "    ldaa  #$01
-FF5A : 97 1C    "  "    staa  X001C
-FF5C : 86 6C    " l"    ldaa  #$6C
-FF5E : 97 12    "  "    staa  X0012
-FF60 : 86 FF    "  "    ldaa  #$FF
-FF62 : 97 1B    "  "    staa  X001B
-FF64 : 86 01    "  "    ldaa  #$01
-FF66 : C6 6C    " l"    ldab  #$6C
-FF68 : 20 2A    " *"    bra  LFF94
+;6 bytes: 01 01 6C FF 01 6C
+;SNZ3LD2
+FF54 : 86 01      ldaa  #$01          ;load A with 01h
+FF56 : 97 19      staa  $19           ;store A in addr 19
+FF58 : 86 01      ldaa  #$01          ;load A with 01h
+FF5A : 97 1C      staa  $1C           ;store A in addr 1C
+FF5C : 86 6C      ldaa  #$6C          ;load A with 6Ch
+FF5E : 97 12      staa  $12           ;store A in addr 12
+FF60 : 86 FF      ldaa  #$FF          ;load A with FFh
+FF62 : 97 1B      staa  $1B           ;store A in addr 1B
+FF64 : 86 01      ldaa  #$01          ;load A with 01h
+FF66 : C6 6C      ldab  #$6C          ;load B with 6Ch
+FF68 : 20 2A      bra  LFF94          ;branch always SYNTHZ3
 ;*************************************;
-;low3 - paramZ3- synthZ-3 loader #3
+;synthZ-3 loader #3
 ;*************************************;
-FF6A : 86 02    "  "    ldaa  #$02
-FF6C : 97 19    "  "    staa  X0019
-FF6E : 86 1D    "  "    ldaa  #$1D
-FF70 : 97 12    "  "    staa  X0012
-FF72 : 86 01    "  "    ldaa  #$01
-FF74 : 97 1C    "  "    staa  X001C
-FF76 : 86 C8    "  "    ldaa  #$C8
-FF78 : 97 1B    "  "    staa  X001B
-FF7A : 86 01    "  "    ldaa  #$01
-FF7C : C6 6C    " l"    ldab  #$6C
-FF7E : 20 14    "  "    bra  LFF94
+;6 bytes: 02 1D 01 C8 01 6C
+;SNZ3LD3
+FF6A : 86 02      ldaa  #$02          ;load A with 02h
+FF6C : 97 19      staa  $19           ;store A in addr 19
+FF6E : 86 1D      ldaa  #$1D          ;load A with 1Dh
+FF70 : 97 12      staa  $12           ;store A in addr 12
+FF72 : 86 01      ldaa  #$01          ;load A with 01h
+FF74 : 97 1C      staa  $1C           ;store A in addr 1C
+FF76 : 86 C8      ldaa  #$C8          ;load A with C8h
+FF78 : 97 1B      staa  $1B           ;store A in addr 1B
+FF7A : 86 01      ldaa  #$01          ;load A with 01h
+FF7C : C6 6C      ldab  #$6C          ;load B with 6Ch
+FF7E : 20 14      bra  LFF94          ;branch always SYNTHZ3
 ;*************************************;
-;low5 - synthZ-3
+;synthZ-3 loader #4
+;*************************************;
+;6 bytes: 01 1D 01 FF 01 6C
+;SNZ3LD4
+FF80 : 86 01      ldaa  #$01          ;load A with 01h
+FF82 : 97 19      staa  $19           ;store A in addr 19
+FF84 : 86 1D      ldaa  #$1D          ;load A with 1Dh
+FF86 : 97 12      staa  $12           ;store A in addr 12
+FF88 : 86 01      ldaa  #$01          ;load A with 01h
+FF8A : 97 1C      staa  $1C           ;store A in addr 1C
+FF8C : 86 FF      ldaa  #$FF          ;load A with FFh
+FF8E : 97 1B      staa  $1B           ;store A in addr 1B
+FF90 : 86 01      ldaa  #$01          ;load A with 01h
+FF92 : C6 6C      ldab  #$6C          ;load B with 6Ch
+;*************************************;
+;synthZ-3
 ;*************************************;
 ;SYNTHZ3
-FF80 : 86 01    "  "    ldaa  #$01
-FF82 : 97 19    "  "    staa  X0019
-FF84 : 86 1D    "  "    ldaa  #$1D
-FF86 : 97 12    "  "    staa  X0012
-FF88 : 86 01    "  "    ldaa  #$01
-FF8A : 97 1C    "  "    staa  X001C
-FF8C : 86 FF    "  "    ldaa  #$FF
-FF8E : 97 1B    "  "    staa  X001B
-FF90 : 86 01    "  "    ldaa  #$01
-FF92 : C6 6C    " l"    ldab  #$6C
-;LFF94:
-FF94 : 97 18    "  "    staa  X0018
-FF96 : 7F 04 00    "   "    clr  X0400
-FF99 : 96 12    "  "    ldaa  X0012
-FF9B : D7 1A    "  "    stab  X001A
-;LFF9D:
-FF9D : D6 1A    "  "    ldab  X001A
-FF9F : D7 17    "  "    stab  X0017
-;LFFA1:
-FFA1 : 48    "H"    asla
-FFA2 : 24 0A    "$ "    bcc  LFFAE
-FFA4 : F6 04 00    "   "    ldab  X0400
-FFA7 : D8 1B    "  "    eorb  X001B
-FFA9 : F7 04 00    "   "    stab  X0400
-FFAC : 98 12    "  "    eora  X0012
-;LFFAE:
-FFAE : D6 18    "  "    ldab  X0018
-;LFFB0:
-FFB0 : 5A    "Z"    decb
-FFB1 : 26 FD    "& "    bne  LFFB0
-FFB3 : 7A 00 17    "z  "    dec  X0017
-FFB6 : 26 E9    "& "    bne  LFFA1
-FFB8 : 7F 04 00    "   "    clr  X0400
-FFBB : D6 1B    "  "    ldab  X001B
-FFBD : D0 1C    "  "    subb  X001C
-FFBF : D7 1B    "  "    stab  X001B
-FFC1 : 27 08    "' "    beq  LFFCB
-FFC3 : D6 18    "  "    ldab  X0018
-FFC5 : DB 19    "  "    addb  X0019
-FFC7 : D7 18    "  "    stab  X0018
-FFC9 : 26 D2    "& "    bne  LFF9D
-;LFFCB:
-FFCB : 39    "9"    rts
+FF94 : 97 18      staa  $18           ;store A in addr 18
+FF96 : 7F 04 00   clr  $0400          ;clear DAC output SOUND
+FF99 : 96 12      ldaa  $12           ;load A with addr 12
+FF9B : D7 1A      stab  $1A           ;store B in addr 1A
+;SZ3LP1
+FF9D : D6 1A      ldab  $1A           ;load B with addr 1A
+FF9F : D7 17      stab  $17           ;store B in addr 17
+;SZ3LP2
+FFA1 : 48         asla                ;arith shift left A
+FFA2 : 24 0A      bcc  LFFAE          ;branch C=0 SZ3PRM
+FFA4 : F6 04 00   ldab  $0400         ;load B with addr 0400 DAC
+FFA7 : D8 1B      eorb  $1B           ;exclusive or B with addr 1B
+FFA9 : F7 04 00   stab  $0400         ;store B in DAC output SOUND
+FFAC : 98 12      eora  $12           ;exclusive or A with addr 12
+;SZ3PRM
+FFAE : D6 18      ldab  $18           ;load B with addr 18
+;SZ3DEC
+FFB0 : 5A         decb                ;decr B
+FFB1 : 26 FD      bne  LFFB0          ;branch Z=0 SZ3DEC
+;
+FFB3 : 7A 00 17   dec  $0017          ;decr addr 0017
+FFB6 : 26 E9      bne  LFFA1          ;branch Z=0 SZ3LP2
+FFB8 : 7F 04 00   clr  $0400          ;clear DAC output SOUND
+FFBB : D6 1B      ldab  $1B           ;load B with addr 1B
+FFBD : D0 1C      subb  $1C           ;sub B with addr 1C
+FFBF : D7 1B      stab  $1B           ;store B in addr 1B
+FFC1 : 27 08      beq  LFFCB          ;branch Z=1 SYNZ3X
+FFC3 : D6 18      ldab  $18           ;load B with addr 18
+FFC5 : DB 19      addb  $19           ;add B with addr 19
+FFC7 : D7 18      stab  $18           ;store B in addr 18
+FFC9 : 26 D2      bne  LFF9D          ;branch Z=0 SZ3LP1
+;SYNZ3X
+FFCB : 39         rts                 ;return subroutine
 ;*************************************;
 ;zero padding
 FFCC : 00 00 00 00 00 00 00 00 
@@ -3148,3 +3153,8 @@ FFFC : F5 D1                          ;NMI
 FFFE : F0 1D                          ;RESET (hardware) 
 
 ;--------------------------------------------------------------
+
+
+
+
+
