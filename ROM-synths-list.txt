@@ -557,6 +557,28 @@ Ziren
 
 
 ;*************************************;
+(Video) Sound ROM 4 (Joust) 1983 (pinball version)
+Size:    4096 bytes
+Checksum:  9A11
+CRC-32:    3BBC90BF
+ORG: $F000
+DAC: $0400
+;-------------------------------------;
+Three Oscillator Sound Generator
+Whist (THE BOMB OOOOOH NOOOOO!)
+Knocker Routine
+Delta F, Delta A Routine
+Vari
+Lightning+Appear Noise Routine
+Noise with Whistle Routine (Full)
+Tilt
+Filtered Noise Routine
+GWave
+Walsh Function Sound Machine V2
+
+
+
+;*************************************;
 ROM ?? (Laser Cue) March 1984 (Sys 7) (routines sim to Cosmic Gunfight)
 Size:    2048 bytes
 Checksum:  52FB
@@ -737,22 +759,22 @@ GWave
 
 
 ;*************************************;
-Video Sound ROM 4 (Joust) 1983 (pinball version)
+Video Sound ROM 4 (Joust) 1983 (Red Label)
 Size:    4096 bytes
-Checksum:  9A11
-CRC-32:    3BBC90BF
+Checksum:  AF34
+CRC-32:    F1835BDD
 ORG: $F000
 DAC: $0400
 ;-------------------------------------;
 Three Oscillator Sound Generator
+Echo And Decay Routine
 Whist (THE BOMB OOOOOH NOOOOO!)
 Knocker Routine
 Delta F, Delta A Routine
 Vari
-Lightning+Appear Noise Routine
 Noise with Whistle Routine (Full)
-Tilt
-Filtered Noise Routine
+Lightning+Appear Noise Routine
+White Noise Routine
 GWave
 Walsh Function Sound Machine V2
 

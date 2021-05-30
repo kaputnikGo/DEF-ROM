@@ -19,9 +19,9 @@
         ;
         ; updated 30 May 2021
         ;
-          org  $F000
+org  $F000
         ;
-F000 : 74 
+F000 : 74                             ;checksum
 ;*************************************;
 ;Reset and setup power on
 ;*************************************;
@@ -46,928 +46,592 @@ F01D : 20 FE      bra  LF01D          ;(*) WAIT FOR INTERRUPT
 ;* THREE OSCILLATOR SOUND GENERATOR
 ;*************************************;
 ;PLAY:
-F01F : DF 07    "  "    stx  X0007
-F021 : CE F0 C4    "   "    ldx  #$F0C4
-F024 : DF 02    "  "    stx  X0002
-F026 : 86 80    "  "    ldaa  #$80
-F028        LF028:
-F028 : D6 10    "  "    ldab  X0010
-F02A : 2A 09    "* "    bpl  LF035
-F02C : D6 01    "  "    ldab  X0001
-F02E : 54    "T"    lsrb
-F02F : 54    "T"    lsrb
-F030 : 54    "T"    lsrb
-F031 : 5C    "\"    incb
-F032        LF032:
-F032 : 5A    "Z"    decb
-F033 : 26 FD    "& "    bne  LF032
-F035        LF035:
-F035 : 7A 00 15    "z  "    dec  X0015
-F038 : 27 4C    "'L"    beq  LF086
-F03A : 7A 00 16    "z  "    dec  X0016
-F03D : 27 4C    "'L"    beq  LF08B
-F03F : 7A 00 17    "z  "    dec  X0017
-F042 : 27 4C    "'L"    beq  LF090
-F044 : 7A 00 18    "z  "    dec  X0018
-F047 : 26 DF    "& "    bne  LF028
-F049 : D6 10    "  "    ldab  X0010
-F04B : 27 DB    "' "    beq  LF028
-F04D : C4 7F    "  "    andb  #$7F
-F04F : D7 18    "  "    stab  X0018
-F051 : D6 01    "  "    ldab  X0001
-F053 : 58    "X"    aslb
-F054 : DB 01    "  "    addb  X0001
-F056 : CB 0B    "  "    addb  #$0B
-F058 : D7 01    "  "    stab  X0001
-F05A : 7A 00 28    "z ("    dec  X0028
-F05D : 26 0E    "& "    bne  LF06D
-F05F : D6 1C    "  "    ldab  X001C
-F061 : D7 28    " ("    stab  X0028
-F063 : DE 02    "  "    ldx  X0002
-F065 : 09    " "    dex
-F066 : 8C F0 BD    "   "    cpx  #$F0BD
-F069 : 27 4E    "'N"    beq  LF0B9
-F06B : DF 02    "  "    stx  X0002
-F06D        LF06D:
-F06D : D6 01    "  "    ldab  X0001
-F06F : 2B 06    "+ "    bmi  LF077
-F071 : D4 14    "  "    andb  X0014
-F073 : C4 7F    "  "    andb  #$7F
-F075 : 20 05    "  "    bra  LF07C
-        ;
-F077        LF077:
-F077 : D4 14    "  "    andb  X0014
-F079 : C4 7F    "  "    andb  #$7F
-F07B : 50    "P"    negb
-F07C        LF07C:
-F07C : 36    "6"    psha
-F07D : 1B    " "    aba
-F07E : 16    " "    tab
-F07F : 32    "2"    pula
-F080 : DE 02    "  "    ldx  X0002
-F082 : AD 00    "  "    jsr  $00,x            ;INFO: index jump
-F084 : 20 A2    "  "    bra  LF028
-        ;
-F086        LF086:
-F086 : CE 00 0D    "   "    ldx  #$000D
-F089 : 20 08    "  "    bra  LF093
-        ;
-F08B        LF08B:
-F08B : CE 00 0E    "   "    ldx  #$000E
-F08E : 20 03    "  "    bra  LF093
-        ;
-F090        LF090:
-F090 : CE 00 0F    "   "    ldx  #$000F
-F093        LF093:
-F093 : 6D 18    "m "    tst  $18,x
-F095 : 27 12    "' "    beq  LF0A9
-F097 : 6A 18    "j "    dec  $18,x
-F099 : 26 0E    "& "    bne  LF0A9
-F09B : E6 0C    "  "    ldab  $0C,x
-F09D : E7 18    "  "    stab  $18,x
-F09F : E6 00    "  "    ldab  $00,x
-F0A1 : EB 10    "  "    addb  $10,x
-F0A3 : E1 14    "  "    cmpb  $14,x
-F0A5 : 27 12    "' "    beq  LF0B9
-F0A7 : E7 00    "  "    stab  $00,x
-F0A9        LF0A9:
-F0A9 : E6 00    "  "    ldab  $00,x
-F0AB : E7 08    "  "    stab  $08,x
-F0AD : AB 04    "  "    adda  $04,x
-F0AF : 60 04    "` "    neg  $04,x
-F0B1 : 16    " "    tab
-F0B2 : DE 02    "  "    ldx  X0002
-F0B4 : AD 00    "  "    jsr  $00,x            ;INFO: index jump
-F0B6 : 7E F0 28    "~ ("    jmp  LF028
+F01F : DF 07      stx  X0007
+F021 : CE F0 C4   ldx  #$F0C4
+F024 : DF 02      stx  X0002
+F026 : 86 80      ldaa  #$80
+;PLAY1:
+F028 : D6 10      ldab  X0010
+F02A : 2A 09      bpl  LF035
+F02C : D6 01      ldab  X0001
+F02E : 54         lsrb
+F02F : 54         lsrb
+F030 : 54         lsrb
+F031 : 5C         incb
+;PLAY2:
+F032 : 5A         decb
+F033 : 26 FD      bne  LF032
+;PLAY3:
+F035 : 7A 00 15   dec  X0015
+F038 : 27 4C      beq  LF086
+F03A : 7A 00 16   dec  X0016
+F03D : 27 4C      beq  LF08B
+F03F : 7A 00 17   dec  X0017
+F042 : 27 4C      beq  LF090
+F044 : 7A 00 18   dec  X0018
+F047 : 26 DF      bne  LF028
+F049 : D6 10      ldab  X0010
+F04B : 27 DB      beq  LF028
+F04D : C4 7F      andb  #$7F
+F04F : D7 18      stab  X0018
+F051 : D6 01      ldab  X0001
+F053 : 58         aslb
+F054 : DB 01      addb  X0001
+F056 : CB 0B      addb  #$0B
+F058 : D7 01      stab  X0001
+F05A : 7A 00 28   dec  X0028
+F05D : 26 0E      bne  LF06D
+F05F : D6 1C      ldab  X001C
+F061 : D7 28      stab  X0028
+F063 : DE 02      ldx  X0002
+F065 : 09         dex
+F066 : 8C F0 BD   cpx  #$F0BD
+F069 : 27 4E      beq  LF0B9
+F06B : DF 02      stx  X0002
+;PLAY6:
+F06D : D6 01      ldab  X0001
+F06F : 2B 06      bmi  LF077
+F071 : D4 14      andb  X0014
+F073 : C4 7F      andb  #$7F
+F075 : 20 05      bra  LF07C
+;PLAY6A:
+F077 : D4 14      andb  X0014
+F079 : C4 7F      andb  #$7F
+F07B : 50         negb
+;PLAY6B:
+F07C : 36         psha
+F07D : 1B         aba
+F07E : 16         tab
+F07F : 32         pula
+F080 : DE 02      ldx  X0002
+F082 : AD 00      jsr  $00,x            ;INFO: index jump
+F084 : 20 A2      bra  LF028
+;PLAY7:
+F086 : CE 00 0D   ldx  #$000D
+F089 : 20 08      bra  LF093
+;PLAY8:
+F08B : CE 00 0E   ldx  #$000E
+F08E : 20 03      bra  LF093
+;PLAY9:
+F090 : CE 00 0F   ldx  #$000F
+;PLAY10:
+F093 : 6D 18      tst  $18,x
+F095 : 27 12      beq  LF0A9
+F097 : 6A 18      dec  $18,x
+F099 : 26 0E      bne  LF0A9
+F09B : E6 0C      ldab  $0C,x
+F09D : E7 18      stab  $18,x
+F09F : E6 00      ldab  $00,x
+F0A1 : EB 10      addb  $10,x
+F0A3 : E1 14      cmpb  $14,x
+F0A5 : 27 12      beq  LF0B9
+F0A7 : E7 00      stab  $00,x
+;PLAY11:
+F0A9 : E6 00      ldab  $00,x
+F0AB : E7 08      stab  $08,x
+F0AD : AB 04      adda  $04,x
+F0AF : 60 04      neg  $04,x
+F0B1 : 16         tab
+F0B2 : DE 02      ldx  X0002
+F0B4 : AD 00      jsr  $00,x            ;INFO: index jump
+F0B6 : 7E F0 28   jmp  LF028
 ;PLAY12:
-F0B9 : DE 07    "  "    ldx  X0007
-F0BB : 39    "9"    rts
+F0B9 : DE 07      ldx  X0007
+F0BB : 39         rts
 ;*************************************;
 ;* ECHO AND DECAY ROUTINE
 ;*************************************;
 ;RDECAY
-F0BC : 54    "T"    lsrb
-F0BD : 54    "T"    lsrb
-F0BE : 54    "T"    lsrb
-F0BF : 54    "T"    lsrb
-F0C0 : 54    "T"    lsrb
-F0C1 : 54    "T"    lsrb
-F0C2 : 54    "T"    lsrb
-F0C3 : 54    "T"    lsrb
-F0C4 : F7 04 00    "   "    stab  X0400
-F0C7 : 39    "9"    rts
+F0BC : 54         lsrb
+F0BD : 54         lsrb
+F0BE : 54         lsrb
+F0BF : 54         lsrb
+F0C0 : 54         lsrb
+F0C1 : 54         lsrb
+F0C2 : 54         lsrb
+F0C3 : 54         lsrb
+F0C4 : F7 04 00   stab  $0400
+F0C7 : 39         rts
 ;*************************************;
 ;* 3 OSCILLATOR CALLING ROUTINES
 ;*************************************;
 ;THNDR
-F0C8 : CE F2 9C    "   "    ldx  #$F29C
-F0CB        LF0CB:
-F0CB : C6 1C    "  "    ldab  #$1C
-F0CD : BD F6 62    "  b"    jsr  LF662
-F0D0 : BD F0 1F    "   "    jsr  LF01F
-F0D3 : 39    "9"    rts
-        ;
-F0D4 : CE F2 F0    "   "    ldx  #$F2F0
-F0D7 : 20 F2    "  "    bra  LF0CB
-        ;
-F0D9 : CE F3 0C    "   "    ldx  #$F30C
-F0DC : 20 ED    "  "    bra  LF0CB
+F0C8 : CE F2 9C   ldx  #$F29C
+;THNDR1:
+F0CB : C6 1C      ldab  #$1C
+F0CD : BD F6 62   jsr  LF662
+F0D0 : BD F0 1F   jsr  LF01F
+F0D3 : 39         rts
+;SND4
+F0D4 : CE F2 F0   ldx  #$F2F0
+F0D7 : 20 F2      bra  LF0CB
+;SND5
+F0D9 : CE F3 0C   ldx  #$F30C
+F0DC : 20 ED      bra  LF0CB
 ;*************************************;
 ;* THE BOMB OOOOOH NOOOOO!
 ;*************************************;
 ;WHIST
-F0DE : 86 80    "  "    ldaa  #$80
-F0E0 : 97 10    "  "    staa  X0010
-F0E2 : 86 F1    "  "    ldaa  #$F1
-F0E4 : 97 0E    "  "    staa  X000E
-F0E6        LF0E6:
-F0E6 : 86 80    "  "    ldaa  #$80
-F0E8 : 97 0B    "  "    staa  X000B
-F0EA        LF0EA:
-F0EA : 86 12    "  "    ldaa  #$12
-F0EC        LF0EC:
-F0EC : 4A    "J"    deca
-F0ED : 26 FD    "& "    bne  LF0EC
-F0EF : 96 0D    "  "    ldaa  X000D
-F0F1 : 9B 10    "  "    adda  X0010
-F0F3 : 97 0D    "  "    staa  X000D
-F0F5 : 44    "D"    lsra
-F0F6 : 44    "D"    lsra
-F0F7 : 44    "D"    lsra
-F0F8 : 8B 12    "  "    adda  #$12
-F0FA : 97 0F    "  "    staa  X000F
-F0FC : DE 0E    "  "    ldx  X000E
-F0FE : A6 00    "  "    ldaa  $00,x
-F100 : B7 04 00    "   "    staa  X0400
-F103 : 7A 00 0B    "z  "    dec  X000B
-F106 : 26 E2    "& "    bne  LF0EA
-F108 : 7A 00 10    "z  "    dec  X0010
-F10B : 96 10    "  "    ldaa  X0010
-F10D : 81 20    "  "    cmpa  #$20
-F10F : 26 D5    "& "    bne  LF0E6
-F111 : 39    "9"    rts
+F0DE : 86 80      ldaa  #$80
+F0E0 : 97 10      staa  X0010
+F0E2 : 86 F1      ldaa  #$F1
+F0E4 : 97 0E      staa  X000E
+;WHIST0:
+F0E6 : 86 80      ldaa  #$80
+F0E8 : 97 0B      staa  X000B
+;WHIST1:
+F0EA : 86 12      ldaa  #$12
+;WHIST2:
+F0EC : 4A         deca
+F0ED : 26 FD      bne  LF0EC
+F0EF : 96 0D      ldaa  X000D
+F0F1 : 9B 10      adda  X0010
+F0F3 : 97 0D      staa  X000D
+F0F5 : 44         lsra
+F0F6 : 44         lsra
+F0F7 : 44         lsra
+F0F8 : 8B 12      adda  #$12
+F0FA : 97 0F      staa  X000F
+F0FC : DE 0E      ldx  X000E
+F0FE : A6 00      ldaa  $00,x
+F100 : B7 04 00   staa  X0400
+F103 : 7A 00 0B   dec  X000B
+F106 : 26 E2      bne  LF0EA
+F108 : 7A 00 10   dec  X0010
+F10B : 96 10      ldaa  X0010
+F10D : 81 20      cmpa  #$20
+F10F : 26 D5      bne  LF0E6
+F111 : 39         rts
 ;*************************************;
 ;*     SINE TABLE
 ;*************************************;
-F112 : 80 8C    "  "    suba  #$8C
-F114 : 98 A5    "  "    eora  X00A5
-F116 : B0 BC C6    "   "    suba  XBCC6
-F119 : D0 DA    "  "    subb  X00DA
-F11B : E2 EA    "  "    sbcb  $EA,x
-F11D : F0 F5 FA    "   "    subb  XF5FA
-        ;
-F120 : FD    " "    db  $FD
-        ;
-F121 : FE FF FE    "   "    ldx  XFFFE
-        ;
-F124 : FD    " "    db  $FD
-        ;
-F125 : FA F5 F0    "   "    orab  XF5F0
-F128 : EA E2    "  "    orab  $E2,x
-F12A : DA D0    "  "    orab  X00D0
-F12C : C6 BC    "  "    ldab  #$BC
-F12E : B0 A5 98    "   "    suba  XA598
-F131 : 8C 80 73    "  s"    cpx  #$8073
-F134 : 67 5A    "gZ"    asr  $5A,x
-F136 : 4F    "O"    clra
-F137 : 43    "C"    coma
-F138 : 39    "9"    rts
-        ;
-F139 : 2F 25    "/%"    ble  LF160
-        ;
-F13B : 1D 15    "  "    db  $1D, $15
-        ;
-F13D : 0F    " "    sei
-F13E : 0A    " "    clv
-        ;
-F13F : 05 02    "  "    db  $05, $02
-        ;
-F141 : 01    " "    nop
-        ;
-F142 : 00    " "    db  $00
-        ;
-F143 : 01    " "    nop
-        ;
-F144 : 02 05    "  "    db  $02, $05
-        ;
-F146 : 0A    " "    clv
-F147 : 0F    " "    sei
-        ;
-F148 : 15 1D    "  "    db  $15, $1D
-        ;
-F14A : 25 2F    "%/"    bcs  LF17B
-F14C : 39    "9"    rts
-        ;
-F14D : 43    "C"    coma
-F14E : 4F    "O"    clra
-F14F : 5A    "Z"    decb
-F150 : 67 73    "gs"    asr  $73,x
+F112 : 80 8C 98 A5 B0 BC C6 D0        ;SINTBL
+F11A : DA E2 EA F0 F5 FA FD FE        ;
+F122 : FF FE FD FA F5 F0 EA E2        ;
+F12A : DA D0 C6 BC B0 A5 98 8C        ;
+F132 : 80 73 67 5A 4F 43 39 2F        ;
+F13A : 25 1D 15 0F 0A 05 02 01        ;
+F142 : 00 01 02 05 0A 0F 15 1D        ;
+F14A : 25 2F 39 43 4F 5A 67 73        ;
 ;*************************************;
 ;* KNOCKER ROUTINE
 ;*************************************;
 ;KNOCK:
-F152 : 7F 04 02    "   "    clr  X0402
-F155 : CE F1 99    "   "    ldx  #$F199
-F158 : DF 0F    "  "    stx  X000F
-F15A        LF15A:
-F15A : DE 0F    "  "    ldx  X000F
-F15C : A6 00    "  "    ldaa  $00,x
-F15E : 27 33    "'3"    beq  LF193
-F160        LF160:
-F160 : E6 01    "  "    ldab  $01,x
-F162 : C4 F0    "  "    andb  #$F0
-F164 : D7 0E    "  "    stab  X000E
-F166 : E6 01    "  "    ldab  $01,x
-F168 : 08    " "    inx
-F169 : 08    " "    inx
-F16A : DF 0F    "  "    stx  X000F
-F16C : 97 0D    "  "    staa  X000D
-F16E : C4 0F    "  "    andb  #$0F
-F170        LF170:
-F170 : 96 0E    "  "    ldaa  X000E
-F172 : B7 04 00    "   "    staa  X0400
-F175 : 96 0D    "  "    ldaa  X000D
-F177        LF177:
-F177 : CE 00 05    "   "    ldx  #$0005
-F17A        LF17A:
-F17A : 09    " "    dex
-F17B        LF17B:
-F17B : 26 FD    "& "    bne  LF17A
-F17D : 4A    "J"    deca
-F17E : 26 F7    "& "    bne  LF177
-F180 : 7F 04 00    "   "    clr  X0400
-F183 : 96 0D    "  "    ldaa  X000D
-F185        LF185:
-F185 : CE 00 05    "   "    ldx  #$0005
-F188        LF188:
-F188 : 09    " "    dex
-F189 : 26 FD    "& "    bne  LF188
-F18B : 4A    "J"    deca
-F18C : 26 F7    "& "    bne  LF185
-F18E : 5A    "Z"    decb
-F18F : 26 DF    "& "    bne  LF170
-F191 : 20 C7    "  "    bra  LF15A
-        ;
-F193        LF193:
-F193 : 86 80    "  "    ldaa  #$80
-F195 : B7 04 02    "   "    staa  X0402
-F198 : 39    "9"    rts
+F152 : 7F 04 02   clr  $0402
+F155 : CE F1 99   ldx  #$F199
+F158 : DF 0F      stx  X000F
+;SQLP:
+F15A : DE 0F      ldx  X000F
+F15C : A6 00      ldaa  $00,x
+F15E : 27 33      beq  LF193
+F160 : E6 01      ldab  $01,x
+F162 : C4 F0      andb  #$F0
+F164 : D7 0E      stab  X000E
+F166 : E6 01      ldab  $01,x
+F168 : 08         inx
+F169 : 08         inx
+F16A : DF 0F      stx  X000F
+F16C : 97 0D      staa  X000D
+F16E : C4 0F      andb  #$0F
+;LP0:
+F170 : 96 0E      ldaa  X000E
+F172 : B7 04 00   staa  X0400
+F175 : 96 0D      ldaa  X000D
+;LP1:
+F177 : CE 00 05   ldx  #$0005
+;LP11
+F17A : 09         dex
+F17B : 26 FD      bne  LF17A
+F17D : 4A         deca
+F17E : 26 F7      bne  LF177
+F180 : 7F 04 00   clr  X0400
+F183 : 96 0D      ldaa  X000D
+;LP2:
+F185 : CE 00 05   ldx  #$0005
+;LP22:
+F188 : 09         dex
+F189 : 26 FD      bne  LF188
+F18B : 4A         deca
+F18C : 26 F7      bne  LF185
+F18E : 5A         decb
+F18F : 26 DF      bne  LF170
+F191 : 20 C7      bra  LF15A
+;END:
+F193 : 86 80      ldaa  #$80
+F195 : B7 04 02   staa  X0402
+F198 : 39         rts
 ;*************************************;
 ;* KNOCKER PATTERN
 ;*************************************;
-F199 : 01    " "    nop
-        ;
-F19A : FC 02 FC 03  "    "    db  $FC, $02, $FC, $03
-        ;
-F19E : F8 04 F8    "   "    eorb  X04F8
-F1A1 : 06    " "    tap
-F1A2 : F8 08 F4    "   "    eorb  X08F4
-F1A5 : 0C    " "    clc
-F1A6 : F4 10 F4    "   "    andb  X10F4
-F1A9 : 20 F2    "  "    bra  LF19D
-        ;
-F1AB : 40    "@"    nega
-F1AC : F1 60 F1    " ` "    cmpb  X60F1
-F1AF : 80 F1    "  "    suba  #$F1
-F1B1 : A0 F1    "  "    suba  $F1,x
-F1B3 : C0 F1    "  "    subb  #$F1
-        ;
-F1B5 : 00 00    "  "    db  $00, $00
+F199 : 01FC 02FC 03F8 04F8 06F8 08F4  ;
+F1A5 : 0CF4 10F4 20F2 40F1 60F1 80F1  ;
+F1B1 : A0F1 C0F1 0000                 ;
 ;*************************************;
 ;* SINGLE OSCILLATOR SOUND CALLS
 ;*************************************;
 ;PERK1:
-F1B7 : BD F1 FA    "   "    jsr  LF1FA
-F1BA : BD F2 13    "   "    jsr  LF213
-F1BD : 39    "9"    rts
-        ;
-F1BE : CE F3 82    "   "    ldx  #$F382
-F1C1 : 20 F4    "  "    bra  LF1B7
-        ;
-F1C3        LF1C3:
-F1C3 : 8D F2    "  "    bsr  LF1B7
-F1C5 : 8D 27    " '"    bsr  LF1EE
-F1C7 : 20 FA    "  "    bra  LF1C3
-        ;
-F1C9        XF1C9:
-F1C9 : 86 FF    "  "    ldaa  #$FF
-F1CB : 97 04    "  "    staa  X0004
-F1CD : CE F3 9A    "   "    ldx  #$F39A
-F1D0 : 20 F1    "  "    bra  LF1C3
+F1B7 : BD F1 FA   jsr  LF1FA
+F1BA : BD F2 13   jsr  LF213
+F1BD : 39         rts
+;ATARI
+F1BE : CE F3 82   ldx  #$F382
+F1C1 : 20 F4      bra  LF1B7
+;PERK$1:
+F1C3 : 8D F2      bsr  LF1B7
+F1C5 : 8D 27      bsr  LF1EE
+F1C7 : 20 FA      bra  LF1C3
+;PERK$$
+F1C9 : 86 FF      ldaa  #$FF
+F1CB : 97 04      staa  X0004
+F1CD : CE F3 9A   ldx  #$F39A
+F1D0 : 20 F1      bra  LF1C3
 ;*************************************;
 ;* RANDOM SQUIRTS
 ;*************************************;
 ;SQRT
-F1D2 : C6 30    " 0"    ldab  #$30
-F1D4 : CE F3 AC    "   "    ldx  #$F3AC
-F1D7 : 8D 21    " !"    bsr  LF1FA
-F1D9        LF1D9:
-F1D9 : 96 01    "  "    ldaa  X0001
-F1DB : 48    "H"    asla
-F1DC : 9B 01    "  "    adda  X0001
-F1DE : 8B 0B    "  "    adda  #$0B
-F1E0 : 97 01    "  "    staa  X0001
-F1E2 : 44    "D"    lsra
-F1E3 : 44    "D"    lsra
-F1E4 : 8B 0C    "  "    adda  #$0C
-F1E6 : 97 0E    "  "    staa  X000E
-F1E8 : 8D 29    " )"    bsr  LF213
-F1EA : 5A    "Z"    decb
-F1EB : 26 EC    "& "    bne  LF1D9
-F1ED : 39    "9"    rts
+F1D2 : C6 30      ldab  #$30
+F1D4 : CE F3 AC   ldx  #$F3AC
+F1D7 : 8D 21      bsr  LF1FA
+;SQRT2:
+F1D9 : 96 01      ldaa  X0001
+F1DB : 48         asla
+F1DC : 9B 01      adda  X0001
+F1DE : 8B 0B      adda  #$0B
+F1E0 : 97 01      staa  X0001
+F1E2 : 44         lsra
+F1E3 : 44         lsra
+F1E4 : 8B 0C      adda  #$0C
+F1E6 : 97 0E      staa  X000E
+F1E8 : 8D 29      bsr  LF213
+F1EA : 5A         decb
+F1EB : 26 EC      bne  LF1D9
+F1ED : 39         rts
 ;*************************************;
 ;* ECHO FUNCTION
 ;*************************************;
 ;ECHO
-F1EE : 96 04    "  "    ldaa  X0004
-F1F0 : 80 08    "  "    suba  #$08
-F1F2 : 2A 03    "* "    bpl  LF1F7
-F1F4 : 97 04    "  "    staa  X0004
-F1F6        LF1F6:
-F1F6 : 39    "9"    rts
-        ;
-F1F7        LF1F7:
-F1F7 : 32    "2"    pula
-F1F8 : 32    "2"    pula
-F1F9 : 39    "9"    rts
+F1EE : 96 04      ldaa  X0004
+F1F0 : 80 08      suba  #$08
+F1F2 : 2A 03      bpl  LF1F7
+F1F4 : 97 04      staa  X0004
+F1F6 : 39         rts
+;ECHO1:
+F1F7 : 32         pula
+F1F8 : 32         pula
+F1F9 : 39         rts
 ;*************************************;
 ;* MOVE PARAMETERS
 ;*************************************;
 ;MOVE:
-F1FA : A6 00    "  "    ldaa  $00,x
-F1FC : 97 0E    "  "    staa  X000E
-F1FE : A6 01    "  "    ldaa  $01,x
-F200 : 97 0F    "  "    staa  X000F
-F202 : A6 02    "  "    ldaa  $02,x
-F204 : 97 10    "  "    staa  X0010
-F206 : A6 03    "  "    ldaa  $03,x
-F208 : 97 11    "  "    staa  X0011
-F20A : A6 04    "  "    ldaa  $04,x
-F20C : 97 12    "  "    staa  X0012
-F20E : A6 05    "  "    ldaa  $05,x
-F210 : 97 13    "  "    staa  X0013
-F212 : 39    "9"    rts
+F1FA : A6 00      ldaa  $00,x
+F1FC : 97 0E      staa  X000E
+F1FE : A6 01      ldaa  $01,x
+F200 : 97 0F      staa  X000F
+F202 : A6 02      ldaa  $02,x
+F204 : 97 10      staa  X0010
+F206 : A6 03      ldaa  $03,x
+F208 : 97 11      staa  X0011
+F20A : A6 04      ldaa  $04,x
+F20C : 97 12      staa  X0012
+F20E : A6 05      ldaa  $05,x
+F210 : 97 13      staa  X0013
+F212 : 39         rts
 ;*************************************;
 ;* DELTA F, DELTA A ROUTINE
 ;*************************************;
 ;SING:
-F213 : 96 04    "  "    ldaa  X0004
-F215 : 37    "7"    pshb
-F216 : D6 12    "  "    ldab  X0012
-F218 : D7 14    "  "    stab  X0014
-F21A : D6 0F    "  "    ldab  X000F
-F21C : D7 15    "  "    stab  X0015
-F21E        LF21E:
-F21E : 43    "C"    coma
-F21F : D6 0E    "  "    ldab  X000E
-F221 : B7 04 00    "   "    staa  X0400
-F224        LF224:
-F224 : 5A    "Z"    decb
-F225 : 26 FD    "& "    bne  LF224
-F227 : 43    "C"    coma
-F228 : D6 0E    "  "    ldab  X000E
-F22A : 20 00    "  "    bra  LF22C
-        ;
-F22C        LF22C:
-F22C : 08    " "    inx
-F22D : 09    " "    dex
-F22E : 08    " "    inx
-F22F : 09    " "    dex
-F230 : B7 04 00    "   "    staa  X0400
-F233        LF233:
-F233 : 5A    "Z"    decb
-F234 : 26 FD    "& "    bne  LF233
-F236 : 7A 00 15    "z  "    dec  X0015
-F239 : 27 16    "' "    beq  LF251
-F23B : 7A 00 14    "z  "    dec  X0014
-F23E : 26 DE    "& "    bne  LF21E
-F240 : 43    "C"    coma
-F241 : D6 12    "  "    ldab  X0012
-F243 : B7 04 00    "   "    staa  X0400
-F246 : D7 14    "  "    stab  X0014
-F248 : D6 0E    "  "    ldab  X000E
-F24A : 9B 13    "  "    adda  X0013
-F24C : 2B 1E    "+ "    bmi  LF26C
-F24E : 01    " "    nop
-F24F : 20 15    "  "    bra  LF266
-        ;
-F251        LF251:
-F251 : 08    " "    inx
-F252 : 09    " "    dex
-F253 : 01    " "    nop
-F254 : 43    "C"    coma
-F255 : D6 0F    "  "    ldab  X000F
-F257 : B7 04 00    "   "    staa  X0400
-F25A : D7 15    "  "    stab  X0015
-F25C : D6 0E    "  "    ldab  X000E
-F25E : D0 10    "  "    subb  X0010
-F260 : D1 11    "  "    cmpb  X0011
-F262 : D1 11    "  "    cmpb  X0011
-F264 : 27 06    "' "    beq  LF26C
-F266        LF266:
-F266 : D7 0E    "  "    stab  X000E
-F268 : C0 05    "  "    subb  #$05
-F26A : 20 B8    "  "    bra  LF224
-        ;
-F26C        LF26C:
-F26C : 33    "3"    pulb
-F26D : 39    "9"    rts
+F213 : 96 04      ldaa  X0004
+;SING$
+F215 : 37         pshb
+F216 : D6 12      ldab  X0012
+F218 : D7 14      stab  X0014
+F21A : D6 0F      ldab  X000F
+F21C : D7 15      stab  X0015
+;SING1:
+F21E : 43         coma
+F21F : D6 0E      ldab  X000E
+F221 : B7 04 00   staa  X0400
+;SING2:
+F224 : 5A         decb
+F225 : 26 FD      bne  LF224
+F227 : 43         coma
+F228 : D6 0E      ldab  X000E
+F22A : 20 00      bra  LF22C
+F22C : 08         inx
+F22D : 09         dex
+F22E : 08         inx
+F22F : 09         dex
+F230 : B7 04 00   staa  X0400
+;SING3:
+F233 : 5A         decb
+F234 : 26 FD      bne  LF233
+F236 : 7A 00 15   dec  X0015
+F239 : 27 16      beq  LF251
+F23B : 7A 00 14   dec  X0014
+F23E : 26 DE      bne  LF21E
+F240 : 43         coma
+F241 : D6 12      ldab  X0012
+F243 : B7 04 00   staa  X0400
+F246 : D7 14      stab  X0014
+F248 : D6 0E      ldab  X000E
+F24A : 9B 13      adda  X0013
+F24C : 2B 1E      bmi  LF26C
+F24E : 01         nop
+F24F : 20 15      bra  LF266
+;SING4:
+F251 : 08         inx
+F252 : 09         dex
+F253 : 01         nop
+F254 : 43         coma
+F255 : D6 0F      ldab  X000F
+F257 : B7 04 00   staa  X0400
+F25A : D7 15      stab  X0015
+F25C : D6 0E      ldab  X000E
+F25E : D0 10      subb  X0010
+F260 : D1 11      cmpb  X0011
+F262 : D1 11      cmpb  X0011
+F264 : 27 06      beq  LF26C
+;SING5:
+F266 : D7 0E      stab  X000E
+F268 : C0 05      subb  #$05
+F26A : 20 B8      bra  LF224
+;SING6:
+F26C : 33         pulb
+F26D : 39         rts
 ;*************************************;
 ;data tables for PULSE
 ;*************************************;
-F26E : DA FF    "  "    orab  X00FF
-F270 : DA 80    "  "    orab  X0080
-F272 : 26 01    "& "    bne  LF275
-F274 : 26 80    "& "    bne  LF1F6
-F276 : 07    " "    tpa
-F277 : 0A    " "    clv
-F278 : 07    " "    tpa
-        ;
-F279 : 00    " "    db  $00
-        ;
-F27A : F9 F6 F9    "   "    adcb  XF6F9
-        ;
-F27D : 00 3A    " :"    db  $00, $3A
-        ;
-F27F : 3E    ">"    wai
-F280 : 50    "P"    negb
-F281 : 46    "F"    rora
-F282 : 33    "3"    pulb
-F283 : 2C 27    ",'"    bge  LF2AC
-F285 : 20 25    " %"    bra  LF2AC
-        ;
-F287 : 1C 1A    "  "    db  $1C, $1A
-        ;
-F289 : 17    " "    tba
-        ;
-F28A : 14    " "    db  $14
-        ;
-F28B : 11    " "    cba
-F28C : 10    " "    sba
-F28D : 33    "3"    pulb
-F28E : 08    " "    inx
-        ;
-F28F : 03 02    "  "    db  $03, $02
-        ;
-F291 : 01    " "    nop
-        ;
-F292 : 02 03 04 05  "    "    db  $02, $03, $04, $05
-        ;
-F296 : 06    " "    tap
-F297 : 0A    " "    clv
-        ;
-F298 : 1E    " "    db  $1E
-        ;
-F299 : 32    "2"    pula
-F29A : 70 00 
+F26E : DA FF DA 80 26 01 26 80        ;SNDTBL
+F276 : 07 0A 07 00 F9 F6 F9 00        ;
+;
+F27E : 3A 3E 50 46 33 2C 27 20        ;NOTTBL
+F286 : 25 1C 1A 17 14 11 10 33        ;
+;
+F28E : 08 03 02 01 02 03 04 05        ;WAVFRM
+F296 : 06 0A 1E 32 70 00              ;
 ;*************************************;
 ;data tables for PLAY (Three Osc) - 28 bytes
 ;*************************************;
-F29C : FF    "p  "    neg  X00FF
-F29D : FF FF 90    "   "    stx  XFF90
-F2A0 : FF FF FF    "   "    stx  XFFFF
-F2A3 : FF FF FF    "   "    stx  XFFFF
-F2A6 : FF 90 FF    "   "    stx  X90FF
-F2A9 : FF FF FF    "   "    stx  XFFFF
-F2AC        LF2AC:
-F2AC : FF FF FF    "   "    stx  XFFFF
-F2AF : FF 00 00    "   "    stx  X0000
-        ;
-F2B2 : 00 00 00 00 
-F2B6 : 00 00    "  "    db  $00, $00
-        ;
-F2B8 : 48    "H"    asla
-F2B9 : 01    " "    nop
-        ;
-F2BA : 00 00    "  "    db  $00, $00
-        ;
-F2BC : 3F    "?"    swi
-F2BD : 3F    "?"    swi
-        ;
-F2BE : 00 00    "  "    db  $00, $00
-        ;
-F2C0 : 48    "H"    asla
-F2C1 : 01    " "    nop
-        ;
-F2C2 : 00 00    "  "    db  $00, $00
-        ;
-F2C4 : 01    " "    nop
-F2C5 : 08    " "    inx
-        ;
-F2C6 : 00 00    "  "    db  $00, $00
-        ;
-F2C8 : 81 01    "  "    cmpa  #$01
-        ;
-F2CA : 00 00    "  "    db  $00, $00
-        ;
-F2CC : 01    " "    nop
-F2CD : FF 00 00    "   "    stx  X0000
-F2D0 : 01    " "    nop
-F2D1 : 08    " "    inx
-        ;
-F2D2 : 00 00    "  "    db  $00, $00
-        ;
-F2D4 : 01    " "    nop
-F2D5 : 10    " "    sba
-        ;
-F2D6 : 00 00    "  "    db  $00, $00
-        ;
-F2D8 : 3F    "?"    swi
-F2D9 : 3F    "?"    swi
-        ;
-F2DA : 00 00    "  "    db  $00, $00
-        ;
-F2DC : 01    " "    nop
-F2DD : 10    " "    sba
-        ;
-F2DE : 00 00 05 05  "    "    db  $00, $00, $05, $05
-F2E2 : 00 00    "  "    db  $00, $00
-        ;
-F2E4 : 01    " "    nop
-F2E5 : 01    " "    nop
-        ;
-F2E6 : 00 00    "  "    db  $00, $00
-        ;
-F2E8 : 31    "1"    ins
-F2E9 : FF 00 00    "   "    stx  X0000
-        ;
-F2EC : 05 05 00 00  "    "    db  $05, $05, $00, $00
-        ;
-F2F0 : 30    "0"    tsx
-        ;
-F2F1 : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F2F4 : 7F 00 00    "   "    clr  X0000
-        ;
-F2F7 : 00    " "    db  $00
-        ;
-F2F8 : 30    "0"    tsx
-        ;
-F2F9 : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F2FC : 01    " "    nop
-        ;
-F2FD : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F300 : 7F 00 00    "   "    clr  X0000
-        ;
-F303 : 00 02 00 00  "    "    db  $00, $02, $00, $00
-F307 : 00    " "    db  $00
-        ;
-F308 : 01    " "    nop
-        ;
-F309 : 00 00 00 04  "    "    db  $00, $00, $00, $04
-F30D : 00 00 04    "   "    db  $00, $00, $04
-        ;
-F310 : 7F 00 00    "   "    clr  X0000
-F313 : 7F 04 00    "   "    clr  X0400
-        ;
-F316 : 00 04    "  "    db  $00, $04
-        ;
-F318 : FF 00 00    "   "    stx  X0000
-F31B : A0 00    "  "    suba  $00,x
-        ;
-F31D : 00 00 00 00 
-F321 : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F324 : FF 00 00    "   "    stx  X0000
-F327 : A0 0C    "  "    suba  $0C,x
-F329 : 68 68    "hh"    asl  $68,x
-        ;
-F32B : 00    " "    db  $00
-        ;
-F32C : 07    " "    tpa
-        ;
-F32D : 1F    " "    db  $1F
-        ;
-F32E : 0F    " "    sei
-        ;
-F32F : 00    " "    db  $00
-        ;
-F330 : 0C    " "    clc
-F331 : 80 80    "  "    suba  #$80
-        ;
-F333 : 00    " "    db  $00
-        ;
-F334 : FF FF FF    "   "    stx  XFFFF
-        ;
-F337 : 00 00 00 00 
-F33B : 00 00 00 00 
-F33F : 00    " "    db  $00
-        ;
-F340 : FF FF FF    "   "    stx  XFFFF
-        ;
-F343 : 00    " "    db  $00
-        ;
-F344 : 01    " "    nop
-        ;
-F345 : 04 00 00    "   "    db  $04, $00, $00
-        ;
-F348 : 3F    "?"    swi
-F349 : 7F 00 00    "   "    clr  X0000
-F34C : 01    " "    nop
-        ;
-F34D : 04 00 00 05  "    "    db  $04, $00, $00, $05
-        ;
-F351 : FF 00 00    "   "    stx  X0000
-F354 : 01    " "    nop
-        ;
-F355 : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F358 : 48    "H"    asla
-        ;
-F359 : 00 00 00 05  "    "    db  $00, $00, $00, $05
-        ;
-F35D : FF 00 00    "   "    stx  X0000
-        ;
-F360 : 02    " "    db  $02
-        ;
-F361 : 80 00    "  "    suba  #$00
-F363 : 30    "0"    tsx
-F364 : 0A    " "    clv
-F365 : 7F 00 7F    "   "    clr  X007F
-        ;
-F368 : 02    " "    db  $02
-        ;
-F369 : 80 00    "  "    suba  #$00
-F36B : 30    "0"    tsx
-F36C : C0 80    "  "    subb  #$80
-        ;
-F36E : 00    " "    db  $00
-        ;
-F36F : 20 01    "  "    bra  LF372
-        ;
-F371 : 10    " "    sba
-        ;
-F372        LF372:
-F372 : 00 15    "  "    db  $00, $15
-        ;
-F374 : C0 10    "  "    subb  #$10
-        ;
-F376 : 00 00    "  "    db  $00, $00
-        ;
-F378 : C0 80    "  "    subb  #$80
-        ;
-F37A : 00 00    "  "    db  $00, $00
+F29C : FFFF FF90 FFFF FFFF FFFF       ;VEC01
+F2A6 : FF90 FFFF FFFF FFFF FFFF       ;
+F2B0 : 0000 0000 0000 0000            ;
+;
+F2B8 : 4801 0000 3F3F 0000 4801       ;VEC02
+F2C2 : 0000 0108 0000 8101 0000       ;
+F2CC : 01FF 0000 0108 0000            ;
+;
+F2D4 : 0110 0000 3F3F 0000 0110       ;VEC03
+F2DE : 0000 0505 0000 0101 0000       ;
+F2E8 : 31FF 0000 0505 0000            ;
+;
+F2F0 : 3000 0000 7F00 0000 3000       ;VEC04
+F2FA : 0000 0100 0000 7F00 0000       ;
+F304 : 0200 0000 0100 0000            ;
+;
+F30C : 0400 0004 7F00 007F 0400       ;VEC05
+F316 : 0004 FF00 00A0 0000 0000       ;
+F320 : 0000 0000 FF00 00A0            ;
+;
+F328 : 0C68 6800 071F 0F00 0C80       ;VEC06
+F332 : 8000 FFFF FF00 0000 0000       ;
+F33C : 0000 0000 FFFF FF00            ;
+;
+F344 : 0104 0000 3F7F 0000 0104       ;VEC016
+F34E : 0000 05FF 0000 0100 0000       ;
+F358 : 4800 0000 05FF 0000            ;
+;
+F360 : 0280 0030 0A7F 007F 0280       ;VEC017
+F36A : 0030 C080 0020 0110 0015       ;
+F374 : C010 0000 C080 0000            ;
 ;*************************************;
 ; data tables for SING (Single Osc)
 ;*************************************;
-F37C : FF 01 02    "   "    stx  X0102
-        ;
-F37F : C3    " "    db  $C3
-        ;
-F380 : FF 00 01    "   "    stx  X0001
-        ;
-F383 : 03    " "    db  $03
-        ;
-F384 : FF 80 FF    "   "    stx  X80FF
-        ;
-F387 : 00    " "    db  $00
-        ;
-F388 : 20 03    "  "    bra  LF38D
-        ;
-F38A : FF 50 FF    " P "    stx  X50FF
-        ;
-F38D        LF38D:
-F38D : 00    " "    db  $00
-        ;
-F38E : 50    "P"    negb
-        ;
-F38F : 03    " "    db  $03
-        ;
-F390 : 01    " "    nop
-F391 : 20 FF    "  "    bra  LF392
-        ;
-F393 : 00    " "    db  $00
-        ;
-F394 : FE 04 02    "   "    ldx  X0402
-        ;
-F397 : 04    " "    db  $04
-        ;
-F398 : FF 00 48    "  H"    stx  X0048
-        ;
-F39B : 03    " "    db  $03
-        ;
-F39C : 01    " "    nop
-F39D : 0C    " "    clc
-F39E : FF 00 48    "  H"    stx  X0048
-        ;
-F3A1 : 02    " "    db  $02
-        ;
-F3A2 : 01    " "    nop
-F3A3 : 0C    " "    clc
-F3A4 : FF 00 E0    "   "    stx  X00E0
-F3A7 : 01    " "    nop
-        ;
-F3A8 : 02    " "    db  $02
-        ;
-F3A9 : 10    " "    sba
-F3AA : FF 00 50    "  P"    stx  X0050
-F3AD : FF 00 00    "   "    stx  X0000
-F3B0 : 60 80    "` "    neg  $80,x
-F3B2 : FF 02 01    "   "    stx  X0201
-F3B5 : 06    " "    tap
-F3B6 : FF 00 
+F37C : FF01 02C3 FF00                 ;VEC01X
+;
+F382 : 0103 FF80 FF00                 ;VEC02X
+;
+F388 : 2003 FF50 FF00                 ;VEC03X
+;
+F38E : 5003 0120 FF00                 ;VEC04X
+;
+F394 : FE04 0204 FF00                 ;VEC05X
+;
+F39A : 4803 010C FF00                 ;VEC06X
+;
+F3A0 : 4802 010C FF00                 ;VEC07X
+;
+F3A6 : E001 0210 FF00                 ;VEC08X
+;
+F3AC : 50FF 0000 6080                 ;VEC09X
+;
+F3B2 : FF02 0106 FF00                 ;VEC10X
 ;*************************************;
 ;*VARI LOADER
 ;*************************************;
 ;VARILD
-F3B8 : 16    "   "    stx  X0016
-F3B9 : 48    "H"    asla
-F3BA : 48    "H"    asla
-F3BB : 48    "H"    asla
-F3BC : 1B    " "    aba
-F3BD : CE 00 0D    "   "    ldx  #$000D
-F3C0 : DF 09    "  "    stx  X0009
-F3C2 : CE F8 38    "  8"    ldx  #$F838
-F3C5 : BD F7 FA    "   "    jsr  LF7FA
-F3C8 : C6 09    "  "    ldab  #$09
-F3CA : 7E F6 62    "~ b"    jmp  LF662
+F3B8 : 16         stx  X0016
+F3B9 : 48         asla
+F3BA : 48         asla
+F3BB : 48         asla
+F3BC : 1B         aba
+F3BD : CE 00 0D   ldx  #$000D
+F3C0 : DF 09      stx  X0009
+F3C2 : CE F8 38   ldx  #$F838
+F3C5 : BD F7 FA   jsr  LF7FA
+F3C8 : C6 09      ldab  #$09
+F3CA : 7E F6 62   jmp  LF662
 ;*************************************;
 ;*VARIABLE DUTY CYCLE SQUARE WAVE ROUTINE
 ;*************************************;
 ;VARI
-F3CD : 96 15    "  "    ldaa  X0015
-F3CF : B7 04 00    "   "    staa  X0400
-F3D2        LF3D2:
-F3D2 : 96 0D    "  "    ldaa  X000D
-F3D4 : 97 16    "  "    staa  X0016
-F3D6 : 96 0E    "  "    ldaa  X000E
-F3D8 : 97 17    "  "    staa  X0017
-F3DA        LF3DA:
-F3DA : DE 12    "  "    ldx  X0012
-F3DC        LF3DC:
-F3DC : 96 16    "  "    ldaa  X0016
-F3DE : 73 04 00    "s  "    com  X0400
-F3E1        LF3E1:
-F3E1 : 09    " "    dex
-F3E2 : 27 10    "' "    beq  LF3F4
-F3E4 : 4A    "J"    deca
-F3E5 : 26 FA    "& "    bne  LF3E1
-F3E7 : 73 04 00    "s  "    com  X0400
-F3EA : 96 17    "  "    ldaa  X0017
-F3EC        LF3EC:
-F3EC : 09    " "    dex
-F3ED : 27 05    "' "    beq  LF3F4
-F3EF : 4A    "J"    deca
-F3F0 : 26 FA    "& "    bne  LF3EC
-F3F2 : 20 E8    "  "    bra  LF3DC
-        ;
-F3F4        LF3F4:
-F3F4 : B6 04 00    "   "    ldaa  X0400
-F3F7 : 2B 01    "+ "    bmi  LF3FA
-F3F9 : 43    "C"    coma
-F3FA        LF3FA:
-F3FA : 8B 00    "  "    adda  #$00
-F3FC : B7 04 00    "   "    staa  X0400
-F3FF : 96 16    "  "    ldaa  X0016
-F401 : 9B 0F    "  "    adda  X000F
-F403 : 97 16    "  "    staa  X0016
-F405 : 96 17    "  "    ldaa  X0017
-F407 : 9B 10    "  "    adda  X0010
-F409 : 97 17    "  "    staa  X0017
-F40B : 91 11    "  "    cmpa  X0011
-F40D        XF40D:
-F40D : 26 CB    "& "    bne  LF3DA
-F40F : 96 14    "  "    ldaa  X0014
-F411 : 27 06    "' "    beq  LF419
-F413 : 9B 0D    "  "    adda  X000D
-F415 : 97 0D    "  "    staa  X000D
-F417 : 26 B9    "& "    bne  LF3D2
-F419        LF419:
-F419 : 39    "9"    rts
-        ;
-F41A : CE F4 20    "   "    ldx  #$F420
-F41D : 7E F4 CA    "~  "    jmp  LF4CA
-        ;
-F420 : 10    " "    sba
-F421 : FF 01 01    "   "    stx  X0101
-F424 : 01    " "    nop
-F425 : CE F4 44    "  D"    ldx  #$F444
-F428 : DF 1E    "  "    stx  X001E
-F42A : BD F5 AC    "   "    jsr  LF5AC
-F42D : CE A5 00    "   "    ldx  #$A500
-F430 : DF 00    "  "    stx  X0000
-F432 : CE F4 6D    "  m"    ldx  #$F46D
-F435 : BD F4 B5    "   "    jsr  LF4B5
-F438 : BD F5 50    "  P"    jsr  LF550
-F43B : CE F4 72    "  r"    ldx  #$F472
-F43E : BD F4 B5    "   "    jsr  LF4B5
-F441 : 7E F5 5D    "~ ]"    jmp  LF55D
-        ;
-F444 : 90 10    "  "    suba  X0010
-        ;
-F446 : 02 14    "  "    db  $02, $14
-        ;
-F448 : 40    "@"    nega
-F449 : B4 40 FF    " @ "    anda  X40FF
-        ;
-F44C : 14    " "    db  $14
-        ;
-F44D : 30    "0"    tsx
-F44E : D0 32    " 2"    subb  X0032
-        ;
-F450 : 02    " "    db  $02
-        ;
-F451 : 10    " "    sba
-F452 : 60 EE    "` "    neg  $EE,x
-F454 : 20 02    "  "    bra  LF458
-        ;
-F456 : 08    " "    inx
-F457 : 54    "T"    lsrb
-F458        LF458:
-F458 : E9 54    " T"    adcb  $54,x
-F45A : FF 20 28    "  ("    stx  X2028
-F45D : C0 30    " 0"    subb  #$30
-        ;
-F45F : 02 14    "  "    db  $02, $14
-        ;
-F461 : 58    "X"    aslb
-F462 : AC 20    "  "    cpx  $20,x
-        ;
-F464 : 02    " "    db  $02
-        ;
-F465 : 08    " "    inx
-F466 : 58    "X"    aslb
-F467 : A6 58    " X"    ldaa  $58,x
-F469 : FF 18 22    "  ""    stx  X1822
-        ;
-F46C : 00    " "    db  $00
-        ;
-F46D : 30    "0"    tsx
-F46E : 10    " "    sba
-        ;
-F46F : FC 00    "  "    db  $FC, $00
-        ;
-F471 : 01    " "    nop
-F472 : 30    "0"    tsx
-        ;
-F473 : FC    " "    db  $FC
-        ;
-F474 : 01    " "    nop
-        ;
-F475 : 00    " "    db  $00
-        ;
-F476 : 01    " "    nop
-F477 : 10    " "    sba
-F478 : F0 F0 01    "   "    subb  XF001
-F47B : 30    "0"    tsx
-F47C : CE F4 77    "  w"    ldx  #$F477
-F47F : 8D 34    " 4"    bsr  LF4B5
-F481        LF481:
-F481 : 8D 14    "  "    bsr  LF497
-F483 : 8D 12    "  "    bsr  LF497
-F485 : 86 28    " ("    ldaa  #$28
-F487 : 97 2A    " *"    staa  X002A
-F489 : 73 00 12    "s  "    com  X0012
-F48C : 8D 3E    " >"    bsr  LF4CC
-F48E : 73 00 12    "s  "    com  X0012
-F491 : 86 1E    "  "    ldaa  #$1E
-F493 : 8D 0D    "  "    bsr  LF4A2
-F495 : 20 EA    "  "    bra  LF481
-        ;
-F497        LF497:
-F497 : 86 30    " 0"    ldaa  #$30
-F499 : 97 2A    " *"    staa  X002A
-F49B : 8D 2F    " /"    bsr  LF4CC
-F49D : 86 02    "  "    ldaa  #$02
-F49F : 8D 01    "  "    bsr  LF4A2
-F4A1 : 39    "9"    rts
-        ;
-F4A2        LF4A2:
-F4A2 : 16    " "    tab
-F4A3 : CE 04 00    "   "    ldx  #$0400
-F4A6        LF4A6:
-F4A6 : 17    " "    tba
-F4A7        LF4A7:
-F4A7 : 4A    "J"    deca
-F4A8 : 26 FD    "& "    bne  LF4A7
-F4AA : 09    " "    dex
-F4AB : 8C 00 00    "   "    cpx  #$0000
-F4AE : 26 F6    "& "    bne  LF4A6
-F4B0 : 86 F0    "  "    ldaa  #$F0
-F4B2 : 97 0E    "  "    staa  X000E
-F4B4 : 39    "9"    rts
+F3CD : 96 15      ldaa  X0015
+F3CF : B7 04 00   staa  X0400
+;VAR0:
+F3D2 : 96 0D      ldaa  X000D
+F3D4 : 97 16      staa  X0016
+F3D6 : 96 0E      ldaa  X000E
+F3D8 : 97 17      staa  X0017
+;V0:
+F3DA : DE 12      ldx  X0012
+;V0LP:
+F3DC : 96 16      ldaa  X0016
+F3DE : 73 04 00   com  X0400
+;V1:
+F3E1 : 09         dex
+F3E2 : 27 10      beq  LF3F4
+F3E4 : 4A         deca
+F3E5 : 26 FA      bne  LF3E1
+F3E7 : 73 04 00   com  X0400
+F3EA : 96 17      ldaa  X0017
+;V2:
+F3EC : 09         dex
+F3ED : 27 05      beq  LF3F4
+F3EF : 4A         deca
+F3F0 : 26 FA      bne  LF3EC
+F3F2 : 20 E8      bra  LF3DC
+;VSWEEP:
+F3F4 : B6 04 00   ldaa  X0400
+F3F7 : 2B 01      bmi  LF3FA
+F3F9 : 43         coma
+;VS1:
+F3FA : 8B 00      adda  #$00
+F3FC : B7 04 00   staa  X0400
+F3FF : 96 16      ldaa  X0016
+F401 : 9B 0F      adda  X000F
+F403 : 97 16      staa  X0016
+F405 : 96 17      ldaa  X0017
+F407 : 9B 10      adda  X0010
+F409 : 97 17      staa  X0017
+F40B : 91 11      cmpa  X0011
+F40D : 26 CB      bne  LF3DA
+F40F : 96 14      ldaa  X0014
+F411 : 27 06      beq  LF419
+F413 : 9B 0D      adda  X000D
+F415 : 97 0D      staa  X000D
+F417 : 26 B9      bne  LF3D2
+;VARX:
+F419 : 39         rts
 ;*************************************;
-;*WHITE NOISE ROUTINE
+;
+;*************************************;
+F41A : CE F4 20   ldx  #$F420         ;load X with F420h
+F41D : 7E F4 CA   jmp  LF4CA          ;jump NOISLG
+;
+F420 : 10 FF 01 01 01                 ;NSTAB1
+;*************************************;
+;CROWD ROAR
+;*************************************;
+;CDR
+F425 : CE F4 44   ldx  #$F444         ;load X with F444h (#WS1)(1ST WHISTLE PARAMS)
+F428 : DF 1E      stx  $1E            ;store X in addr 1E (PTRHI)
+F42A : BD F5 AC   jsr  LF5AC          ;jump sub WISLD
+F42D : CE A5 00   ldx  #$A500         ;load X with A500h (SEED)
+F430 : DF 00      stx  $00            ;store X in addr 00
+F432 : CE F4 6D   ldx  #$F46D         ;load X with F46Dh (#CR1)(1ST CROWD ROAR NOISE PARAMS)
+F435 : BD F4 B5   jsr  LF4B5          ;jump sub NOISLD
+F438 : BD F5 50   jsr  LF550          ;jump sub NINIT
+F43B : CE F4 72   ldx  #$F472         ;load X with F472h (#CR2)
+F43E : BD F4 B5   jsr  LF4B5          ;jump sub NOISLD
+F441 : 7E F5 5D   jmp  LF55D          ;jump NINIT2
+;*************************************;
+;WHISTLE tables
+;*************************************;
+F444 : 90 10 02 14 40                 ;WS1
+F449 : B4 40 FF 14 30                 ;
+F44E : D0 32 02 10 60                 ;
+F453 : EE 20 02 08 54                 ;
+F458 : E9 54 FF 20 28                 ;
+F45D : C0 30 02 14 58                 ;
+F462 : AC 20 02 08 58                 ;
+F467 : A6 58 FF 18 22                 ;
+F46C : 00                             ;
+F46D : 30 10 FC 00 01                 ;CR1
+F472 : 30 FC 01 00 01                 ;CR2
+;*************************************;
+;
+;*************************************;
+F477 : 10 F0 F0 01 30                 ;
+;LF47C
+F47C : CE F4 77   ldx  #$F477         ;load X with F477h 
+F47F : 8D 34      bsr  LF4B5          ;branch sub NOISLD
+;LF481:
+F481 : 8D 14      bsr  LF497          ;branch sub 
+F483 : 8D 12      bsr  LF497          ;branch sub 
+F485 : 86 28      ldaa  #$28          ;load A with 28h
+F487 : 97 2A      staa  $2A           ;store A in addr 2A
+F489 : 73 00 12   com  $0012          ;complement 1s in addr 0012
+F48C : 8D 3E      bsr  LF4CC          ;branch sub NOIN
+F48E : 73 00 12   com  $0012          ;complement 1s addr 0012
+F491 : 86 1E      ldaa  #$1E          ;load A with 1Eh
+F493 : 8D 0D      bsr  LF4A2          ;branch sub 
+F495 : 20 EA      bra  LF481          ;branch always 
+;*************************************;
+;
+;*************************************;
+;LF497:
+F497 : 86 30      ldaa  #$30          ;load A with 30h
+F499 : 97 2A      staa  $2A           ;store A in addr 2A
+F49B : 8D 2F      bsr  LF4CC          ;branch sub NOIN
+F49D : 86 02      ldaa  #$02          ;load A with 02h
+F49F : 8D 01      bsr  LF4A2          ;branch sub 
+F4A1 : 39         rts                 ;return subroutine
+;*************************************;
+;
+;*************************************;
+;LF4A2:
+F4A2 : 16         tab                 ;transfer A to B
+F4A3 : CE 04 00   ldx  #$0400         ;load X with 0400h
+;LF4A6:
+F4A6 : 17         tba                 ;transfer A to B
+;LF4A7:
+F4A7 : 4A         deca                ;decr A
+F4A8 : 26 FD      bne  LF4A7          ;branch Z=0
+F4AA : 09         dex                 ;decr X
+F4AB : 8C 00 00   cpx  #$0000         ;compare X with 0000h
+F4AE : 26 F6      bne  LF4A6          ;branch Z=0
+F4B0 : 86 F0      ldaa  #$F0          ;load A with F0h
+F4B2 : 97 0E      staa  $0E           ;store A in addr 0E
+F4B4 : 39         rts                 ;return subroutine
+;*************************************;
+;Noise with Whistle Routine
 ;*************************************;
 ;*NFRQ=INIT PERIOD, NAMP=INIT AMP, DECAY AMPLITUDE RATE
 ;*CYCNT=CYCLE COUNT, NFFLG= FREQ DECAY FLAG
 ;*NFFLG=0 NO FREQ CHANGE;=POS DECAY;=MINUS INC FREQ
 ;*NOISE LOAD PROG-ENTER WITH XREG POINTING TO DATA
-;NOISLD LF44F:
-F4B5 : A6 00    "  "    ldaa  $00,x
-F4B7 : 97 25    " %"    staa  X0025
-F4B9 : A6 01    "  "    ldaa  $01,x
-F4BB : 97 0E    "  "    staa  X000E
-F4BD : A6 02    "  "    ldaa  $02,x
-F4BF : 97 0D    "  "    staa  X000D
-F4C1 : A6 03    "  "    ldaa  $03,x
-F4C3 : 97 12    "  "    staa  X0012
-F4C5 : A6 04    "  "    ldaa  $04,x
-F4C7 : 97 2A    " *"    staa  X002A
+;NOISLD
+F4B5 : A6 00      ldaa  $00,x
+F4B7 : 97 25      staa  $25
+F4B9 : A6 01      ldaa  $01,x
+F4BB : 97 0E      staa  $0E
+F4BD : A6 02      ldaa  $02,x
+F4BF : 97 0D      staa  $0D
+F4C1 : A6 03      ldaa  $03,x
+F4C3 : 97 12      staa  $12
+F4C5 : A6 04      ldaa  $04,x
+F4C7 : 97 2A      staa  $2A
 ;NEND
-F4C9 : 39    "9"    rts
+F4C9 : 39         rts
 ;*************************************;
 ;*LOAD NOISE AND GO
 ;*************************************;
@@ -1010,71 +674,74 @@ F501 : 96 2A    " *"    ldaa  X002A
 F503 : 97 29    " )"    staa  X0029
 F505 : 7F 00 28    "  ("    clr  X0028
 F508 : 39    "9"    rts
-        ;
-F509        LF509:
+;*************************************;
+;* 23 CYCLES FOR EACH SUBROUTINE PLUS CALLING OVERHEAD
+;*
+;*
+;NOISE1:
 F509 : 96 01    "  "    ldaa  X0001
-F50B : 44    "D"    lsra
-F50C : 44    "D"    lsra
-F50D : 44    "D"    lsra
+F50B : 44         lsra
+F50C : 44         lsra
+F50D : 44         lsra
 F50E : 98 01    "  "    eora  X0001
 F510 : 97 23    " #"    staa  X0023
 F512 : 08    " "    inx
 F513 : 84 07    "  "    anda  #$07
 F515 : 39    "9"    rts
-        ;
-F516        LF516:
+;*
+;NOISE2:
 F516 : 96 23    " #"    ldaa  X0023
-F518 : 44    "D"    lsra
+F518 : 44         lsra
 F519 : 76 00 00    "v  "    ror  X0000
 F51C : 76 00 01    "v  "    ror  X0001
 F51F : 86 00    "  "    ldaa  #$00
 F521 : 24 02    "$ "    bcc  LF525
 F523 : 96 0E    "  "    ldaa  X000E
-F525        LF525:
+;NOISE3:
 F525 : 97 28    " ("    staa  X0028
 F527 : 39    "9"    rts
-        ;
-F528        LF528:
+;*
+;RNT:
 F528 : 96 2A    " *"    ldaa  X002A
 F52A : 7A 00 29    "z )"    dec  X0029
 F52D : 27 04    "' "    beq  LF533
 F52F : 08    " "    inx
 F530 : 09    " "    dex
 F531 : 20 08    "  "    bra  LF53B
-        ;
-F533        LF533:
+;NW0:
 F533 : 97 29    " )"    staa  X0029
 F535 : D6 28    " ("    ldab  X0028
-F537 : 54    "T"    lsrb
+F537 : 54         lsrb
 F538 : 7C 00 0F    "|  "    inc  X000F
-F53B        LF53B:
+;NNW1:
 F53B : 39    "9"    rts
-        ;
-F53C        LF53C:
+;*
+;RNA:
 F53C : 96 25    " %"    ldaa  X0025
 F53E : 91 0F    "  "    cmpa  X000F
 F540 : 27 04    "' "    beq  LF546
 F542 : 08    " "    inx
 F543 : 09    " "    dex
 F544 : 20 09    "  "    bra  LF54F
-        ;
-F546        LF546:
+;NW2:
 F546 : 7F 00 0F    "   "    clr  X000F
 F549 : 96 0E    "  "    ldaa  X000E
 F54B : 90 0D    "  "    suba  X000D
 F54D : 97 0E    "  "    staa  X000E
-F54F        LF54F:
+;NW3:
 F54F : 39    "9"    rts
-        ;
-F550        LF550:
+;*************************************;
+;* NOISE WITH WHISTLE MAIN LOOP
+;*************************************;
+;NINIT
 F550 : 7F 00 1C    "   "    clr  X001C
 F553 : 7F 00 26    "  &"    clr  X0026
 F556 : 86 0E    "  "    ldaa  #$0E
 F558 : 97 1D    "  "    staa  X001D
 F55A : 7F 00 22    "  ""    clr  X0022
-F55D        LF55D:
+;NINIT2
 F55D : 8D 9F    "  "    bsr  LF4FE
-F55F        LF55F:
+;WIN:
 F55F : 8D A8    "  "    bsr  LF509
 F561 : BD F5 E6    "   "    jsr  LF5E6
 F564 : 8D B0    "  "    bsr  LF516
@@ -1089,24 +756,23 @@ F575 : 8D 1D    "  "    bsr  LF594
 F577 : 8D 6D    " m"    bsr  LF5E6
 F579 : 8D 52    " R"    bsr  LF5CD
 F57B : 20 E2    "  "    bra  LF55F
-        ;
-F57D        LF57D:
+;*************************************;
+;TRICNT:
 F57D : 96 21    " !"    ldaa  X0021
 F57F : 7A 00 1D    "z  "    dec  X001D
 F582 : 27 07    "' "    beq  LF58B
 F584 : B6 00 0E    "   "    ldaa  X000E
 F587 : 26 0A    "& "    bne  LF593
 F589 : 20 68    " h"    bra  LF5F3
-        ;
-F58B        LF58B:
+;NW4:
 F58B : 97 1D    "  "    staa  X001D
 F58D : 96 1C    "  "    ldaa  X001C
 F58F : 9B 26    " &"    adda  X0026
 F591 : 97 1C    "  "    staa  X001C
 F593        LF593:
 F593 : 39    "9"    rts
-        ;
-F594        LF594:
+;*
+;TRIFRQ:
 F594 : 96 1C    "  "    ldaa  X001C
 F596 : 91 24    " $"    cmpa  X0024
 F598 : 27 07    "' "    beq  LF5A1
@@ -1114,13 +780,12 @@ F59A : 08    " "    inx
 F59B : 96 0E    "  "    ldaa  X000E
 F59D : 26 2A    "&*"    bne  LF5C9
 F59F : 20 29    " )"    bra  LF5CA
-        ;
-F5A1        LF5A1:
+;NW6:
 F5A1 : 7F 00 1C    "   "    clr  X001C
 F5A4 : 7F 00 26    "  &"    clr  X0026
 F5A7 : 7F 00 22    "  ""    clr  X0022
 F5AA : DE 1E    "  "    ldx  X001E
-F5AC        LF5AC:
+;WISLD
 F5AC : A6 00    "  "    ldaa  $00,x
 F5AE : 97 1B    "  "    staa  X001B
 F5B0 : 27 17    "' "    beq  LF5C9
@@ -1135,75 +800,78 @@ F5C0 : 97 24    " $"    staa  X0024
 F5C2 : 86 05    "  "    ldaa  #$05
 F5C4 : BD F7 FA    "   "    jsr  LF7FA
 F5C7 : DF 1E    "  "    stx  X001E
-F5C9        LF5C9:
+;NW7:
 F5C9 : 39    "9"    rts
-        ;
-F5CA        LF5CA:
+;
+;PEND:
 F5CA : 32    "2"    pula
 F5CB : 32    "2"    pula
 F5CC : 39    "9"    rts
-        ;
-F5CD        LF5CD:
+;*
+;NNW:
 F5CD : 96 1B    "  "    ldaa  X001B
 F5CF : 27 06    "' "    beq  LF5D7
 F5D1 : 91 0E    "  "    cmpa  X000E
 F5D3 : 26 04    "& "    bne  LF5D9
 F5D5 : 20 03    "  "    bra  LF5DA
-        ;
-F5D7        LF5D7:
+;*
+;NW8:
 F5D7 : 08    " "    inx
 F5D8 : 09    " "    dex
-F5D9        LF5D9:
+;NW9:
 F5D9 : 39    "9"    rts
-        ;
-F5DA        LF5DA:
+;
+;WINIT:
 F5DA : 7F 00 1B    "   "    clr  X001B
 F5DD : 96 20    "  "    ldaa  X0020
 F5DF : 97 1C    "  "    staa  X001C
 F5E1 : 96 27    " '"    ldaa  X0027
 F5E3 : 97 26    " &"    staa  X0026
 F5E5 : 39    "9"    rts
-        ;
-F5E6        LF5E6:
+;******************
+;TRIDR:
 F5E6 : 96 22    " ""    ldaa  X0022
 F5E8 : 9B 1C    "  "    adda  X001C
 F5EA : 97 22    " ""    staa  X0022
 F5EC : 2A 01    "* "    bpl  LF5EF
 F5EE : 43    "C"    coma
-F5EF        LF5EF:
+;GO:
 F5EF : 1B    " "    aba
-F5F0        XF5F0:
 F5F0 : B7 04 00    "   "    staa  X0400
-F5F3        LF5F3:
+;NSEND
 F5F3 : 39    "9"    rts
-        ;
+;*************************************;
+;*LIGHTNING
+;*************************************;
+;LITE
 F5F4 : 86 01    "  "    ldaa  #$01
 F5F6 : 97 14    "  "    staa  X0014
 F5F8 : C6 03    "  "    ldab  #$03
-F5FA        XF5FA:
 F5FA : 20 00    "  "    bra  LF5FC
-        ;
-F5FC        LF5FC:
+;*************************************;
+;*LIGHTNING+APPEAR NOISE ROUTINE
+;*************************************;
+;LITEN
 F5FC : 97 13    "  "    staa  X0013
 F5FE : 86 FF    "  "    ldaa  #$FF
 F600 : B7 04 00    "   "    staa  X0400
 F603 : D7 0F    "  "    stab  X000F
-F605        LF605:
+;LITE0:
 F605 : D6 0F    "  "    ldab  X000F
-F607        LF607:
+;LITE1:
 F607 : 96 01    "  "    ldaa  X0001
-F609 : 44    "D"    lsra
-F60A : 44    "D"    lsra
-F60B : 44    "D"    lsra
+F609 : 44         lsra
+F60A : 44         lsra
+F60B : 44         lsra
 F60C : 98 01    "  "    eora  X0001
-F60E : 44    "D"    lsra
+F60E : 44         lsra
 F60F : 76 00 00    "v  "    ror  X0000
 F612 : 76 00 01    "v  "    ror  X0001
 F615 : 24 03    "$ "    bcc  LF61A
 F617 : 73 04 00    "s  "    com  X0400
-F61A        LF61A:
+;LITE2:
 F61A : 96 13    "  "    ldaa  X0013
-F61C        LF61C:
+;LITE3:
 F61C : 4A    "J"    deca
 F61D : 26 FD    "& "    bne  LF61C
 F61F : 5A    "Z"    decb
@@ -1213,7 +881,12 @@ F624 : 9B 14    "  "    adda  X0014
 F626 : 97 13    "  "    staa  X0013
 F628 : 26 DB    "& "    bne  LF605
 F62A : 39    "9"    rts
-        ;
+;*************************************;
+;White Noise Routine 
+;*************************************;
+;X=INIT PERIOD, ACCB=INIT AMP, ACCA DECAY RATE
+;CYCNT=CYCLE COUNT, NFFLG= FREQ DECAY FLAG
+;NOISE:
 F62B : 97 0D    "  "    staa  X000D
 F62D        LF62D:
 F62D : DF 10    "  "    stx  X0010
@@ -1222,11 +895,11 @@ F62F : D7 0E    "  "    stab  X000E
 F631 : D6 0F    "  "    ldab  X000F
 F633        LF633:
 F633 : 96 01    "  "    ldaa  X0001
-F635 : 44    "D"    lsra
-F636 : 44    "D"    lsra
-F637 : 44    "D"    lsra
+F635 : 44         lsra
+F636 : 44         lsra
+F637 : 44         lsra
 F638 : 98 01    "  "    eora  X0001
-F63A : 44    "D"    lsra
+F63A : 44         lsra
 F63B : 76 00 00    "v  "    ror  X0000
 F63E : 76 00 01    "v  "    ror  X0001
 F641 : 86 00    "  "    ldaa  #$00
@@ -1250,8 +923,10 @@ F65D : 27 D0    "' "    beq  LF62F
 F65F : 20 CC    "  "    bra  LF62D
 F661        LF661:
 F661 : 39    "9"    rts
-        ;
-F662        LF662:
+;*************************************;
+;*PARAMETER TRANSFER
+;*************************************;
+;TRANS:
 F662 : 36    "6"    psha
 F663        LF663:
 F663 : A6 00    "  "    ldaa  $00,x
@@ -1266,8 +941,10 @@ F671 : 5A    "Z"    decb
 F672 : 26 EF    "& "    bne  LF663
 F674 : 32    "2"    pula
 F675 : 39    "9"    rts
-        ;
-F676        LF676:
+;*************************************;
+;*GWAVE LOADER
+;*************************************;
+;GWLD:
 F676 : 16    " "    tab
 F677 : 58    "X"    aslb
 F678 : 1B    " "    aba
@@ -1279,17 +956,17 @@ F681 : A6 00    "  "    ldaa  $00,x
 F683 : 16    " "    tab
 F684 : 84 0F    "  "    anda  #$0F
 F686 : 97 0E    "  "    staa  X000E
-F688 : 54    "T"    lsrb
-F689 : 54    "T"    lsrb
-F68A : 54    "T"    lsrb
-F68B : 54    "T"    lsrb
+F688 : 54         lsrb
+F689 : 54         lsrb
+F68A : 54         lsrb
+F68B : 54         lsrb
 F68C : D7 0D    "  "    stab  X000D
 F68E : A6 01    "  "    ldaa  $01,x
 F690 : 16    " "    tab
-F691 : 54    "T"    lsrb
-F692 : 54    "T"    lsrb
-F693 : 54    "T"    lsrb
-F694 : 54    "T"    lsrb
+F691 : 54         lsrb
+F692 : 54         lsrb
+F693 : 54         lsrb
+F694 : 54         lsrb
 F695 : D7 0F    "  "    stab  X000F
 F697 : 84 0F    "  "    anda  #$0F
 F699 : 97 0B    "  "    staa  X000B
@@ -1302,8 +979,7 @@ F6A5 : A6 00    "  "    ldaa  $00,x
 F6A7 : 4C    "L"    inca
 F6A8 : BD F7 FA    "   "    jsr  LF7FA
 F6AB : 20 F3    "  "    bra  LF6A0
-        ;
-F6AD        LF6AD:
+;
 F6AD : DF 12    "  "    stx  X0012
 F6AF : BD F7 68    "  h"    jsr  LF768
 F6B2 : DE 05    "  "    ldx  X0005
@@ -1326,8 +1002,11 @@ F6D3 : 7F 00 1D    "   "    clr  X001D
 F6D6 : BD F7 FA    "   "    jsr  LF7FA
 F6D9 : DF 17    "  "    stx  X0017
 F6DB : 39    "9"    rts
-        ;
-F6DC        LF6DC:
+;*************************************;
+;*GWAVE ROUTINE
+;*************************************;
+;*ACCA= FREQ PATTERN LENGTH, X= FREQ PAT ADDR
+;GWAVE:
 F6DC : 96 0D    "  "    ldaa  X000D
 F6DE : 97 1C    "  "    staa  X001C
 F6E0        LF6E0:
@@ -1368,8 +1047,7 @@ F711 : 09    " "    dex
 F712 : 01    " "    nop
 F713 : 01    " "    nop
 F714 : 20 DF    "  "    bra  LF6F5
-        ;
-F716        LF716:
+;
 F716 : 96 0F    "  "    ldaa  X000F
 F718 : 8D 60    " `"    bsr  LF77A
 F71A : 7A 00 1C    "z  "    dec  X001C
@@ -1424,8 +1102,10 @@ F764        LF764:
 F764 : 7E F6 DC    "~  "    jmp  LF6DC
 F767        LF767:
 F767 : 39    "9"    rts
-        ;
-F768        LF768:
+;*************************************;
+;*WAVE TRANSFER ROUTINE
+;*************************************;
+;WVTRAN:
 F768 : CE 00 1E    "   "    ldx  #$001E
 F76B : DF 09    "  "    stx  X0009
 F76D : DE 12    "  "    ldx  X0012
@@ -1435,8 +1115,10 @@ F772 : BD F6 62    "  b"    jsr  LF662
 F775 : DE 09    "  "    ldx  X0009
 F777 : DF 19    "  "    stx  X0019
 F779 : 39    "9"    rts
-        ;
-F77A        LF77A:
+;*************************************;
+;*WAVE DECAY ROUTINE/ DECAY AMOUNT IN ACCA(1/16 PER DECAY)
+;*************************************;
+;WVDECA:
 F77A : 4D    "M"    tsta
 F77B : 27 2B    "'+"    beq  LF7A8
 F77D : DE 12    "  "    ldx  X0012
@@ -1449,10 +1131,10 @@ F788 : DE 07    "  "    ldx  X0007
 F78A : D6 0C    "  "    ldab  X000C
 F78C : D7 0B    "  "    stab  X000B
 F78E : E6 01    "  "    ldab  $01,x
-F790 : 54    "T"    lsrb
-F791 : 54    "T"    lsrb
-F792 : 54    "T"    lsrb
-F793 : 54    "T"    lsrb
+F790 : 54         lsrb
+F791 : 54         lsrb
+F792 : 54         lsrb
+F793 : 54         lsrb
 F794 : 08    " "    inx
 F795 : DF 07    "  "    stx  X0007
 F797 : DE 09    "  "    ldx  X0009
@@ -1471,50 +1153,48 @@ F7A8 : 39    "9"    rts
 ;* INTERRUPT PROCESSING
 ;*************************************;
 ;IRQ
-F7A9 : 8E 00 7F   lds  #$007F         ;(#ENDRAM) RE-INITIALIZE STACK
-F7AC : B6 04 02   ldaa  $0402         ;(SOUND+2) GET INPUT TRIGGER
-F7AF : CE F0 C4   ldx  #$F0C4         ;(#DECAYZ) RANDY'S BRAIN DAMAGE
-F7B2 : DF 02      stx  $02            ;(XDECAY)
-F7B4 : CE 00 0D   ldx  #$000D         ;(#FREQ1)
-F7B7 : DF 09      stx  $09            ;(XPTR)
-F7B9 : C6 AF      ldab  #$AF          ;(#$AF)
-F7BB : D7 04      stab  $04           ;(AMP0)
+F7A9 : 8E 00 7F   lds  #$007F         ;load SP with 007Fh (#ENDRAM) RE-INITIALIZE STACK
+F7AC : B6 04 02   ldaa  $0402         ;load A with addr 0402 (PIA) (SOUND+2) GET INPUT TRIGGER
+F7AF : CE F0 C4   ldx  #$F0C4         ;load X with FoC4h (#DECAYZ) RANDY'S BRAIN DAMAGE
+F7B2 : DF 02      stx  $02            ;store X in addr 02 (XDECAY)
+F7B4 : CE 00 0D   ldx  #$000D         ;load X with 000Dh (#FREQ1)
+F7B7 : DF 09      stx  $09            ;store X in addr 09 (XPTR)
+F7B9 : C6 AF      ldab  #$AF          ;load B with AFh (#$AF)
+F7BB : D7 04      stab  $04           ;store B in addr 04 (AMP0)
 F7BD : 0E         cli                 ;clear interrupts I=0 (NOW ALLOW IRS)
-F7BE : 43         coma                ;INVERT INPUT
-F7BF : 84 3F      anda  #$3F          ;(#$3F) MASK GARB
-F7C1 : 4D         tsta
-F7C2 : 27 34      beq  LF7F8          ;(IRQ3)
-F7C4 : 4A         deca
-F7C5 : 81 14      cmpa  #$14          ;(#$12+2)
-F7C7 : 22 08      bhi  LF7D1          ;(1$)
-F7C9 : BD F6 76   jsr  LF676          ;(GWLD)
-F7CC : BD F6 DC   jsr  LF6DC          ;(GWAVE)
-F7CF : 20 27      bra  LF7F8          ;(IRQ3)
-;*
-;1$:
-F7D1 : 81 1F      cmpa  #$1F
-F7D3 : 22 0F      bhi  LF7E4
-F7D5 : 80 15      suba  #$15
-F7D7 : CE F8 22   ldx  #$F822         ;(#JMPTBL)
-F7DA : 48         asla
-F7DB : BD F7 FA   jsr  LF7FA          ;(ADDX)
-F7DE : EE 00      ldx  $00,x
-F7E0 : AD 00      jsr  $00,x          ;INFO: index jump
-F7E2 : 20 14      bra  LF7F8          ;(IRQ3)
-;
-;3$:
-F7E4 : 81 22      cmpa  #$22
-F7E6 : 22 07      bhi  LF7EF          ;(4$)
-F7E8 : 80 20      suba  #$20
-F7EA : BD FF 4A   jsr  LFF4A          ;(JKNOIS)
-F7ED : 20 09      bra  LF7F8          ;(IRQ3)
-;4$:
-F7EF : 81 26      cmpa  #$26
-F7F1 : 22 05      bhi  LF7F8          ;(IRQ3)
-F7F3 : 80 23      suba  #$23
-F7F5 : BD FF 6C   jsr  LFF6C          ;(WALSH)
-;5$:
-F7F8 : 20 FE      bra  LF7F8          ;(*)
+F7BE : 43         coma                ;complement 1s A INVERT INPUT
+F7BF : 84 3F      anda  #$3F          ;and A with 3Fh (#$3F) MASK GARB
+F7C1 : 4D         tsta                ;test A
+F7C2 : 27 34      beq  LF7F8          ;branch Z=1 IRQX
+F7C4 : 4A         deca                ;decr A
+F7C5 : 81 14      cmpa  #$14          ;compare A with 14h (#$12+2)
+F7C7 : 22 08      bhi  LF7D1          ;branch C+Z=0 IRQ1$
+F7C9 : BD F6 76   jsr  LF676          ;jump sub GWLD
+F7CC : BD F6 DC   jsr  LF6DC          ;jump sub GWAVE
+F7CF : 20 27      bra  LF7F8          ;branch always IRQX
+;IRQ1$
+F7D1 : 81 1F      cmpa  #$1F          ;compare A with 1Fh
+F7D3 : 22 0F      bhi  LF7E4          ;branch C+Z=0 IRQ3$
+F7D5 : 80 15      suba  #$15          ;sub A with 15h (SUB OFFSET)
+F7D7 : CE F8 22   ldx  #$F822         ;load X with F822h (#JMPTBL)
+F7DA : 48         asla                ;arith shift left A (DOUBLE FOR ADDRESSING)
+F7DB : BD F7 FA   jsr  LF7FA          ;jump sub ADDX
+F7DE : EE 00      ldx  $00,x          ;load X with addr X+00h
+F7E0 : AD 00      jsr  $00,x          ;jump addr X+00h
+F7E2 : 20 14      bra  LF7F8          ;branch always IRQX
+;IRQ3$:
+F7E4 : 81 22      cmpa  #$22          ;compare A with 22h
+F7E6 : 22 07      bhi  LF7EF          ;branch C+Z=0 IRQ4$
+F7E8 : 80 20      suba  #$20          ;sub A with 20h (SUB OFFSET)
+F7EA : BD FF 4A   jsr  LFF4A          ;jump sub JKNOIS
+F7ED : 20 09      bra  LF7F8          ;branch always IRQX
+;IRQ4$:
+F7EF : 81 26      cmpa  #$26          ;compare A with 26h
+F7F1 : 22 05      bhi  LF7F8          ;branch C+Z=0 IRQX
+F7F3 : 80 23      suba  #$23          ;sub A with 23h (SUB OFFSET)
+F7F5 : BD FF 6C   jsr  LFF6C          ;jump sub WALSH
+;IRQX
+F7F8 : 20 FE      bra  LF7F8          ;branch always here(*)
 ;*************************************;
 ;* ADD A TO INDEX REGISTER
 ;*************************************;
@@ -1532,35 +1212,35 @@ F807 : 39         rts
 ;*************************************;
 ;NMI:
 F808 : 0F         sei                 ;set interrupt mask
-F809 : 8E 00 7F   lds  #$007F         ;(#ENDRAM) RESET THE STACK
-F80C : CE FF FF   ldx  #$FFFF
-F80F : 5F         clrb
+F809 : 8E 00 7F   lds  #$007F         ;load SP with 007Fh (#ENDRAM) RESET THE STACK
+F80C : CE FF FF   ldx  #$FFFF         ;load X with FFFFh
+F80F : 5F         clrb                ;clear B
 ;NMI1:
-F810 : E9 00      adcb  $00,x
-F812 : 09         dex
-F813 : 8C F0 00   cpx  #$F000
+F810 : E9 00      adcb  $00,x         ;add C+B with X+00h
+F812 : 09         dex                 ;decr X
+F813 : 8C F0 00   cpx  #$F000         ;compare X with F000h
 F816 : 26 F8      bne  LF810          ;branch Z=0 NMI1
-F818 : E1 00      cmpb  $00,x
+F818 : E1 00      cmpb  $00,x         ;compare B with X+00h
 F81A : 27 01      beq  LF81D          ;branch Z=1 NMI2
 F81C : 3E         wai                 ;wait interrupts, PC+1
 ;NMI2:
-F81D : BD F1 52   jsr  LF152          ;(KNOCK)
-F820 : 20 E6      bra  LF808          ;(NMI) KEEP LOOPING
+F81D : BD F1 52   jsr  LF152          ;jump sub KNOCK
+F820 : 20 E6      bra  LF808          ;branch always NMI (KEEP LOOPING)
 ;*************************************;
 ;*SPECIAL ROUTINE JUMP TABLE
 ;*************************************;
 ;JMPTBL
-F822 : F5 F4 
-F824 : F0 D4 
-F826 : F0 D9 
-F828 : F0 C8 
-F92A : F1 BE 
-F82C : F1 C9 
-F82E : F1 D2 
-F830 : F1 52 
-F832 : F0 DE 
-F834 : F0 01 
-F836 : FF 44 
+F822 : F5 F4                          ;LITE
+F824 : F0 D4                          ;SND4
+F826 : F0 D9                          ;SND5
+F828 : F0 C8                          ;THUNDR
+F92A : F1 BE                          ;ATARI
+F82C : F1 C9                          ;PERK$$
+F82E : F1 D2                          ;SQRT
+F830 : F1 52                          ;KNOCK
+F832 : F0 DE                          ;WHIST
+F834 : F0 01                          ;RESET
+F836 : FF 44                          ;WINGDN
 ;*************************************;
 ;*GWAVE TABLE
 ;*************************************;
@@ -1641,7 +1321,7 @@ F8A0 : 8A 7F    "  "    oraa  #$7F
 F8A2 : 75    "u"    db  $75
         ;
 F8A3 : 6A 5F    "j_"    dec  $5F,x
-F8A5 : 54    "T"    lsrb
+F8A5 : 54         lsrb
 F8A6 : 4A    "J"    deca
 F8A7 : 40    "@"    nega
 F8A8 : 37    "7"    pshb
@@ -1676,7 +1356,7 @@ F8BC : 25 2E    "%."    bcs  LF8EC
 F8BE : 37    "7"    pshb
 F8BF : 40    "@"    nega
 F8C0 : 4A    "J"    deca
-F8C1 : 54    "T"    lsrb
+F8C1 : 54         lsrb
 F8C2 : 5F    "_"    clrb
 F8C3 : 6A 75    "ju"    dec  $75,x
 F8C5 : 7F 10 59    "  Y"    clr  X1059
@@ -1740,7 +1420,7 @@ F908 : C9 A3    "  "    adcb  #$A3
         ;
 F90A : 7B 5E    "{^"    db  $7B, $5E
         ;
-F90C : 54    "T"    lsrb
+F90C : 54         lsrb
         ;
 F90D : 5E 7B A3    "^{ "    db  $5E, $7B, $A3
         ;
@@ -2053,7 +1733,7 @@ FA4E : 43    "C"    coma
 FA4F : 04    " "    db  $04
         ;
 FA50        LFA50:
-FA50 : 44    "D"    lsra
+FA50 : 44         lsra
         ;
 FA51 : 05 45    " E"    db  $05, $45
         ;
@@ -2092,45 +1772,39 @@ FA74 : EE AA    "  "    ldx  $AA,x
 FA76 : 50    "P"    negb
         ;
 FA77 : 00    " "    db  $00
-        ;
-FA78 : 28 43    "(C"    bvc  LFABD
-FA7A        LFA7A:
-FA7A : 29 31    ")1"    bvs  LFAAD
-FA7C : 39    "9"    rts
-        ;
-FA7D : 38    "8"    db  $38
-        ;
-FA7E : 32    "2"    pula
-FA7F : 20 57    " W"    bra  LFAD8
-        ;
-FA81 : 49    "I"    rola
-FA82 : 4C    "L"    inca
-FA83 : 4C    "L"    inca
-FA84 : 49    "I"    rola
-        ;
-FA85 : 41    "A"    db  $41
-        ;
-FA86 : 4D    "M"    tsta
-FA87 : 53    "S"    comb
-FA88 : 20 45    " E"    bra  LFACF
-        ;
-FA8A : 4C    "L"    inca
-        ;
-FA8B : 45    "E"    db  $45
-        ;
-FA8C : 43    "C"    coma
-FA8D : 54    "T"    lsrb
-        ;
-FA8E : 52    "R"    db  $52
-        ;
-FA8F : 4F    "O"    clra
-        ;
-FA90 : 4E    "N"    db  $4E
-        ;
-FA91 : 49    "I"    rola
-FA92 : 43    "C"    coma
-FA93 : 53    "S"    comb
-FA94        LFA94:
+;*************************************;
+;*  AND THE EVER POPULAR COPYRIGHT MESSAGE
+;*************************************;
+FA78 : 28 43    "(C"                  ;(C)
+FA7A : 29 31    ")1"                  ;1982
+FA7C : 39    "9"                      ;
+FA7D : 38    "8"                      ;
+FA7E : 32    "2"                      ;
+FA7F : 20 57    " W"                  ;WILLIAMS
+FA81 : 49    "I"                      ;
+FA82 : 4C    "L"                      ;
+FA83 : 4C    "L"                      ;
+FA84 : 49    "I"                      ;
+FA85 : 41    "A"                      ;
+FA86 : 4D    "M"                      ;
+FA87 : 53    "S"                      ;
+FA88 : 20 45    " E"                  ;ELECTRONICS
+FA8A : 4C    "L"                      ;
+FA8B : 45    "E"                      ;
+FA8C : 43    "C"                      ;
+FA8D : 54    "T"                      ;
+FA8E : 52    "R"                      ;
+FA8F : 4F    "O"                      ;
+FA90 : 4E    "N"                      ;
+FA91 : 49    "I"                      ;
+FA92 : 43    "C"                      ;
+FA93 : 53    "S"                      ;
+;*************************************;
+; SUBTTL WAVE PLAYER AND PITCH MODIFICATION
+;*************************************;
+;* PLAY A SAMPLE, REMAINING DELAY IN B.  TOTAL DELAY = MIN (60,B*6) MICS.
+;
+;NTHRVC
 FA94 : C0 0D    "  "    subb  #$0D
 FA96 : 37    "7"    pshb
 FA97 : BD 00 2C    "  ,"    jsr  L002C
@@ -2159,8 +1833,14 @@ FAB8 : F7 04 00    "   "    stab  X0400
 FABB : 84 0F    "  "    anda  #$0F
 FABD        LFABD:
 FABD : 39    "9"    rts
-        ;
-FABE        LFABE:
+;*************************************;
+; Walsh Machine
+;*************************************;
+;* PLAYS WAVE AND ALTERS PITCH ACCORDING TO PITCH CMDS.
+;* SMPPER IS INITIAL PITCH,  PCMDPT IS START PITCH PROGRAM,
+;* FCMDPT IS START WAVE MODIFIER (FILTER) PROGRAM.
+;
+;WSM
 FABE : 4F    "O"    clra
 FABF : CE 00 10    "   "    ldx  #$0010
 FAC2 : C6 61    " a"    ldab  #$61
@@ -2241,9 +1921,9 @@ FB41 : 08    " "    inx
 FB42 : DF 0A    "  "    stx  X000A
 FB44 : 97 29    " )"    staa  X0029
 FB46 : 84 70    " p"    anda  #$70
-FB48 : 44    "D"    lsra
-FB49 : 44    "D"    lsra
-FB4A : 44    "D"    lsra
+FB48 : 44         lsra
+FB49 : 44         lsra
+FB4A : 44         lsra
 FB4B : 5F    "_"    clrb
 FB4C : 8B 22    " ""    adda  #$22
 FB4E : C9 FC    "  "    adcb  #$FC
@@ -2488,9 +2168,9 @@ FCC4 : 39    "9"    rts
 FCC5 : 5F    "_"    clrb
 FCC6 : 96 39    " 9"    ldaa  X0039
 FCC8 : 84 70    " p"    anda  #$70
-FCCA : 44    "D"    lsra
-FCCB : 44    "D"    lsra
-FCCC : 44    "D"    lsra
+FCCA : 44         lsra
+FCCB : 44         lsra
+FCCC : 44         lsra
 FCCD : 8B 32    " 2"    adda  #$32
 FCCF : C9 FC    "  "    adcb  #$FC
 FCD1 : D7 37    " 7"    stab  X0037
@@ -2655,7 +2335,7 @@ FDD5 : 01    " "    nop
 FDD6 : 39    "9"    rts
         ;
 FDD7 : D6 39    " 9"    ldab  X0039
-FDD9 : 54    "T"    lsrb
+FDD9 : 54         lsrb
 FDDA : C4 07    "  "    andb  #$07
 FDDC : CA 60    " `"    orab  #$60
 FDDE : D7 32    " 2"    stab  X0032
@@ -2714,7 +2394,7 @@ FE37 : D7 37    " 7"    stab  X0037
 FE39 : 08    " "    inx
 FE3A : DF 08    "  "    stx  X0008
 FE3C : D6 39    " 9"    ldab  X0039
-FE3E : 54    "T"    lsrb
+FE3E : 54         lsrb
 FE3F : 24 18    "$ "    bcc  LFE59
 FE41 : CE FE 73    "  s"    ldx  #$FE73
 FE44 : DF 2D    " -"    stx  X002D
@@ -2894,81 +2574,73 @@ FF3A : 04 20 F8 FF 20                 ; 1E WING DOWN PART 1
 FF3F : 10 F0 10 01 01                 ;  "            "   2
 ;*************************************;
 ;WINGDN
-FF44 : 86 03      ldaa  #$03          ;(#3)
-FF46 : 8D 02      bsr  LFF4A          ;(JKNOIS)
-FF48 : 86 04      ldaa  #$04          ;(#4)
+FF44 : 86 03      ldaa  #$03          ;load A with 03h (#3)
+FF46 : 8D 02      bsr  LFF4A          ;branch sub JKNOIS
+FF48 : 86 04      ldaa  #$04          ;load A with 04h (#4)
 ;JKNOIS:
-FF4A : CE D9 39   ldx  #$D939         ;(#$D939) GOOD SEED
-FF4D : DF 00      stx  $00            ;(HI)
-FF4F : 16         tab
-FF50 : 48         asla
-FF51 : 48         asla
-FF52 : 1B         aba
-FF53 : CE FF 2B   ldx  #$FF2B         ;(#JNOIST)
-FF56 : BD F7 FA   jsr  LF7FA          ;(ADDX)
-FF59 : 7E F4 CA   jmp  LF4CA          ;(NOISLG)
+FF4A : CE D9 39   ldx  #$D939         ;load X with D939h (#$D939) GOOD SEED
+FF4D : DF 00      stx  $00            ;store X in addr 00 (HI)
+FF4F : 16         tab                 ;transfer A to B
+FF50 : 48         asla                ;arith shift left A
+FF51 : 48         asla                ;arith shift left A
+FF52 : 1B         aba                 ;add B to A
+FF53 : CE FF 2B   ldx  #$FF2B         ;load X with FF2Bh (#JNOIST)
+FF56 : BD F7 FA   jsr  LF7FA          ;jump sub ADDX
+FF59 : 7E F4 CA   jmp  LF4CA          ;jump NOISLG
 ;*************************************;
-;Walsh jump table
+;Walsh jump table - pairs
 ;*************************************;
 ;WALSHT
 FF5C : FE 9A                          ;(SCREMW) $22 PTERODACTYL SCREAM
 FF5E : FE E0                          ;(SCREMP)
+;
 FF60 : FE 9A                          ;(SCREMW) 23 END OF ABOVE
 FF62 : FE F0                          ;(SCDNP)
+;
 FF64 : FE F3                          ;(SKIDW) 24 OSTRICH STOP
 FF66 : FE FF                          ;(SKIDP)
+;
 FF68 : FE F3                          ;(SKIDW) 25 END SKID FOR SHORT ONES
 FF6A : FF 24                          ;(SKIDEP)
 ;*************************************;
-;
-FF6C : 5F         clrb                ;
-FF6D : D7 0D      stab  $0D           ;(SMPPER+1)
-FF6F : 48         asla
-FF70 : 48         asla
-FF71 : 8B 5C      adda  #$5C          ;(#WALSHT!.255)
-FF73 : C9 FF      adcb  #$FF          ;(#WALSH/256)
-FF75 : D7 0A      stab  $0A
-FF77 : 97 0B      staa  $0B
-FF79 : DE 0A      ldx  $0A
-FF7B : EE 00      ldx  $00,x
-FF7D : DF 08      stx  $08
-FF7F : DE 0A      ldx  $0A
-FF81 : EE 02      ldx  $02,x
-FF83 : E6 00      ldab  $00,x
-FF85 : D7 0C      stab  $0C
-FF87 : 08         inx
-FF88 : DF 0A      stx  $0A
-FF8A : CE FE 88   ldx  #$FE88         ;(#ODDTBL)
-FF8D : DF 0E      stx  $0E
-FF8F : 7E FA BE   jmp  LFABE          ;(WSM)
+;Walsh Sound Machine 
+;*************************************;
+;WALSH
+FF6C : 5F         clrb                ;clear B
+FF6D : D7 0D      stab  $0D           ;store B in addr 0D (SMPPER+1)
+FF6F : 48         asla                ;arith shift left A
+FF70 : 48         asla                ;arith shift left A
+FF71 : 8B 5C      adda  #$5C          ;add A with 5Ch (#WALSHT!.255)
+FF73 : C9 FF      adcb  #$FF          ;add C+B + FFh (#WALSH/256)
+FF75 : D7 0A      stab  $0A           ;store B in addr 0A
+FF77 : 97 0B      staa  $0B           ;store A in addr 0B
+FF79 : DE 0A      ldx  $0A            ;load X with addr 0A (WALSHT)
+FF7B : EE 00      ldx  $00,x          ;load X with X+00h (addr in WALSHT)
+FF7D : DF 08      stx  $08            ;store X in addr 08
+FF7F : DE 0A      ldx  $0A            ;load X with addr 0A
+FF81 : EE 02      ldx  $02,x          ;load X with X+02h (next addr in WALSHT)
+FF83 : E6 00      ldab  $00,x         ;load B with X+00h
+FF85 : D7 0C      stab  $0C           ;store B in addr 0C
+FF87 : 08         inx                 ;incr X
+FF88 : DF 0A      stx  $0A            ;store X in addr 0A
+FF8A : CE FE 88   ldx  #$FE88         ;load X with FE88h (#ODDTBL)
+FF8D : DF 0E      stx  $0E            ;store X in addr 0E
+FF8F : 7E FA BE   jmp  LFABE          ;jump WSM
 ;*************************************;
 ; zero padding
-FF92 : 00 00 00 00 
-FF96 : 00 00 00 00 
-FF9A : 00 00 00 00 
-FF9E : 00 00 00 00 
-FFA2 : 00 00 00 00 
-FFA6 : 00 00 00 00 
-FFAA : 00 00 00 00 
-FFAE : 00 00 00 00 
-FFB2 : 00 00 00 00 
-FFB6 : 00 00 
-FFB8 : 00 00 00 00 
-FFBC : 00 00 00 00 
-FFC0 : 00 00 00 00 
-FFC4 : 00 00 00 00 
-FFC8 : 00 00 00 00 
-FFCC : 00 00 00 00 
-FFD0 : 00 00 00 00 
-FFD4 : 00 00 00 00 
-FFD8 : 00 00 00 00 
-FFDC : 00 00 00 00 
-FFE0 : 00 00 00 00 
-FFE4 : 00 00 00 00 
-FFE8 : 00 00 00 00 
-FFEC : 00 00 00 00 
-FFF0 : 00 00 00 00 
-FFF4 : 00 00 00 00 
+FF92 : 00 00 00 00 00 00 00 00 
+FF9A : 00 00 00 00 00 00 00 00 
+FFA2 : 00 00 00 00 00 00 00 00 
+FFAA : 00 00 00 00 00 00 00 00 
+FFB2 : 00 00 00 00 00 00 
+FFB8 : 00 00 00 00 00 00 00 00 
+FFC0 : 00 00 00 00 00 00 00 00 
+FFC8 : 00 00 00 00 00 00 00 00 
+FFD0 : 00 00 00 00 00 00 00 00 
+FFD8 : 00 00 00 00 00 00 00 00 
+FFE0 : 00 00 00 00 00 00 00 00 
+FFE8 : 00 00 00 00 00 00 00 00 
+FFF0 : 00 00 00 00 00 00 00 00 
 ;*************************************;
 ;Motorola vector table
 ;*************************************;
