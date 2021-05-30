@@ -1394,12 +1394,12 @@ F7C1 : BD FF 5C   jsr  LFF5C          ;(WALSH)
 ;5$:
 F7C4 : 81 27      cmpa  #$27          ;(#$25+2)
 F7C6 : 22 05      bhi  LF7CD          ;(6$)
-F7C8 : BD F5 8E   jsr  LF58E          ;
+F7C8 : BD F5 8E   jsr  LF58E          ;jump sub TILT
 F7CB : 20 12      bra  LF7DF          ;(IRQ3)
 ;6$:
 F7CD : 81 28      cmpa  #$28          ;(#$26+2)
 F7CF : 22 05      bhi  LF7D6          ;(7$)
-F7D1 : BD F5 AB   jsr  LF5AB          ;
+F7D1 : BD F5 AB   jsr  LF5AB          ;jump sub CANNON
 F7D4 : 20 09      bra  LF7DF          ;(IRQ3)
 ;7$:
 F7D6 : 81 29      cmpa  #$29          ;(#$27+2)
@@ -2680,13 +2680,10 @@ FF49 : 7E F4 64   jmp  LF464          ;(NOISLG)
 ;WALSHT
 FF4C : FE 8A                          ;(SCREMW) $22 PTERODACTYL SCREAM
 FF4E : FE D0                          ;(SCREMP)
-
 FF50 : FE 8A                          ;(SCREMW) 23 END OF ABOVE
 FF52 : FE E0                          ;(SCDNP)
-
 FF54 : FE E3                          ;(SKIDW) 24 OSTRICH STOP
 FF56 : FE EF                          ;(SKIDP)
-;
 FF58 : FE E3                          ;(SKIDW) 25 END SKID FOR SHORT ONES
 FF5A : FF 14                          ;(SKIDEP)
 ;*************************************;
