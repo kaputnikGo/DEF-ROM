@@ -602,7 +602,7 @@ F4A1 : 39         rts                 ;return subroutine
 F4A2 : 16         tab                 ;transfer A to B
 F4A3 : CE 04 00   ldx  #$0400         ;load X with 0400h
 ;LF4A6:
-F4A6 : 17         tba                 ;transfer A to B
+F4A6 : 17         tba                 ;transfer B to A
 ;LF4A7:
 F4A7 : 4A         deca                ;decr A
 F4A8 : 26 FD      bne  LF4A7          ;branch Z=0
@@ -636,162 +636,161 @@ F4C9 : 39         rts
 ;*LOAD NOISE AND GO
 ;*************************************;
 ;NOISLG:
-F4CA : 8D E9    "  "    bsr  LF4B5
+F4CA : 8D E9      bsr  LF4B5
 ;*************************************;
 ;*NOISE INIT
 ;*************************************;
 ;NOIN
-F4CC : 8D 30    " 0"    bsr  LF4FE
+F4CC : 8D 30      bsr  LF4FE
 ;*************************************;
 ;*NOISE LOOP
 ;*************************************;
 ;NO1
-F4CE : 8D 58    " X"    bsr  LF528
-F4D0 : 96 29    " )"    ldaa  X0029
-F4D2 : 91 2A    " *"    cmpa  X002A
-F4D4 : 26 F8    "& "    bne  LF4CE
-F4D6 : 59    "Y"    rolb
-F4D7 : F7 04 00    "   "    stab  X0400
-F4DA : 8D 2D    " -"    bsr  LF509
-F4DC : 8D 38    " 8"    bsr  LF516
-F4DE : 8D 5C    " \"    bsr  LF53C
-F4E0 : 7D 00 0E    "}  "    tst  X000E
-F4E3 : 27 E4    "' "    beq  LF4C9
-F4E5 : 7D 00 0F    "}  "    tst  X000F
-F4E8 : 26 E4    "& "    bne  LF4CE
-F4EA : 7D 00 12    "}  "    tst  X0012
-F4ED : 27 DF    "' "    beq  LF4CE
-F4EF : 2B 05    "+ "    bmi  LF4F6
-F4F1 : 7C 00 2A    "| *"    inc  X002A
-F4F4 : 20 D8    "  "    bra  LF4CE
+F4CE : 8D 58      bsr  LF528
+F4D0 : 96 29      ldaa  $29
+F4D2 : 91 2A      cmpa  $2A
+F4D4 : 26 F8      bne  LF4CE
+F4D6 : 59         rolb
+F4D7 : F7 04 00   stab  $0400
+F4DA : 8D 2D      bsr  LF509
+F4DC : 8D 38      bsr  LF516
+F4DE : 8D 5C      bsr  LF53C
+F4E0 : 7D 00 0E   tst  $000E
+F4E3 : 27 E4      beq  LF4C9
+F4E5 : 7D 00 0F   tst  $000F
+F4E8 : 26 E4      bne  LF4CE
+F4EA : 7D 00 12   tst  $X0012
+F4ED : 27 DF      beq  LF4CE
+F4EF : 2B 05      bmi  LF4F6
+F4F1 : 7C 00 2A   inc  $002A
+F4F4 : 20 D8      bra  LF4CE
 ;NO3:
-F4F6 : 7A 00 2A    "z *"    dec  X002A
-F4F9 : 7A 00 29    "z )"    dec  X0029
-F4FC : 20 D0    "  "    bra  LF4CE
+F4F6 : 7A 00 2A   dec  $4002A
+F4F9 : 7A 00 29   dec  $0029
+F4FC : 20 D0      bra  LF4CE
 ;NSUB:
-F4FE : 7F 00 0F    "   "    clr  X000F
-F501 : 96 2A    " *"    ldaa  X002A
-F503 : 97 29    " )"    staa  X0029
-F505 : 7F 00 28    "  ("    clr  X0028
-F508 : 39    "9"    rts
+F4FE : 7F 00 0F   clr  $000F
+F501 : 96 2A      ldaa  $2A
+F503 : 97 29      staa  $29
+F505 : 7F 00 28   clr  $0028
+F508 : 39         rts
 ;*************************************;
 ;* 23 CYCLES FOR EACH SUBROUTINE PLUS CALLING OVERHEAD
 ;*
 ;*
 ;NOISE1:
-F509 : 96 01    "  "    ldaa  X0001
+F509 : 96 01      ldaa  $01
 F50B : 44         lsra
 F50C : 44         lsra
 F50D : 44         lsra
-F50E : 98 01    "  "    eora  X0001
-F510 : 97 23    " #"    staa  X0023
-F512 : 08    " "    inx
-F513 : 84 07    "  "    anda  #$07
-F515 : 39    "9"    rts
+F50E : 98 01      eora  $01
+F510 : 97 23      staa  $23
+F512 : 08         inx
+F513 : 84 07      anda  #$07
+F515 : 39         rts
 ;*
 ;NOISE2:
-F516 : 96 23    " #"    ldaa  X0023
+F516 : 96 23      ldaa  $23
 F518 : 44         lsra
-F519 : 76 00 00    "v  "    ror  X0000
-F51C : 76 00 01    "v  "    ror  X0001
-F51F : 86 00    "  "    ldaa  #$00
-F521 : 24 02    "$ "    bcc  LF525
-F523 : 96 0E    "  "    ldaa  X000E
+F519 : 76 00 00   ror  $0000
+F51C : 76 00 01   ror  $0001
+F51F : 86 00      ldaa  #$00
+F521 : 24 02      bcc  LF525
+F523 : 96 0E      ldaa  $0E
 ;NOISE3:
-F525 : 97 28    " ("    staa  X0028
-F527 : 39    "9"    rts
+F525 : 97 28      staa  $28
+F527 : 39         rts
 ;*
 ;RNT:
-F528 : 96 2A    " *"    ldaa  X002A
-F52A : 7A 00 29    "z )"    dec  X0029
-F52D : 27 04    "' "    beq  LF533
-F52F : 08    " "    inx
-F530 : 09    " "    dex
-F531 : 20 08    "  "    bra  LF53B
+F528 : 96 2A      ldaa  $2A
+F52A : 7A 00 29   dec  $0029
+F52D : 27 04      beq  LF533
+F52F : 08         inx
+F530 : 09         dex
+F531 : 20 08      bra  LF53B
 ;NW0:
-F533 : 97 29    " )"    staa  X0029
-F535 : D6 28    " ("    ldab  X0028
+F533 : 97 29      staa  $29
+F535 : D6 28      ldab  $28
 F537 : 54         lsrb
-F538 : 7C 00 0F    "|  "    inc  X000F
+F538 : 7C 00 0F   inc  $000F
 ;NNW1:
-F53B : 39    "9"    rts
+F53B : 39         rts
 ;*
 ;RNA:
-F53C : 96 25    " %"    ldaa  X0025
-F53E : 91 0F    "  "    cmpa  X000F
-F540 : 27 04    "' "    beq  LF546
-F542 : 08    " "    inx
-F543 : 09    " "    dex
-F544 : 20 09    "  "    bra  LF54F
+F53C : 96 25      ldaa  $25
+F53E : 91 0F      cmpa  $0F
+F540 : 27 04      beq  LF546
+F542 : 08         inx
+F543 : 09         dex
+F544 : 20 09      bra  LF54F
 ;NW2:
-F546 : 7F 00 0F    "   "    clr  X000F
-F549 : 96 0E    "  "    ldaa  X000E
-F54B : 90 0D    "  "    suba  X000D
-F54D : 97 0E    "  "    staa  X000E
+F546 : 7F 00 0F   clr  $000F
+F549 : 96 0E      ldaa  $0E
+F54B : 90 0D      suba  $0D
+F54D : 97 0E      staa  $0E
 ;NW3:
-F54F : 39    "9"    rts
+F54F : 39         rts
 ;*************************************;
 ;* NOISE WITH WHISTLE MAIN LOOP
 ;*************************************;
 ;NINIT
-F550 : 7F 00 1C    "   "    clr  X001C
-F553 : 7F 00 26    "  &"    clr  X0026
-F556 : 86 0E    "  "    ldaa  #$0E
-F558 : 97 1D    "  "    staa  X001D
-F55A : 7F 00 22    "  ""    clr  X0022
+F550 : 7F 00 1C   clr  $001C
+F553 : 7F 00 26   clr  $0026
+F556 : 86 0E      ldaa  #$0E
+F558 : 97 1D      staa  $1D
+F55A : 7F 00 22   clr  $0022
 ;NINIT2
-F55D : 8D 9F    "  "    bsr  LF4FE
+F55D : 8D 9F      bsr  LF4FE
 ;WIN:
-F55F : 8D A8    "  "    bsr  LF509
-F561 : BD F5 E6    "   "    jsr  LF5E6
-F564 : 8D B0    "  "    bsr  LF516
-F566 : BD F5 E6    "   "    jsr  LF5E6
-F569 : 8D BD    "  "    bsr  LF528
-F56B : 8D 79    " y"    bsr  LF5E6
-F56D : 8D CD    "  "    bsr  LF53C
-F56F : 8D 75    " u"    bsr  LF5E6
-F571 : 8D 0A    "  "    bsr  LF57D
-F573 : 8D 71    " q"    bsr  LF5E6
-F575 : 8D 1D    "  "    bsr  LF594
-F577 : 8D 6D    " m"    bsr  LF5E6
-F579 : 8D 52    " R"    bsr  LF5CD
-F57B : 20 E2    "  "    bra  LF55F
+F55F : 8D A8      bsr  LF509
+F561 : BD F5 E6   jsr  LF5E6
+F564 : 8D B0      bsr  LF516
+F566 : BD F5 E6   jsr  LF5E6
+F569 : 8D BD      bsr  LF528
+F56B : 8D 79      bsr  LF5E6
+F56D : 8D CD      bsr  LF53C
+F56F : 8D 75      bsr  LF5E6
+F571 : 8D 0A      bsr  LF57D
+F573 : 8D 71      bsr  LF5E6
+F575 : 8D 1D      bsr  LF594
+F577 : 8D 6D      bsr  LF5E6
+F579 : 8D 52      bsr  LF5CD
+F57B : 20 E2      bra  LF55F
 ;*************************************;
 ;TRICNT:
-F57D : 96 21    " !"    ldaa  X0021
-F57F : 7A 00 1D    "z  "    dec  X001D
-F582 : 27 07    "' "    beq  LF58B
-F584 : B6 00 0E    "   "    ldaa  X000E
-F587 : 26 0A    "& "    bne  LF593
-F589 : 20 68    " h"    bra  LF5F3
+F57D : 96 21      ldaa  X0021
+F57F : 7A 00 1D   dec  X001D
+F582 : 27 07      beq  LF58B
+F584 : B6 00 0E   ldaa  X000E
+F587 : 26 0A      bne  LF593
+F589 : 20 68      bra  LF5F3
 ;NW4:
-F58B : 97 1D    "  "    staa  X001D
-F58D : 96 1C    "  "    ldaa  X001C
-F58F : 9B 26    " &"    adda  X0026
-F591 : 97 1C    "  "    staa  X001C
-F593        LF593:
-F593 : 39    "9"    rts
+F58B : 97 1D      staa  X001D
+F58D : 96 1C      ldaa  X001C
+F58F : 9B 26      adda  X0026
+F591 : 97 1C      staa  X001C
+F593 : 39         rts
 ;*
 ;TRIFRQ:
-F594 : 96 1C    "  "    ldaa  X001C
-F596 : 91 24    " $"    cmpa  X0024
-F598 : 27 07    "' "    beq  LF5A1
-F59A : 08    " "    inx
-F59B : 96 0E    "  "    ldaa  X000E
-F59D : 26 2A    "&*"    bne  LF5C9
-F59F : 20 29    " )"    bra  LF5CA
+F594 : 96 1C      ldaa  X001C
+F596 : 91 24      cmpa  X0024
+F598 : 27 07      beq  LF5A1
+F59A : 08         inx
+F59B : 96 0E      ldaa  X000E
+F59D : 26 2A      bne  LF5C9
+F59F : 20 29      bra  LF5CA
 ;NW6:
-F5A1 : 7F 00 1C    "   "    clr  X001C
-F5A4 : 7F 00 26    "  &"    clr  X0026
-F5A7 : 7F 00 22    "  ""    clr  X0022
-F5AA : DE 1E    "  "    ldx  X001E
+F5A1 : 7F 00 1C   clr  X001C
+F5A4 : 7F 00 26   clr  X0026
+F5A7 : 7F 00 22   clr  X0022
+F5AA : DE 1E      ldx  X001E
 ;WISLD
-F5AC : A6 00    "  "    ldaa  $00,x
-F5AE : 97 1B    "  "    staa  X001B
-F5B0 : 27 17    "' "    beq  LF5C9
-F5B2 : A6 01    "  "    ldaa  $01,x
-F5B4 : 97 20    "  "    staa  X0020
-F5B6 : A6 02    "  "    ldaa  $02,x
+F5AC : A6 00      ldaa  $00,x
+F5AE : 97 1B      staa  X001B
+F5B0 : 27 17      beq  LF5C9
+F5B2 : A6 01      ldaa  $01,x
+F5B4 : 97 20      staa  X0020
+F5B6 : A6 02      ldaa  $02,x
 F5B8 : 97 27    " '"    staa  X0027
 F5BA : A6 03    "  "    ldaa  $03,x
 F5BC : 97 21    " !"    staa  X0021
