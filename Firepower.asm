@@ -967,9 +967,9 @@ FC9C : 26 FD      bne  LFC9B          ;branch Z=0 NMI3
 FC9E : BD F9 81   jsr  LF981          ;jump sub KNOCK
 FCA1 : BD F9 81   jsr  LF981          ;jump sub KNOCK
 FCA4 : BD F9 81   jsr  LF981          ;jump sub KNOCK
-FCA7 : 86 80      ldaa  #$80          ;load  Awith 80h
+FCA7 : 86 80      ldaa  #$80          ;load A with 80h
 FCA9 : B7 04 02   staa  $0402         ;store A in addr 0402
-FCAC : 86 01      ldaa  #$01          ;load A wuth 01h
+FCAC : 86 01      ldaa  #$01          ;load A with 01h
 FCAE : BD FA 88   jsr  LFA88          ;jump sub GWLD
 FCB1 : BD FA EE   jsr  LFAEE          ;jump sub GWAVE
 FCB4 : 86 0B      ldaa  #$0B          ;load A with 0Bh
@@ -1124,7 +1124,7 @@ FEED : 10 10 30 60 C0 E0              ;
 FEF3 : 01 01 02 02 03 04 05 06        ;SPNSND
 FEFB : 07 08 09 0A 0C                 ;
 ;
-FF00 : 08 80 10 78 18 70 20 60        ;UNKN1
+FF00 : 08 80 10 78 18 70 20 60        ;YUKSND
 FF08 : 28 58 30 50 40 48              ;
 ;
 FF0E : 04 05 06 07 08 0A 0C 0E        ;UNKN2

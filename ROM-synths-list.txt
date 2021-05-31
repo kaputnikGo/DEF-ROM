@@ -36,6 +36,24 @@ Notes about PROMS (pre ROM 1) as 512 byte code, multiplied x4 to fit into a 2716
 All have slighlty different code layouts for each game. Dasmx checksum will be for the 2716 unless noted otherwise.
 Also PIA/DAC addr is 8400 or 0400, assuming on sound board that addr above $400 is ignored, as marked on some schematics.
 
+
+SPEECH ROM INFO:
+Speech ROM ICs: 4($E000), 5($C000), 6($D000), 7($B000)
+
+IC1 Continuously Variable Slope Delta Modulator/Demodulator
+C-8226 Speech Board uses MC3417 
+C-8228 Speech Board uses MC55516
+
+Speech Clock uses PIA-CB2 Peripheral Control - output mode is TTL compatible
+Speech clck SPCH ROM -> sound PIA CB2 (0403) pin 19 -> IC1 CLin pin14(3417) or pin9(55516)
+
+Speech Data uses PIA-CA2 Peripheral Control - output mode is TTL compatible
+Speech data SPCH ROM -> sound PIA CA2 (0401) pin 39 -> IC1 DIn  pin13(3417) or pin12(55516)
+
+Write to bit3 of CB2 from LO(37h) to HI(3Fh) to LO(37h) for clock (TKSC)(0011 x111)
+then write bit3 of CA2 from LO(34h) to HI(3Ch) to LO(34h) for data (TKSD)(0011 x100)
+
+
 ______________________________________________
 Disassembled by:
 DASMx object code disassembler

@@ -2686,7 +2686,7 @@ F9A3 : 97 AD      staa $AD            ;store A in addr AD (NFRQ2)
 ;NEND
 F9A5 : 39         rts                 ;return subroutine
 ;*
-;*LOAD NOISE AND GO (SYNTH8)
+;*LOAD NOISE AND GO 
 ;*
 ;NOISLG
 F9A6 : 8D E9      bsr LF991           ;branch sub NOISLD

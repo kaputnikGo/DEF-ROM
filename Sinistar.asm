@@ -14,7 +14,7 @@
         ;
         ;  CPU:    Motorola 6800 (6800/6802/6808 family)
         ;
-        ; Video ROM 9/10 Sinistar, 1982 (stereo, with Speech), 
+        ; Video Sound ROM 9/10 Sinistar, 1982 (stereo, with Speech), 
         ; Speech ROMS: IC 4,5,6,7 with Video Sound ROM 9
         ; ROM IC 4: TALK, TALKD
         ;
@@ -55,10 +55,10 @@ F02B : 20 FE      bra  LF02B
 ;Organ Tune 
 ;*************************************;
 ;ORGANT
-F02D : 7F 00 0E   clr  X000E
-F030 : 97 0C      staa  X000C
+F02D : 7F 00 0E   clr  $000E          ;clear addr 0020 (ORGFLG)
+F030 : 97 0C      staa  $0C           ;store A in addr 1E (TEMPA) (TUNE NUMBER)
 F032 : 36         psha
-F033 : CE F1 D0   ldx  #$F1D0
+F033 : CE F1 D0   ldx  #$F1D0         ;load X with F1D0 (ORGTAB)
 ;ORGNT2:
 F036 : A6 00      ldaa  $00,x
 F038 : 27 2D      beq  LF067
@@ -315,22 +315,15 @@ F1CA : 3E         wai                 ;wait interrupts, PC+1
 ;NMI2
 F1CB : BD F6 F9   jsr  LF6F9          ;jump sub 
 F1CE : 20 E6      bra  LF1B6          ;branch always NMI
+
 ;*************************************;
-;
+;Organ Tune Table - in 4th octave
 ;*************************************;
-F1D0 : 0C    " "    clc
-        ;
-F1D1 : 03    " "    db  $03
-        ;
-F1D2 : 47    "G"    asra
-        ;
-F1D3 : 05 FC 03 12  "    "    db  $05, $FC, $03, $12
-        ;
-F1D7 : 11    " "    cba
-F1D8 : F0 03 29    "  )"    subb  X0329
-F1DB : 07    " "    tpa
-        ;
-F1DC : 1E    " "    db  $1E
+; Oscillator Mask(1), Delay(1), Duration(2)
+F1D0 : 0C                             ;FCB 3*4
+F1D1 : 03 47 05 FC                    ;AF4  EQU  $0347
+F1D5 : 03 12 11 F0                    ;E4  EQU  $0312
+F1D9 : 03 29 07 1E                    ;C4  EQU  $0329
 ;*************************************;
 ; SUBTTL WAVE PLAYER AND PITCH MODIFICATION
 ;*************************************;
@@ -1198,7 +1191,9 @@ F6F1 : 44    "D"    lsra
 F6F2 : 76 00 01    "v  "    ror  X0001
 F6F5 : 76 00 02    "v  "    ror  X0002
 F6F8 : 39    "9"    rts
-        ;
+;*************************************;
+;
+;*************************************;
 F6F9        LF6F9:
 F6F9 : 4F    "O"    clra
 F6FA : B7 04 00    "   "    staa  X0400
@@ -2525,11 +2520,11 @@ FFEA : 00 00 00 00
 FFEE : 00 00 00 00 
 FFF2 : 00    " "    db  $00
 ;*************************************;
-;Speech ROM6 jump sub destination
+;Speech ROM4 jump sub destination
 ;*************************************;
 FFF3 : 7E F1 A7    "~  "    jmp  LF1A7
 ;
-FFF6 : 00 00    "  "    db  $00, $00
+FFF6 : 0000                           ;FDB
 ;*************************************;
 ;Motorola vector table
 ;*************************************;
