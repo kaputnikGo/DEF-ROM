@@ -365,7 +365,7 @@ F1E7 : 20 27      bra  LF210          ;branch always FNOSLD
 ;FNoise tables
 ;*************************************;
 ;mem : 18 14 A  B  Xh Xl
-F1E9 : 00 00 01 C0 00 80              ;FNTBL1
+F1E9 : 00 00 01 C0 00 80              ;FNTBL1 - also in Sinistar
 F1EF : 01 00 01 FF 0C 00              ;FNTBL2
 F1F5 : 00 00 00 01 00 00              ;FNTBL3 - BG1
 F1FB : 00 00 00 05 00 00              ;FNTBL4

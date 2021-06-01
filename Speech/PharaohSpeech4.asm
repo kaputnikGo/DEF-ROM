@@ -3260,7 +3260,7 @@ EFCC : 08         inx                 ;incr X
 EFCD : C6 01      ldab  #$01          ;load B with 01h
 ;TKSC1 LEFCF:
 EFCF : 86 3F      ldaa  #$3F          ;load A with 3Fh (0011 1111)
-EFD1 : B7 04 03   staa  $0403         ;store A (3fh) in PIA CR port B (CB2 - speech clock)
+EFD1 : B7 04 03   staa  $0403         ;store A (3Fh) in PIA CR port B (CB2 - speech clock)
 EFD4 : 84 F7      anda  #$F7          ;and A with F7h (1111 0111)
 EFD6 : B7 04 03   staa  $0403         ;store A (F7h) in PIA CR port B (CB2 - speech clock)
 EFD9 : 58         aslb                ;arith shift left B

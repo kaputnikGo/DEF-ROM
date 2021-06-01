@@ -818,7 +818,7 @@ Tilt
 
 
 ;*************************************;
-Video Sound ROM 9/10 (Sinistar) 1982 (stereo, with Speech)
+Video Sound ROM 9 (Sinistar) 1982 (stereo, with Speech)
 Size:    4096 bytes
 Checksum:  A822
 CRC-32:    B82F4DDB
@@ -838,6 +838,15 @@ Filtered Noise Routine
 Delta F, Delta A Routine
 
 
+
+
+;*************************************;
+Video Sound ROM 10 (Sinistar) 1982 (stereo, with Speech)
+Size:    4096 bytes
+
+ cockpit version, rear sound board
+to find and disasm
+has no Speech processing, but ROM may still be same as 9?
 
 
 ;*************************************;
