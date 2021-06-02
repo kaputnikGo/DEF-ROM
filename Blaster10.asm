@@ -15,6 +15,7 @@
         ;  CPU:    Motorola 6800 (6800/6802/6808 family)
         ;
         ; Video ROM 18 Blaster video game (assuming primary sound board)
+        ; cockpit version has 2 boards for stereo (2x mono)
         ;
         ;org  $F000
         ;

@@ -503,7 +503,9 @@ E259 : 78 DD 27    "x '"    asl  XDD27
 E25C : 11    " "    cba
 E25D        LE25D:
 E25D : AC EE    "  "    cpx  $EE,x
-E25F : AB FA    "  "    adda  $FA,x
+
+E25F : AB 
+E260 : FA    "  "    adda  $FA,x
 E261 : 82 56    " V"    sbca  #$56
 E263 : 7D A8 62    "} b"    tst  XA862
         ;
@@ -2714,85 +2716,66 @@ EDF8 : 00 00 00 00 00 00 00 00
 EE00 : 00 00 00 00 00 00 00 00 
 EE08 : 00 00 
 ;*************************************;
-EE0A : 0A    " "    clv
-EE0B : 82 83    "  "    sbca  #$83
-        ;
-EE0D : 04    " "    db  $04
-        ;
-EE0E : 89 28    " ("    adca  #$28
-EE10 : 82 07    "  "    sbca  #$07
-EE12 : 82 08    "  "    sbca  #$08
-EE14 : 89 05    "  "    adca  #$05
-EE16 : 86 05    "  "    ldaa  #$05
-EE18 : 86 86    "  "    ldaa  #$86
-EE1A : 06    " "    tap
-EE1B : 82 88    "  "    sbca  #$88
-;ldx call - data?
-EE1D : 28 05    "( "    bvc  LEE24
-EE1F : 01    " "    nop
-EE20 : 0B    " "    sev
-EE21 : B0 00 C2    "   "    suba  X00C2
-EE24        LEE24:
-EE24 : 80 C2    "  "    suba  #$C2
-EE26 : 81 C5    "  "    cmpa  #$C5
-EE28 : 11    " "    cba
-EE29 : C5 12    "  "    bitb  #$12
-EE2B : C9 40    " @"    adcb  #$40
-EE2D : C9 41    " A"    adcb  #$41
-EE2F : D2 11    "  "    sbcb  X0011
-EE31 : D2 12    "  "    sbcb  X0012
-EE33 : D9 02    "  "    adcb  X0002
-EE35 : D9 03    "  "    adcb  X0003
-        ;
-EE37 : DD 4E DD    " N "    db  $DD, $4E, $DD
-        ;
-EE3A : 4F    "O"    clra
-EE3B : E2 5F    " _"    sbcb  $5F,x
-EE3D : E2 60    " `"    sbcb  $60,x
-EE3F : E7 29    " )"    stab  $29,x
-EE41 : E7 2A    " *"    stab  $2A,x
-        ;
-EE43 : ED    " "    db  $ED
-        ;
-EE44 : 82 B0    "  "    sbca  #$B0
-        ;
-EE46 : 00    " "    db  $00
-        ;
-EE47 : EE 0A    "  "    ldx  $0A,x
-EE49 : D2 0D    "  "    sbcb  X000D
-;ldx call - jump?
-EE4B : D2 11    "  "    sbcb  X0011
-EE4D : EE 0B    "  "    ldx  $0B,x
-EE4F : EE 0E    "  "    ldx  $0E,x
-EE51 : EE 12    "  "    ldx  $12,x
-EE53 : EE 14    "  "    ldx  $14,x
-EE55 : EE 16    "  "    ldx  $16,x
-EE57 : EE 18    "  "    ldx  $18,x
-EE59 : EE 1B    "  "    ldx  $1B,x
-EE5B : EE 1F    "  "    ldx  $1F,x
-;ldx call - jump?
-EE5D : EE 20    "  "    ldx  $20,x
-        ;
-EE5F : 00 00    "  "    db  $00, $00
-        ;
-EE61 : 01    " "    nop
-        ;
-EE62 : 00 02 00 03  "    "    db  $00, $02, $00, $03
-EE66 : 00 04 00 05  "    "    db  $00, $04, $00, $05
-EE6A        LEE6A:
-EE6A : 00    " "    db  $00
-        ;
-EE6B : 06    " "    tap
-        ;
-EE6C : 00    " "    db  $00
-        ;
-EE6D : 07    " "    tpa
-        ;
-EE6E : 00    " "    db  $00
-        ;
-EE6F : 08    " "    inx
-        ;
-EE70 : 00    " "    db  $00
+;TALKD ldx call
+EE0A : 0A 
+EE0B : 82 83 
+EE0D : 04 
+EE0E : 89 28 
+EE10 : 82 07 
+EE12 : 82 08 
+EE14 : 89 05 
+EE16 : 86 05 
+EE18 : 86 86 
+EE1A : 06 
+EE1B : 82 88 
+;*************************************;
+;TKIRQ ldx call #3
+EE1D : 28 05 
+EE1F : 01 0B 
+EE21 : B0 00 
+EE23 : C2 80 
+EE25 : C2 81 
+EE27 : C5 11 
+EE29 : C5 12 
+EE2B : C9 40 
+EE2D : C9 41 
+EE2F : D2 11 
+EE31 : D2 12 
+EE33 : D9 02 
+EE35 : D9 03 
+EE37 : DD 4E 
+EE39 : DD 4F 
+EE3B : E2 5F 
+EE3D : E2 60 
+EE3F : E7 29 
+EE41 : E7 2A 
+EE43 : ED 82 
+EE45 : B0 00 
+EE47 : EE 0A 
+EE49 : D2 0D 
+;*************************************;
+;TKIRQ ldx call #2
+EE4B : D2 11 
+EE4D : EE 0B 
+EE4F : EE 0E 
+EE51 : EE 12 
+EE53 : EE 14 
+EE55 : EE 16 
+EE57 : EE 18 
+EE59 : EE 1B
+EE5B : EE 1F 
+;*************************************;
+;TKIRQ ldx call #1
+EE5D : EE 20 
+EE5F : 00 00 
+EE61 : 01 00 
+EE63 : 02 00 
+EE65 : 03 00 
+EE67 : 04 00 
+EE69 : 05 00 
+EE6B : 06 00 
+EE6D : 07 00 
+EE6F : 08 00 
 ;*************************************;
 ; Copyright Message
 ;*************************************;
@@ -2935,7 +2918,7 @@ EF23 : C6 01      ldab  #$01          ;load B with 01h
 ;TKSCLP
 EF25 : 86 3F      ldaa  #$3F          ;load A with 3Fh (0011 1111)
 EF27 : B7 04 03   staa  $0403         ;store A (3Fh) in PIA CR port B (CB2 - speech clock)
-EF2A : 84 F7      anda  #$F7          ;and A with 7Fh (1111 0111)
+EF2A : 84 F7      anda  #$F7          ;and A with 7Fh (1111 0111)(flip bit 3)
 EF2C : B7 04 03   staa  $0403         ;store A (F7h) in PIA CR port B (CB2 - speech clock)
 EF2F : 58         aslb                ;arith shift left B
 EF30 : 26 07      bne  LEF39          ;branch Z=0 TKSD
@@ -2957,7 +2940,7 @@ EF42 : 86 3C      ldaa  #$3C          ;load A with 3Ch (0011 1100)
 EF44 : B7 04 01   staa  $0401         ;store A (3Ch) in PIA sound select (CA2 - speech data)
 EF47 : 20 DC      bra  LEF25          ;branch always TKSCLP
 ;TKSD1
-EF49 : 86 34      ldaa  #$34          ;load A with 34h (0011 0100)
+EF49 : 86 34      ldaa  #$34          ;load A with 34h (0011 0100)(flip bit 3)
 EF4B : B7 04 01   staa  $0401         ;store A (34h) in PIA sound select (CA2 - speech data)
 EF4E : 20 D5      bra  LEF25          ;branch always TKSCLP
 ;*************************************;
