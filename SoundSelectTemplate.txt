@@ -8,11 +8,14 @@ TEMPLATE FOR SOUND SELECT TRIGGERS
 
 
 NOTES:
-IRQ typically has an andA with 1F (MASK GARB) (0001 1111)
+- IRQ typically has an andA with 1F (MASK GARB) (0001 1111)
+
 b5 -> J3-6(W4) or DS1-2(W9)(speech)
 b6 -> DS1-1(chimes or electronic)
 b7 -> J3-8(W13/W12)(for stereo?)
 
+- bits are inverted here (complement 1s A (INVERT INPUT))
+  IOJ3- pins are pulled low to trigger
 
 
 Byte order MSB||LSB
@@ -26,7 +29,7 @@ J3-: NC|8 |SW|6 |7 ||4 |5 |2 |3 |key
 +---+---+---+---+---+---++---+---+---+---+
 | PIAB  |b0 |b1 |b2 |b3 ||b4 |b5 |b6 |b7 |
 +---+---+---+---+---+---++---+---+---+---+---------------------+----------+--------------------------------------+
-| # |0x |   |   |   |   ||   |   |   |   | Routine             | Table    | Description                          |
+| # | 0x|   |   |   |   ||   |   |   |   | Routine             | Table    | Description                          |
 +---+---+---+---+---+---++---+---+---+---+---------------------+----------+--------------------------------------+
 | 1 |   | 1 | 0 | 0 | 0 || 0 | x | x | x |                     |          |                                      |
 +---+---+---+---+---+---++---+---+---+---+---------------------+----------+--------------------------------------+
