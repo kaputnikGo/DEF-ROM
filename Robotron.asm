@@ -707,593 +707,374 @@ F2C3 : 20 C5      bra  LF28A          ;branch always SND1$$
 ;* SINGLE OSCILLATOR SOUND CALLS
 ;*************************************;
 ;PERK
-F2C5 : CE F4 B2    "   "    ldx  #$F4B2
-F2C8 : 20 26    " &"    bra  LF2F0
-        ;
-F2CA        LF2CA:
-F2CA : BD F3 30    "  0"    jsr  LF330
-F2CD : BD F3 49    "  I"    jsr  LF349
-F2D0 : 39    "9"    rts
-        ;
-F2D1        XF2D1:
-F2D1 : CE F4 B8    "   "    ldx  #$F4B8
-F2D4 : 20 F4    "  "    bra  LF2CA
-        ;
-F2D6 : C6 FF    "  "    ldab  #$FF
-F2D8 : D7 09    "  "    stab  X0009
-F2DA        LF2DA:
-F2DA : CE F4 BE    "   "    ldx  #$F4BE
-F2DD : 8D EB    "  "    bsr  LF2CA
-F2DF : CE F4 C4    "   "    ldx  #$F4C4
-F2E2 : 8D E6    "  "    bsr  LF2CA
-F2E4 : 5A    "Z"    decb
-F2E5 : 26 F3    "& "    bne  LF2DA
-F2E7 : 39    "9"    rts
-        ;
-F2E8 : CE F4 CA    "   "    ldx  #$F4CA
-F2EB : 20 DD    "  "    bra  LF2CA
-        ;
-F2ED : CE F4 D6    "   "    ldx  #$F4D6
-F2F0        LF2F0:
-F2F0 : 8D D8    "  "    bsr  LF2CA
-F2F2 : 8D 30    " 0"    bsr  LF324
-F2F4 : 20 FA    "  "    bra  LF2F0
-        ;
-F2F6 : 86 FF    "  "    ldaa  #$FF
-F2F8 : 97 09    "  "    staa  X0009
-F2FA : CE F4 DC    "   "    ldx  #$F4DC
-F2FD : 20 F1    "  "    bra  LF2F0
-        ;
-F2FF : 86 FF    "  "    ldaa  #$FF
-F301 : 97 09    "  "    staa  X0009
-F303 : CE F4 D0    "   "    ldx  #$F4D0
-F306 : 20 E8    "  "    bra  LF2F0
+F2C5 : CE F4 B2   ldx  #$F4B2         ;load X with F4B2h (#VEC01X)
+F2C8 : 20 26      bra  LF2F0          ;branch always PERK$1
+;PERK1
+F2CA : BD F3 30   jsr  LF330          ;jump sub MOVE
+F2CD : BD F3 49   jsr  LF349          ;jump sub SING
+F2D0 : 39         rts                 ;return subroutine
+;ATARI
+F2D1 : CE F4 B8   ldx  #$F4B8         ;load X with F4B8h (#VEC02X)
+F2D4 : 20 F4      bra  LF2CA          ;branch always PERK1
+;SIREN
+F2D6 : C6 FF      ldab  #$FF          ;load B with FFh
+F2D8 : D7 09      stab  $09           ;store B in addr 09 (AMP0)
+;SIREN1
+F2DA : CE F4 BE   ldx  #$F4BE         ;load X with F4BEh (#VEC03X)
+F2DD : 8D EB      bsr  LF2CA          ;branch sub PERK1
+F2DF : CE F4 C4   ldx  #$F4C4         ;load X with F4C4h (#VEC04X)
+F2E2 : 8D E6      bsr  LF2CA          ;branch sub PERK1
+F2E4 : 5A         decb                ;decr B 
+F2E5 : 26 F3      bne  LF2DA          ;branch Z=0 SIREN1
+F2E7 : 39         rts                 ;return subroutine
+;ORRRR
+F2E8 : CE F4 CA   ldx  #$F4CA         ;load X with F4CAh (#VEC05X)
+F2EB : 20 DD      bra  LF2CA          ;branch always PERK1
+;PERK$
+F2ED : CE F4 D6   ldx  #$F4D6         ;load X with F4D6h (#VEC07X)
+;PERK$1
+F2F0 : 8D D8      bsr  LF2CA          ;branch sub PERK1
+F2F2 : 8D 30      bsr  LF324          ;branch sub ECHO
+F2F4 : 20 FA      bra  LF2F0          ;branch always PERK$1
+;HSTD
+F2F6 : 86 FF      ldaa  #$FF          ;load A with FFh
+F2F8 : 97 09      staa  $09           ;store A in addr 09 (AMP0)
+F2FA : CE F4 DC   ldx  #$F4DC         ;load X with F4DCh (#VEC08X)
+F2FD : 20 F1      bra  LF2F0          ;branch always PERK$1
+;PERK$$
+F2FF : 86 FF      ldaa  #$FF          ;load A with FFh
+F301 : 97 09      staa  $09           ;store A in addr 09 (AMP0)
+F303 : CE F4 D0   ldx  #$F4D0         ;load X with F4D0h (#VEC06X)
+F306 : 20 E8      bra  LF2F0          ;branch always PERK$1
 ;*************************************;
 ;*  RANDOM SQUIRTS
 ;*************************************;
 ;SQRT
-F308 : C6 30    " 0"    ldab  #$30
-F30A : CE F4 E2    "   "    ldx  #$F4E2
-F30D : 8D 21    " !"    bsr  LF330
-F30F        LF30F:
-F30F : 96 06    "  "    ldaa  X0006
-F311 : 48    "H"    asla
-F312 : 9B 06    "  "    adda  X0006
-F314 : 8B 0B    "  "    adda  #$0B
-F316 : 97 06    "  "    staa  X0006
-F318 : 44    "D"    lsra
-F319 : 44    "D"    lsra
-F31A : 8B 0C    "  "    adda  #$0C
-F31C : 97 13    "  "    staa  X0013
-F31E : 8D 29    " )"    bsr  LF349
-F320 : 5A    "Z"    decb
-F321 : 26 EC    "& "    bne  LF30F
-F323 : 39    "9"    rts
+F308 : C6 30      ldab  #$30          ;load B with 30h
+;SQRT1
+F30A : CE F4 E2   ldx  #$F4E2         ;load X with F4E2h (#VEC09X)
+F30D : 8D 21      bsr  LF330          ;branch sub MOVE
+;SQRT2
+F30F : 96 06      ldaa  $06           ;load A with addr 06 (RANDOM)
+F311 : 48         asla                ;arith shift left A
+F312 : 9B 06      adda  $06           ;add A with addr 06 (RANDOM)
+F314 : 8B 0B      adda  #$0B          ;add A with 0Bh
+F316 : 97 06      staa  $06           ;store A in addr 06 (RANDOM)
+F318 : 44         lsra                ;logic shift right A
+F319 : 44         lsra                ;logic shift right A
+F31A : 8B 0C      adda  #$0C          ;add A with 0Ch
+F31C : 97 13      staa  $13           ;store A in addr 13 (FREQ$)
+F31E : 8D 29      bsr  LF349          ;branch sub SING
+F320 : 5A         decb                ;decr B
+F321 : 26 EC      bne  LF30F          ;branch Z=0 SQRT2
+F323 : 39         rts                 ;return subroutine
 ;*************************************;
 ;*  ECHO FUNCTION
 ;*************************************;
 ;ECHO
-F324 : 96 09    "  "    ldaa  X0009
-F326 : 80 08    "  "    suba  #$08
-F328 : 2A 03    "* "    bpl  LF32D
-F32A : 97 09    "  "    staa  X0009
-F32C        LF32C:
-F32C : 39    "9"    rts
-        ;
-F32D        LF32D:
-F32D : 32    "2"    pula
-F32E : 32    "2"    pula
-F32F : 39    "9"    rts
+F324 : 96 09      ldaa  $09           ;load A with addr 09 (AMP0)
+F326 : 80 08      suba  #$08          ;sub A with 08h
+F328 : 2A 03      bpl  LF32D          ;branch N=0 ECHO1
+F32A : 97 09      staa  $09           ;store A in addr 09 (AMP0)
+F32C : 39         rts                 ;return subroutine
+;ECHO1
+F32D : 32         pula                ;SP+1 pull stack into A
+F32E : 32         pula                ;SP+1 pull stack into A
+F32F : 39         rts                 ;return subroutine
 ;*************************************;
 ;*  MOVE PARAMETERS
 ;*************************************;
 ;MOVE
-F330 : A6 00    "  "    ldaa  $00,x
-F332 : 97 13    "  "    staa  X0013
-F334 : A6 01    "  "    ldaa  $01,x
-F336 : 97 14    "  "    staa  X0014
-F338 : A6 02    "  "    ldaa  $02,x
-F33A : 97 15    "  "    staa  X0015
-F33C : A6 03    "  "    ldaa  $03,x
-F33E : 97 16    "  "    staa  X0016
-F340 : A6 04    "  "    ldaa  $04,x
-F342 : 97 17    "  "    staa  X0017
-F344 : A6 05    "  "    ldaa  $05,x
-F346 : 97 18    "  "    staa  X0018
-F348 : 39    "9"    rts
+F330 : A6 00      ldaa  $00,x         ;load A with X+00h 
+F332 : 97 13      staa  $13           ;store A in addr 13 (FREQ$)
+F334 : A6 01      ldaa  $01,x         ;load A with X+01h
+F336 : 97 14      staa  $14           ;store A in addr 14 (C$FRQ)
+F338 : A6 02      ldaa  $02,x         ;load A with X+02h
+F33A : 97 15      staa  $15           ;store A in addr 15 (D$FRQ)
+F33C : A6 03      ldaa  $03,x         ;load A with X+03h
+F33E : 97 16      staa  $16           ;store A in addr 16 (E$FRQ)
+F340 : A6 04      ldaa  $04,x         ;load A with X+04h
+F342 : 97 17      staa  $17           ;store A in addr 17 (C$AMP)
+F344 : A6 05      ldaa  $05,x         ;load A with X+05h
+F346 : 97 18      staa  $18           ;store A in addr 18 (D$AMP)
+F348 : 39         rts                 ;return subroutine
 ;*************************************;
 ;*  DELTA F, DELTA A ROUTINE
 ;*************************************;
 ;SING
-F349 : 96 09    "  "    ldaa  X0009
-F34B : 37    "7"    pshb
-F34C : D6 17    "  "    ldab  X0017
-F34E : D7 19    "  "    stab  X0019
-F350 : D6 14    "  "    ldab  X0014
-F352 : D7 1A    "  "    stab  X001A
-F354        LF354:
-F354 : 43    "C"    coma
-F355 : D6 13    "  "    ldab  X0013
-F357 : B7 04 00    "   "    staa  X0400
-F35A        LF35A:
-F35A : 5A    "Z"    decb
-F35B : 26 FD    "& "    bne  LF35A
-F35D : 43    "C"    coma
-F35E : D6 13    "  "    ldab  X0013
-F360 : 20 00    "  "    bra  LF362
-        ;
-F362        LF362:
-F362 : 08    " "    inx
-F363 : 09    " "    dex
-F364 : 08    " "    inx
-F365 : 09    " "    dex
-F366 : B7 04 00    "   "    staa  X0400
-F369        LF369:
-F369 : 5A    "Z"    decb
-F36A : 26 FD    "& "    bne  LF369
-F36C : 7A 00 1A    "z  "    dec  X001A
-F36F : 27 16    "' "    beq  LF387
-F371 : 7A 00 19    "z  "    dec  X0019
-F374 : 26 DE    "& "    bne  LF354
-F376 : 43    "C"    coma
-F377 : D6 17    "  "    ldab  X0017
-F379 : B7 04 00    "   "    staa  X0400
-F37C : D7 19    "  "    stab  X0019
-F37E : D6 13    "  "    ldab  X0013
-F380 : 9B 18    "  "    adda  X0018
-F382 : 2B 1E    "+ "    bmi  LF3A2
-F384 : 01    " "    nop
-F385 : 20 15    "  "    bra  LF39C
-        ;
-F387        LF387:
-F387 : 08    " "    inx
-F388 : 09    " "    dex
-F389 : 01    " "    nop
-F38A : 43    "C"    coma
-F38B : D6 14    "  "    ldab  X0014
-F38D : B7 04 00    "   "    staa  X0400
-F390 : D7 1A    "  "    stab  X001A
-F392 : D6 13    "  "    ldab  X0013
-F394 : D0 15    "  "    subb  X0015
-F396 : D1 16    "  "    cmpb  X0016
-F398 : D1 16    "  "    cmpb  X0016
-F39A : 27 06    "' "    beq  LF3A2
-F39C        LF39C:
-F39C : D7 13    "  "    stab  X0013
-F39E : C0 05    "  "    subb  #$05
-F3A0 : 20 B8    "  "    bra  LF35A
-        ;
-F3A2        LF3A2:
-F3A2 : 33    "3"    pulb
-F3A3 : 39    "9"    rts
+F349 : 96 09      ldaa  $09           ;load A with addr 09 (AMP0) GET STARTING AMPLITUDE
+;SING$
+F34B : 37         pshb                ;push B into stack then SP-1 (SAVE B)
+F34C : D6 17      ldab  $17           ;load B with addr 17 (C$AMP) GET CYCLES AT AMPLITUDE
+F34E : D7 19      stab  $19           ;store B in addr 19 (C$AMP$) SAVE AS COUNTER
+F350 : D6 14      ldab  $14           ;load B with addr 14 (C$FRQ) GET CYCLES AT FREQUENCY
+F352 : D7 1A      stab  $1A           ;store B in addr 1A (C$FRQ$) SAVE AS COUNTER
+;SING1
+F354 : 43         coma                ;complement 1s A (INVERT AMPLITUDE)
+F355 : D6 13      ldab  $13           ;load B with addr 13 (FREQ$) GET FREQUENCY COUNTER
+F357 : B7 04 00   staa  $0400         ;store A in DAC output SOUND (OUTPUT TO D/A)
+;SING2
+F35A : 5A         decb                ;decr B 
+F35B : 26 FD      bne  LF35A          ;branch Z=0 SING2
+F35D : 43         coma                ;complement 1s A (INVERT AMPLITUDE)
+F35E : D6 13      ldab  $13           ;load B with addr 13 (FREQ$) GET FREQUENCY COUNTER
+F360 : 20 00      bra  LF362          ;branch always (*+2) -I
+F362 : 08         inx                 ;incr X (-I)
+F363 : 09         dex                 ;decr X (-I---) SYNC, 20 CYCLES
+F364 : 08         inx                 ;incr X (-I)
+F365 : 09         dex                 ;decr X (-I)
+F366 : B7 04 00   staa  $0400         ;store A in DAC output SOUND (OUTPUT TO D/A)
+;SING3
+F369 : 5A         decb                ;decr B
+F36A : 26 FD      bne  LF369          ;branch Z=0 SING3
+F36C : 7A 00 1A   dec  $001A          ;decr addr 001A (C$FRQ$) CHECK CYCLES AT FREQUENCY
+F36F : 27 16      beq  LF387          ;branch Z=1 SING4 (GO CHANGE FREQUENCY)
+F371 : 7A 00 19   dec  $0019          ;decr addr 0019 (C$AMP$) CHECK CYCLES AT AMPLITUDE
+F374 : 26 DE      bne  LF354          ;branch Z=0 SING1 (ALL OK, GO OUTPUT)
+F376 : 43         coma                ;complement 1s A (INVERT AMPLITUDE)
+F377 : D6 17      ldab  $17           ;load B with addr 17 (C$AMP) GET CYCLES AT AMPLITUDE
+F379 : B7 04 00   staa  $0400         ;store A in DAC output SOUND (OUTPUT TO D/A)
+F37C : D7 19      stab  $19           ;store B in addr 19 (C$AMP$) SAVE AS COUNTER
+F37E : D6 13      ldab  $13           ;load B with addr 13 (FREQ$)GET FREQUENCY COUNT
+F380 : 9B 18      adda  $18           ;add A with addr 18 (D$AMP) ADD AMPLITUDE DELTA
+F382 : 2B 1E      bmi  LF3A2          ;branch N=1 SING6 (RETURN FROM SUBROUTINE)
+F384 : 01         nop                 ;(SYNC, 2 CYCLES)
+F385 : 20 15      bra  LF39C          ;branch always SING5 
+;SING4
+F387 : 08         inx                 ;incr X (-I)
+F388 : 09         dex                 ;decr X (-I---) SYNC, 10 CYCLES
+F389 : 01         nop                 ;(-I)
+F38A : 43         coma                ;complement 1s A (INVERT AMPLITUDE)
+F38B : D6 14      ldab  $14           ;load B with addr 14 (C$FRQ) GET CYCLES AT FREQUENCY
+F38D : B7 04 00   staa  $0400         ;store A in DAC output SOUND (OUTPUT TO D/A)
+F390 : D7 1A      stab  $1A           ;store B in addr 1A (C$FRQ$) SAVE AS COUNTER
+F392 : D6 13      ldab  $13           ;load B with addr 13 (FREQ$) GET FREQUENCY COUNT
+F394 : D0 15      subb  $15           ;sub B with addr 15 (D$FRQ) SUBTRACT FREQUENCY DELTA
+F396 : D1 16      cmpb  $16           ;compare B with addr 16 (E$FRQ) COMPARE TO END FREQUENCY
+F398 : D1 16      cmpb  $16           ;compare B with addr 16 (E$FRQ) SYNC, 3 CYCLES
+F39A : 27 06      beq  LF3A2          ;branch Z=1 SING6 (RETURN FROM SUBROUTINE)
+;SING5
+F39C : D7 13      stab  $13           ;store B in addr 13 (FREQ$) SAVE FREQUENCY COUNT
+F39E : C0 05      subb  #$05          ;sub B with 05h (SYNC TO FREQUENCY COUNTDOWN)
+F3A0 : 20 B8      bra  LF35A          ;branch always SING2 (JUMP INTO COUNTDOWN LOOP)
+;SING6
+F3A2 : 33         pulb                ;SP+1 pull stack into B (RESTORE B)
+F3A3 : 39         rts                 ;return subroutine
 ;*************************************;
-;* tables
+;* tables for PULSE - not included in ROM?
 ;*************************************;
-;SNDTBL, 
-F3A4 : DA FF    "  "    orab  X00FF
-F3A6 : DA 80    "  "    orab  X0080
-F3A8 : 26 01    "& "    bne  LF3AB
-F3AA : 26 80    "& "    bne  LF32C
-F3AC : 07    " "    tpa
-F3AD : 0A    " "    clv
-F3AE : 07    " "    tpa
-        ;
-F3AF : 00    " "    db  $00
-        ;
-F3B0 : F9 F6 F9    "   "    adcb  XF6F9
-        ;
-F3B3 : 00 3A    " :"    db  $00, $3A
-        ;
-F3B5 : 3E    ">"    wai
-F3B6 : 50    "P"    negb
-F3B7 : 46    "F"    rora
-F3B8 : 33    "3"    pulb
-F3B9 : 2C 27    ",'"    bge  LF3E2
-F3BB : 20 25    " %"    bra  LF3E2
-        ;
-F3BD : 1C 1A    "  "    db  $1C, $1A
-        ;
-F3BF : 17    " "    tba
-        ;
-F3C0 : 14    " "    db  $14
-        ;
-F3C1 : 11    " "    cba
-F3C2 : 10    " "    sba
-F3C3 : 33    "3"    pulb
-F3C4 : 08    " "    inx
-        ;
-F3C5 : 03 02    "  "    db  $03, $02
-        ;
-F3C7 : 01    " "    nop
-        ;
-F3C8 : 02 03 04 05  "    "    db  $02, $03, $04, $05
-        ;
-F3CC : 06    " "    tap
-F3CD : 0A    " "    clv
-        ;
-F3CE : 1E    " "    db  $1E
-        ;
-F3CF : 32    "2"    pula
-F3D0 : 70 00 FF    "p  "    neg  X00FF
-F3D3 : FF FF 90    "   "    stx  XFF90
-F3D6 : FF FF FF    "   "    stx  XFFFF
-F3D9 : FF FF FF    "   "    stx  XFFFF
-F3DC : FF 90 FF    "   "    stx  X90FF
-F3DF : FF FF FF    "   "    stx  XFFFF
-F3E2        LF3E2:
-F3E2 : FF FF FF    "   "    stx  XFFFF
-F3E5 : FF 00 00    "   "    stx  X0000
-        ;
-F3E8 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-F3EC : 00 00    "  "    db  $00, $00
-        ;
-F3EE : 48    "H"    asla
-F3EF : 01    " "    nop
-        ;
-F3F0 : 00 00    "  "    db  $00, $00
-        ;
-F3F2 : 3F    "?"    swi
-F3F3 : 3F    "?"    swi
-        ;
-F3F4 : 00 00    "  "    db  $00, $00
-        ;
-F3F6 : 48    "H"    asla
-F3F7 : 01    " "    nop
-        ;
-F3F8 : 00 00    "  "    db  $00, $00
-        ;
-F3FA : 01    " "    nop
-F3FB : 08    " "    inx
-        ;
-F3FC : 00 00    "  "    db  $00, $00
-        ;
-F3FE : 81 01    "  "    cmpa  #$01
-        ;
-F400 : 00 00    "  "    db  $00, $00
-        ;
-F402 : 01    " "    nop
-F403 : FF 00 00    "   "    stx  X0000
-F406 : 01    " "    nop
-F407 : 08    " "    inx
-        ;
-F408 : 00 00    "  "    db  $00, $00
-        ;
-F40A : 01    " "    nop
-F40B : 10    " "    sba
-        ;
-F40C : 00 00    "  "    db  $00, $00
-        ;
-F40E : 3F    "?"    swi
-F40F : 3F    "?"    swi
-        ;
-F410 : 00 00    "  "    db  $00, $00
-        ;
-F412 : 01    " "    nop
-F413 : 10    " "    sba
-        ;
-F414 : 00 00 05 05  "    "    db  $00, $00, $05, $05
-F418 : 00 00    "  "    db  $00, $00
-        ;
-F41A : 01    " "    nop
-F41B : 01    " "    nop
-        ;
-F41C : 00 00    "  "    db  $00, $00
-        ;
-F41E : 31    "1"    ins
-F41F : FF 00 00    "   "    stx  X0000
-        ;
-F422 : 05 05 00 00  "    "    db  $05, $05, $00, $00
-        ;
-F426 : 30    "0"    tsx
-        ;
-F427 : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F42A : 7F 00 00    "   "    clr  X0000
-        ;
-F42D : 00    " "    db  $00
-        ;
-F42E : 30    "0"    tsx
-        ;
-F42F : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F432 : 01    " "    nop
-        ;
-F433 : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F436 : 7F 00 00    "   "    clr  X0000
-        ;
-F439 : 00 02 00 00  "    "    db  $00, $02, $00, $00
-F43D : 00    " "    db  $00
-        ;
-F43E : 01    " "    nop
-        ;
-F43F : 00 00 00 04  "    "    db  $00, $00, $00, $04
-F443 : 00 00 04    "   "    db  $00, $00, $04
-        ;
-F446 : 7F 00 00    "   "    clr  X0000
-F449 : 7F 04 00    "   "    clr  X0400
-        ;
-F44C : 00 04    "  "    db  $00, $04
-        ;
-F44E : FF 00 00    "   "    stx  X0000
-F451 : A0 00    "  "    suba  $00,x
-        ;
-F453 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-F457 : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F45A : FF 00 00    "   "    stx  X0000
-F45D : A0 0C    "  "    suba  $0C,x
-F45F : 68 68    "hh"    asl  $68,x
-        ;
-F461 : 00    " "    db  $00
-        ;
-F462 : 07    " "    tpa
-        ;
-F463 : 1F    " "    db  $1F
-        ;
-F464 : 0F    " "    sei
-        ;
-F465 : 00    " "    db  $00
-        ;
-F466 : 0C    " "    clc
-F467 : 80 80    "  "    suba  #$80
-        ;
-F469 : 00    " "    db  $00
-        ;
-F46A : FF FF FF    "   "    stx  XFFFF
-        ;
-F46D : 00 00 00 00  "    "    db  $00, $00, $00, $00
-F471 : 00 00 00 00  "    "    db  $00, $00, $00, $00
-F475 : 00    " "    db  $00
-        ;
-F476 : FF FF FF    "   "    stx  XFFFF
-        ;
-F479 : 00    " "    db  $00
-        ;
-F47A : 01    " "    nop
-        ;
-F47B : 04 00 00    "   "    db  $04, $00, $00
-        ;
-F47E : 3F    "?"    swi
-F47F : 7F 00 00    "   "    clr  X0000
-F482 : 01    " "    nop
-        ;
-F483 : 04 00 00 05  "    "    db  $04, $00, $00, $05
-        ;
-F487 : FF 00 00    "   "    stx  X0000
-F48A : 01    " "    nop
-        ;
-F48B : 00 00 00    "   "    db  $00, $00, $00
-        ;
-F48E : 48    "H"    asla
-        ;
-F48F : 00 00 00 05  "    "    db  $00, $00, $00, $05
-        ;
-F493 : FF 00 00    "   "    stx  X0000
-        ;
-F496 : 02    " "    db  $02
-        ;
-F497 : 80 00    "  "    suba  #$00
-F499 : 30    "0"    tsx
-F49A : 0A    " "    clv
-F49B : 7F 00 7F    "   "    clr  X007F
-        ;
-F49E : 02    " "    db  $02
-        ;
-F49F : 80 00    "  "    suba  #$00
-F4A1 : 30    "0"    tsx
-F4A2 : C0 80    "  "    subb  #$80
-        ;
-F4A4 : 00    " "    db  $00
-        ;
-F4A5 : 20 01    "  "    bra  LF4A8
-        ;
-F4A7 : 10    " "    sba
-        ;
-F4A8        LF4A8:
-F4A8 : 00 15    "  "    db  $00, $15
-        ;
-F4AA : C0 10    "  "    subb  #$10
-        ;
-F4AC : 00 00    "  "    db  $00, $00
-        ;
-F4AE : C0 80    "  "    subb  #$80
-        ;
-F4B0 : 00 00    "  "    db  $00, $00
-        ;
-F4B2 : FF 01 02    "   "    stx  X0102
-        ;
-F4B5 : C3    " "    db  $C3
-        ;
-F4B6 : FF 00 01    "   "    stx  X0001
-        ;
-F4B9 : 03    " "    db  $03
-        ;
-F4BA : FF 80 FF    "   "    stx  X80FF
-        ;
-F4BD : 00    " "    db  $00
-        ;
-F4BE : 20 03    "  "    bra  LF4C3
-        ;
-F4C0 : FF 50 FF    " P "    stx  X50FF
-        ;
-F4C3        LF4C3:
-F4C3 : 00    " "    db  $00
-        ;
-F4C4 : 50    "P"    negb
-        ;
-F4C5 : 03    " "    db  $03
-        ;
-F4C6 : 01    " "    nop
-F4C7 : 20 FF    "  "    bra  LF4C8
-        ;
-F4C9 : 00    " "    db  $00
-        ;
-F4CA : FE 04 02    "   "    ldx  X0402
-        ;
-F4CD : 04    " "    db  $04
-        ;
-F4CE : FF 00 48    "  H"    stx  X0048
-        ;
-F4D1 : 03    " "    db  $03
-        ;
-F4D2 : 01    " "    nop
-F4D3 : 0C    " "    clc
-F4D4 : FF 00 48    "  H"    stx  X0048
-        ;
-F4D7 : 02    " "    db  $02
-        ;
-F4D8 : 01    " "    nop
-F4D9 : 0C    " "    clc
-F4DA : FF 00 E0    "   "    stx  X00E0
-F4DD : 01    " "    nop
-        ;
-F4DE : 02    " "    db  $02
-        ;
-F4DF : 10    " "    sba
-F4E0 : FF 00 50    "  P"    stx  X0050
-F4E3 : FF 00 00    "   "    stx  X0000
-F4E6 : 60 80    "` "    neg  $80,x
-F4E8 : FF 02 01    "   "    stx  X0201
-F4EB : 06    " "    tap
-F4EC : FF 00 
+;SNDTBL - FCB 
+F3A4 : DA FF DA 80 26 01 26 80        ;
+F3AC : 07 0A 07 00 F9 F6 F9 00        ;
+;NOTTBL - FCB
+F3B4 : 3A 3E 50 46 33 2C 27 20        ;
+F3BC : 25 1C 1A 17 14 11 10 33        ;
+;WAVFRM - FCB
+F3C4 : 08 03 02 01 02 03 04 05        ;
+F3CC : 06 0A 1E 32 70 00              ;
+;*************************************;
+;* tables for PLAY
+;*************************************;
+;VEC01 - FDB
+F3D1 : FFFF FF90 FFFF FFFF            ;
+F3DA : FFFF FF90 FFFF FFFF            ;
+F3E2 : FFFF FFFF 0000 0000            ;
+F3EA : 0000 0000                      ;
+;VEC02 - FDB
+F3EE : 4801 0000 3F3F 0000            ;
+F3F6 : 4801 0000 0108 0000            ;
+F3FE : 8101 0000 01FF 0000            ;
+F406 : 0108 0000                      ;
+;VEC03 - FDB
+F40A : 0110 0000 3F3F 0000            ;
+F412 : 0110 0000 0505 0000            ;
+F41A : 0101 0000 31FF 0000            ;
+F422 : 0505 0000                      ;
+;VEC04 - FDB
+F426 : 3000 0000 7F00 0000            ;
+F42E : 3000 0000 0100 0000            ;
+F436 : 7F00 0000 0200 0000            ;
+F43E : 0100 0000                      ;
+;VEC05 - FDB
+F442 : 0400 0004 7F00 007F            ;
+F44A : 0400 0004 FF00 00A0            ;
+F452 : 0000 0000 0000 0000            ;
+F45A : FF00 00A0                      ;
+;VEC06 - FDB
+F45E : 0C68 6800 071F 0F00            ;
+F466 : 0C80 8000 FFFF FF00            ;
+F46E : 0000 0000 0000 0000            ;
+F476 : FFFF FF00                      ;
+;VEC016 - FDB
+F47A : 0104 0000 3F7F 0000            ;
+F482 : 0104 0000 05FF 0000            ;
+F48A : 0100 0000 4800 0000            ;
+F492 : 05FF 0000                      ;
+;VEC017 - FDB
+F496 : 0280 0030 0A7F 007F            ;
+F49E : 0280 0030 C080 0020            ;
+F4A6 : 0110 0015 C010 0000            ;
+F4AE : C080 0000                      ;
+;*************************************;
+;* tables for SING
+;*************************************;
+;VEC01X - FDB
+F4B2 : FF01 02C3 FF00                 ;
+;VEC02X - FDB
+F4B8 : 0103 FF80 FF00                 ;
+;VEC03X - FDB
+F4BE : 2003 FF50 FF00                 ;
+;VEC04X - FDB
+F4C4 : 5003 0120 FF00                 ;
+;VEC05X - FDB
+F4CA : FE04 0204 FF00                 ;
+;VEC06X - FDB
+F4D0 : 4803 010C FF00                 ;
+;VEC07X - FDB
+F4D6 : 4802 010C FF00                 ;
+;VEC08X - FDB
+F4DC : E001 0210 FF00                 ;
+;VEC09X - FDB
+F4E2 : 50FF 0000 6080                 ;
+;VEC10X - FDB
+F4E8 : FF02 0106 FF00                 ;
 ;*************************************;
 ;*VARI LOADER
 ;*************************************;
 ;VARILD
-F4EE : 16    "   "    tab
-F4EF : 48    "H"    asla
-F4F0 : 48    "H"    asla
-F4F1 : 48    "H"    asla
-F4F2 : 1B    " "    aba
-F4F3 : CE 00 12    "   "    ldx  #$0012
-F4F6 : DF 0E    "  "    stx  X000E
-F4F8 : CE FC 08    "   "    ldx  #$FC08
-F4FB : BD FB 92    "   "    jsr  LFB92
-F4FE : C6 09    "  "    ldab  #$09
-F500 : 7E F9 65    "~ e"    jmp  LF965
+F4EE : 16         tab                 ;transfer A to B
+F4EF : 48         asla                ;arith shift left A (X2)
+F4F0 : 48         asla                ;arith shift left A (X4)
+F4F1 : 48         asla                ;arith shift left A (X8)
+F4F2 : 1B         aba                 ;add B to A (X9)
+F4F3 : CE 00 12   ldx  #$0012         ;load X with 0012h (#LOCRAM)
+F4F6 : DF 0E      stx  $0E            ;store X in addr 0E (XPTR) SET XSFER
+F4F8 : CE FC 08   ldx  #$FC08         ;load X with FC08h (#VVECT)
+F4FB : BD FB 92   jsr  LFB92          ;jump sub ADDX 
+F4FE : C6 09      ldab  #$09          ;load B with 09h (#9) GET COUNT
+;VTRAN
+F500 : 7E F9 65   jmp  LF965          ;jump TRANS
 ;*************************************;
 ;*VARIABLE DUTY CYCLE SQUARE WAVE ROUTINE
 ;*************************************;
 ;VARI
-F503 : 96 1A    "  "    ldaa  X001A
-F505 : B7 04 00    "   "    staa  X0400
-F508        LF508:
-F508 : 96 12    "  "    ldaa  X0012
-F50A : 97 1B    "  "    staa  X001B
-F50C : 96 13    "  "    ldaa  X0013
-F50E : 97 1C    "  "    staa  X001C
-F510        LF510:
-F510 : DE 17    "  "    ldx  X0017
-F512        LF512:
-F512 : 96 1B    "  "    ldaa  X001B
-F514 : 73 04 00    "s  "    com  X0400
-F517        LF517:
-F517 : 09    " "    dex
-F518 : 27 10    "' "    beq  LF52A
-F51A : 4A    "J"    deca
-F51B : 26 FA    "& "    bne  LF517
-F51D : 73 04 00    "s  "    com  X0400
-F520 : 96 1C    "  "    ldaa  X001C
-F522        LF522:
-F522 : 09    " "    dex
-F523 : 27 05    "' "    beq  LF52A
-F525 : 4A    "J"    deca
-F526 : 26 FA    "& "    bne  LF522
-F528 : 20 E8    "  "    bra  LF512
-        ;
-F52A        LF52A:
-F52A : B6 04 00    "   "    ldaa  X0400
-F52D : 2B 01    "+ "    bmi  LF530
-F52F : 43    "C"    coma
-F530        LF530:
-F530 : 8B 00    "  "    adda  #$00
-F532 : B7 04 00    "   "    staa  X0400
-F535 : 96 1B    "  "    ldaa  X001B
-F537 : 9B 14    "  "    adda  X0014
-F539 : 97 1B    "  "    staa  X001B
-F53B : 96 1C    "  "    ldaa  X001C
-F53D : 9B 15    "  "    adda  X0015
-F53F : 97 1C    "  "    staa  X001C
-F541 : 91 16    "  "    cmpa  X0016
-F543 : 26 CB    "& "    bne  LF510
-F545 : 96 19    "  "    ldaa  X0019
-F547 : 27 06    "' "    beq  LF54F
-F549 : 9B 12    "  "    adda  X0012
-F54B : 97 12    "  "    staa  X0012
-F54D : 26 B9    "& "    bne  LF508
-F54F        LF54F:
-F54F : 39    "9"    rts
+F503 : 96 1A      ldaa  $1A           ;load A with addr 1A (VAMP)
+F505 : B7 04 00   staa  $0400         ;store A in DAC output SOUND
+;VAR0
+F508 : 96 12      ldaa  $12           ;load A with addr 12 (LOPER)
+F50A : 97 1B      staa  $1B           ;store A in addr 1B (LOCNT)
+F50C : 96 13      ldaa  $13           ;load A with addr 13 (HIPER)
+F50E : 97 1C      staa  $1C           ;store A with addr 1C (HICNT)
+;V0
+F510 : DE 17      ldx  $17            ;load X with addr 17 (SWPDT)
+;V0LP
+F512 : 96 1B      ldaa  $1B           ;load A with addr 1B (LOCNT) LO CYCLE
+F514 : 73 04 00   com  $0400          ;complement 1s DAC output SOUND
+;V1
+F517 : 09         dex                 ;decr X
+F518 : 27 10      beq  LF52A          ;branch Z=1 VSWEEP
+F51A : 4A         deca                ;decr A
+F51B : 26 FA      bne  LF517          ;branch Z=0 V1
+F51D : 73 04 00   com  $0400          ;complement 1s in DAC output SOUND
+F520 : 96 1C      ldaa  $1C           ;load A with addr 1C (HICNT) HI CYCLE
+;V2
+F522 : 09         dex                 ;decr X
+F523 : 27 05      beq  LF52A          ;branch Z=1 VSWEEP
+F525 : 4A         deca                ;decr A
+F526 : 26 FA      bne  LF522          ;branch Z=0 V2
+F528 : 20 E8      bra  LF512          ;branch always V0LP (LOOP BACK)
+;VSWEEP
+F52A : B6 04 00   ldaa  $0400         ;load A with addr DAC 
+F52D : 2B 01      bmi  LF530          ;branch N=1 VS1
+F52F : 43         coma                ;compement 1s A
+;VS1
+F530 : 8B 00      adda  #$00          ;add A with 00h
+F532 : B7 04 00   staa  $0400         ;store A in DAC output SOUND (OUTPUT)
+F535 : 96 1B      ldaa  $1B           ;load A with addr 1B (LOCNT)
+F537 : 9B 14      adda  $14           ;add A with addr 14 (LODT)
+F539 : 97 1B      staa  $1B           ;store A in addr 1B (LOCNT)
+F53B : 96 1C      ldaa  $1C           ;load A with addr 1C (HICNT)
+F53D : 9B 15      adda  $15           ;add A with addr 15 (HIDT)
+F53F : 97 1C      staa  $1C           ;store A in addr 1C (HICNT)
+F541 : 91 16      cmpa  $16           ;compare A with addr 16 (HIEN)
+F543 : 26 CB      bne  LF510          ;branch Z=0 V0
+F545 : 96 19      ldaa  $19           ;load A with addr 19 (LOMOD)
+F547 : 27 06      beq  LF54F          ;branch Z=1 VARX
+F549 : 9B 12      adda  $12           ;add A with addr 12 (LOPER)
+F54B : 97 12      staa  $12           ;store A in addr 12 (LOPER)
+F54D : 26 B9      bne  LF508          ;branch Z=0 VAR0
+;VARX
+F54F : 39         rts                 ;return subroutine
 ;*************************************;
 ;*LAUNCH
 ;*************************************;
 ;LAUNCH
-F550 : 86 FF    "  "    ldaa  #$FF
-F552 : 97 19    "  "    staa  X0019
-F554 : 86 60    " `"    ldaa  #$60
-F556 : C6 FF    "  "    ldab  #$FF
-F558 : 20 12    "  "    bra  LF56C
+F550 : 86 FF      ldaa  #$FF          ;load A with FFh
+F552 : 97 19      staa  $19           ;store A in addr 19 (DFREQ)
+F554 : 86 60      ldaa  #$60          ;load A with 60h
+F556 : C6 FF      ldab  #$FF          ;load B with FFh
+F558 : 20 12      bra  LF56C          ;branch always LITEN
 ;*************************************;
 ;*LIGHTNING
 ;*************************************;
 ;LITE
-F55A : 86 01    "  "    ldaa  #$01
-F55C : 97 19    "  "    staa  X0019
-F55E : C6 03    "  "    ldab  #$03
-F560 : 20 0A    "  "    bra  LF56C
+F55A : 86 01      ldaa  #$01          ;load A with 01h
+F55C : 97 19      staa  $19           ;store A in addr 19 (DFREQ)
+F55E : C6 03      ldab  #$03          ;load B with 03h
+F560 : 20 0A      bra  LF56C          ;branch always LITEN
 ;*************************************;
 ;*APPEAR
 ;*************************************;
 ;APPEAR
-F562 : 86 FE    "  "    ldaa  #$FE
-F564 : 97 19    "  "    staa  X0019
-F566 : 86 C0    "  "    ldaa  #$C0
-F568 : C6 10    "  "    ldab  #$10
-F56A : 20 00    "  "    bra  LF56C
+F562 : 86 FE      ldaa  #$FE          ;load A with FEh
+F564 : 97 19      staa  $19           ;store A in addr 19 (DFREQ)
+F566 : 86 C0      ldaa  #$C0          ;load A with C0h
+F568 : C6 10      ldab  #$10          ;load B with 10h
+F56A : 20 00      bra  LF56C          ;branch always LITEN
 ;*************************************;
 ;*LIGHTNING+APPEAR NOISE ROUTINE
 ;*************************************;
 ;LITEN
-F56C : 97 18    "  "    staa  X0018
-F56E : 86 FF    "  "    ldaa  #$FF
-F570 : B7 04 00    "   "    staa  X0400
-F573 : D7 14    "  "    stab  X0014
-F575        LF575:
-F575 : D6 14    "  "    ldab  X0014
-F577        LF577:
-F577 : 96 06    "  "    ldaa  X0006
-F579 : 44    "D"    lsra
-F57A : 44    "D"    lsra
-F57B : 44    "D"    lsra
-F57C : 98 06    "  "    eora  X0006
-F57E : 44    "D"    lsra
-F57F : 76 00 05    "v  "    ror  X0005
-F582 : 76 00 06    "v  "    ror  X0006
-F585 : 24 03    "$ "    bcc  LF58A
-F587 : 73 04 00    "s  "    com  X0400
-F58A        LF58A:
-F58A : 96 18    "  "    ldaa  X0018
-F58C        LF58C:
-F58C : 4A    "J"    deca
-F58D : 26 FD    "& "    bne  LF58C
-F58F : 5A    "Z"    decb
-F590 : 26 E5    "& "    bne  LF577
-F592 : 96 18    "  "    ldaa  X0018
-F594 : 9B 19    "  "    adda  X0019
-F596 : 97 18    "  "    staa  X0018
-F598 : 26 DB    "& "    bne  LF575
-F59A : 39    "9"    rts
+F56C : 97 18      staa  $18           ;store A in addr 18 (LFREQ)
+F56E : 86 FF      ldaa  #$FF          ;load A with FFh (HIGHEST AMP)
+F570 : B7 04 00   staa  $0400         ;store A in DAC output SOUND
+F573 : D7 14      stab  $14           ;store B in addr 14 (CYCNT)
+;LITE0
+F575 : D6 14      ldab  $14           ;load B with addr 14 (CYCNT)
+;LITE1
+F577 : 96 06      ldaa  $06           ;load A with addr 06 (LO) GET RANDOM
+F579 : 44         lsra                ;logic shift right A
+F57A : 44         lsra                ;logic shift right A
+F57B : 44         lsra                ;logic shift right A
+F57C : 98 06      eora  $06           ;exclusive or A with addr 06 (LO)
+F57E : 44         lsra                ;logic shift right A
+F57F : 76 00 05   ror  $0005          ;rotate right addr 0005 (HI)
+F582 : 76 00 06   ror  $0006          ;rotate right addr 0006 (LO)
+F585 : 24 03      bcc  LF58A          ;branch C=0 LITE2
+F587 : 73 04 00   com  $0400          ;complement 1s in DAC output SOUND
+;LITE2
+F58A : 96 18      ldaa  $18           ;load A with addr 18 (LFREQ) COUNT FREQ
+;LITE3
+F58C : 4A         deca                ;decr A
+F58D : 26 FD      bne  LF58C          ;branch Z=0 LITE3
+F58F : 5A         decb                ;decr B (COUNT CYCLES)
+F590 : 26 E5      bne  LF577          ;branch Z=0 LITE1
+F592 : 96 18      ldaa  $18           ;load A with addr 18 (LFREQ)
+F594 : 9B 19      adda  $19           ;add A with addr 19 (DFREQ)
+F596 : 97 18      staa  $18           ;store A in addr 18 (LFREQ)
+F598 : 26 DB      bne  LF575          ;branch Z=0 LITE0
+F59A : 39         rts                 ;return subroutine
 ;*************************************;
 ;*TURBO
 ;*************************************;
 ;TURBO
-F59B : 86 20    "  "    ldaa  #$20
-F59D : 97 14    "  "    staa  X0014
-F59F : 97 17    "  "    staa  X0017
-F5A1 : 86 01    "  "    ldaa  #$01
-F5A3 : CE 00 01    "   "    ldx  #$0001
-F5A6 : C6 FF    "  "    ldab  #$FF
-F5A8 : 20 00    "  "    bra  LF5AA
+F59B : 86 20      ldaa  #$20          ;load A with 20h
+F59D : 97 14      staa  $14           ;store A in addr 14 (CYCNT)
+F59F : 97 17      staa  $17           ;store A in addr 17 (NFFLG)
+F5A1 : 86 01      ldaa  #$01          ;load A with 01h
+F5A3 : CE 00 01   ldx  #$0001         ;load X with 0001h
+F5A6 : C6 FF      ldab  #$FF          ;load B with FFh
+F5A8 : 20 00      bra  LF5AA          ;branch always MOISE
 ;*************************************;
 ;*WHITE NOISE ROUTINE
 ;*************************************;
@@ -1302,115 +1083,74 @@ F5A8 : 20 00    "  "    bra  LF5AA
 ;*
 ; (label MOISE instead of NOISE - white noise routine)
 ;MOISE
-F5AA : 97 12    "  "    staa  X0012
-F5AC        LF5AC:
-F5AC : DF 15    "  "    stx  X0015
-F5AE        LF5AE:
-F5AE : D7 13    "  "    stab  X0013
-F5B0 : D6 14    "  "    ldab  X0014
-F5B2        LF5B2:
-F5B2 : 96 06    "  "    ldaa  X0006
-F5B4 : 44    "D"    lsra
-F5B5 : 44    "D"    lsra
-F5B6 : 44    "D"    lsra
-F5B7 : 98 06    "  "    eora  X0006
-F5B9 : 44    "D"    lsra
-F5BA : 76 00 05    "v  "    ror  X0005
-F5BD : 76 00 06    "v  "    ror  X0006
-F5C0 : 86 00    "  "    ldaa  #$00
-F5C2 : 24 02    "$ "    bcc  LF5C6
-F5C4 : 96 13    "  "    ldaa  X0013
-F5C6        LF5C6:
-F5C6 : B7 04 00    "   "    staa  X0400
-F5C9 : DE 15    "  "    ldx  X0015
-F5CB        LF5CB:
-F5CB : 09    " "    dex
-F5CC : 26 FD    "& "    bne  LF5CB
-F5CE : 5A    "Z"    decb
-F5CF : 26 E1    "& "    bne  LF5B2
-F5D1 : D6 13    "  "    ldab  X0013
-F5D3 : D0 12    "  "    subb  X0012
-F5D5 : 27 09    "' "    beq  LF5E0
-F5D7 : DE 15    "  "    ldx  X0015
-F5D9 : 08    " "    inx
-F5DA : 96 17    "  "    ldaa  X0017
-F5DC : 27 D0    "' "    beq  LF5AE
-F5DE : 20 CC    "  "    bra  LF5AC
-F5E0        LF5E0:
-F5E0 : 39    "9"    rts
+F5AA : 97 12      staa  $12           ;store A in addr 12 (DECAY)
+;MOISE0
+F5AC : DF 15      stx  $15            ;store X in addr 15 (NFRQ1)
+;MOIS00
+F5AE : D7 13      stab  $13           ;store B in addr 13 (NAMP)
+F5B0 : D6 14      ldab  $14           ;load B with addr 14 (CYCNT)
+;MOISE1
+F5B2 : 96 06      ldaa  $06           ;load A with addr 06 (LO) GET RANDOM BIT
+F5B4 : 44         lsra                ;logic shift right A
+F5B5 : 44         lsra                ;logic shift right A
+F5B6 : 44         lsra                ;logic shift right A
+F5B7 : 98 06      eora  $06           ;exclusive or A with addr 06 (LO)
+F5B9 : 44         lsra                ;logic shift right A
+F5BA : 76 00 05   ror  $0005          ;rotate right addr 0005 (HI)
+F5BD : 76 00 06   ror  $0006          ;rotate right addr 0006 (LO)
+F5C0 : 86 00      ldaa  #$00          ;load A with 00h
+F5C2 : 24 02      bcc  LF5C6          ;branch C=0 MOISE2
+F5C4 : 96 13      ldaa  $13           ;load A with addr 13 (NAMP)
+;MOISE2
+F5C6 : B7 04 00   staa  $0400         ;store A in DAC output SOUND
+F5C9 : DE 15      ldx  $15            ;load X with addr 15 (NFRQ1) INCREASING DELAY
+;MOISE3
+F5CB : 09         dex                 ;decr X
+F5CC : 26 FD      bne  LF5CB          ;branch Z=0 MOISE3
+F5CE : 5A         decb                ;decr B (FINISH CYCLE COUNT?)
+F5CF : 26 E1      bne  LF5B2          ;branch Z=0 MOISE1 (NO)
+F5D1 : D6 13      ldab  $13           ;load B with addr 13 (NAMP) DECAY AMP
+F5D3 : D0 12      subb  $12           ;sub B with addr 12 (DECAY)
+F5D5 : 27 09      beq  LF5E0          ;branch Z=1 MSEND
+F5D7 : DE 15      ldx  $15            ;load X with addr 15 (NFRQ1) INC FREQ
+F5D9 : 08         inx                 ;incr X
+F5DA : 96 17      ldaa  $17           ;load A with addr 17 (NFFLG) DECAY FREQ?
+F5DC : 27 D0      beq  LF5AE          ;branch Z=1 MOIS00 (NO)
+F5DE : 20 CC      bra  LF5AC          ;branch always MOISE0
+;MSEND 
+F5E0 : 39         rts                 ;return subroutine
 ;*************************************;
 ;*CROWD ROAR
 ;*************************************;
 ;CDR
-F5E1 : CE F6 00    "   "    ldx  #$F600
-F5E4 : DF 23    " #"    stx  X0023
-F5E6 : BD F7 2A    "  *"    jsr  LF72A
-F5E9 : CE A5 00    "   "    ldx  #$A500
-F5EC : DF 05    "  "    stx  X0005
-F5EE : CE F6 29    "  )"    ldx  #$F629
-F5F1 : BD F6 33    "  3"    jsr  LF633
-F5F4 : BD F6 CE    "   "    jsr  LF6CE
-F5F7 : CE F6 2E    "  ."    ldx  #$F62E
-F5FA        XF5FA:
-F5FA : BD F6 33    "  3"    jsr  LF633
-F5FD : 7E F6 DB    "~  "    jmp  LF6DB
+F5E1 : CE F6 00   ldx  #$F600         ;load X with F600h (#WS1) 1ST WHISTLE PARAMS
+F5E4 : DF 23      stx  $23            ;store X in addr 23 (PTRHI)
+F5E6 : BD F7 2A   jsr  LF72A          ;jump sub WISLD
+F5E9 : CE A5 00   ldx  #$A500         ;load X with A500h (SEED)
+F5EC : DF 05      stx  $05            ;store X in addr 05 (HI)
+F5EE : CE F6 29   ldx  #$F629         ;load X with F629h (#CR1) 1ST CROWD ROAR NOISE PARAMS
+F5F1 : BD F6 33   jsr  LF633          ;jump sub NOISLD
+F5F4 : BD F6 CE   jsr  LF6CE          ;jump sub NINIT
+F5F7 : CE F6 2E   ldx  #$F62E         ;load X with F62Eh (#CR2)
+F5FA : BD F6 33   jsr  LF633          ;jump sub NOISLD
+F5FD : 7E F6 DB   jmp  LF6DB          ;jump NINIT2
 ;*************************************;
-;*WHISTLE PARAMS
+;*WHISTLE PARAMS - FCB
 ;*************************************;
-F600 : 90 10    "  "    suba  X0010
-        ;
-F602 : 02 14    "  "    db  $02, $14
-        ;
-F604 : 40    "@"    nega
-F605 : B4 40 FF    " @ "    anda  X40FF
-        ;
-F608 : 14    " "    db  $14
-        ;
-F609 : 30    "0"    tsx
-F60A : D0 32    " 2"    subb  X0032
-        ;
-F60C : 02    " "    db  $02
-        ;
-F60D : 10    " "    sba
-F60E : 60 EE    "` "    neg  $EE,x
-F610 : 20 02    "  "    bra  LF614
-        ;
-F612 : 08    " "    inx
-F613 : 54    "T"    lsrb
-F614        LF614:
-F614 : E9 54    " T"    adcb  $54,x
-F616 : FF 20 28    "  ("    stx  X2028
-F619 : C0 30    " 0"    subb  #$30
-        ;
-F61B : 02 14    "  "    db  $02, $14
-        ;
-F61D : 58    "X"    aslb
-F61E : AC 20    "  "    cpx  $20,x
-        ;
-F620 : 02    " "    db  $02
-        ;
-F621 : 08    " "    inx
-F622 : 58    "X"    aslb
-F623 : A6 58    " X"    ldaa  $58,x
-F625 : FF 18 22    "  ""    stx  X1822
-        ;
-F628 : 00    " "    db  $00
-        ;
-F629 : 30    "0"    tsx
-F62A : 10    " "    sba
-        ;
-F62B : FC 00    "  "    db  $FC, $00
-        ;
-F62D : 01    " "    nop
-F62E : 30    "0"    tsx
-        ;
-F62F : FC    " "    db  $FC
-        ;
-F630 : 01    " "    nop
-        ;
-F631 : 00    " "    db  $00
-        ;
-F632 : 01    " "    nop
+;WS1
+F600 : 90 10 02 14 40                 ;
+F605 : B4 40 FF 14 30                 ;
+F60A : D0 32 02 10 60                 ;
+F60F : EE 20 02 08 54                 ;
+F614 : E9 54 FF 20 28                 ;
+F619 : C0 30 02 14 58                 ;
+F61E : AC 20 02 08 58                 ;
+F623 : A6 58 FF 18 22                 ;
+F628 : 00                             ;
+;CR1
+F629 : 30 10 FC 00 01                 ;
+;CR2
+F62E : 30 FC 01 00 01                 ;
 ;*************************************;
 ;*WHITE NOISE ROUTINE - noise with whistle routine (full)
 ;*************************************;
@@ -1420,59 +1160,60 @@ F632 : 01    " "    nop
 ;*NOISE LOAD PROG-ENTER WITH XREG POINTING TO DATA
 ;*
 ;NOISLD
-F633 : A6 00    "  "    ldaa  $00,x
-F635 : 97 2A    " *"    staa  X002A
-F637 : A6 01    "  "    ldaa  $01,x
-F639 : 97 13    "  "    staa  X0013
-F63B : A6 02    "  "    ldaa  $02,x
-F63D : 97 12    "  "    staa  X0012
-F63F : A6 03    "  "    ldaa  $03,x
-F641 : 97 17    "  "    staa  X0017
-F643 : A6 04    "  "    ldaa  $04,x
-F645 : 97 2F    " /"    staa  X002F
-F647        LF647:
-F647 : 39    "9"    rts
+F633 : A6 00      ldaa  $00,x         ;load A with X+00h
+F635 : 97 2A      staa  $2A           ;store A in addr 2A
+F637 : A6 01      ldaa  $01,x         ;load A with X+01h
+F639 : 97 13      staa  $13           ;store A in addr 13
+F63B : A6 02      ldaa  $02,x         ;load A with X+02h
+F63D : 97 12      staa  $12           ;store A in addr 12
+F63F : A6 03      ldaa  $03,x         ;load A with X+03h
+F641 : 97 17      staa  $17           ;store A in addr 17
+F643 : A6 04      ldaa  $04,x         ;load A with X+04h
+F645 : 97 2F      staa  $2F           ;store A in addr 2F
+;NEND
+F647 : 39         rts                 ;return subroutine
 ;*************************************;
 ;*LOAD NOISE AND GO
 ;*************************************;
-F648 : 8D E9    "  "    bsr  LF633
+;NOISLG
+F648 : 8D E9      bsr  LF633          ;branch sub NOISLD
 ;*************************************;
 ;*NOISE INIT
 ;*************************************;
-F64A : 8D 30    " 0"    bsr  LF67C
+;NOIN
+F64A : 8D 30      bsr  LF67C          ;branch sub NSUB (CY2&NFRQ2 TO CYCNT&NFRQ)
 ;*************************************;
 ;*NOISE LOOP
 ;*************************************;
-F64C : 8D 58    " X"    bsr  LF6A6
-F64E : 96 2E    " ."    ldaa  X002E
-F650 : 91 2F    " /"    cmpa  X002F
-F652 : 26 F8    "& "    bne  LF64C
-F654 : 59    "Y"    rolb
-F655 : F7 04 00    "   "    stab  X0400
-F658 : 8D 2D    " -"    bsr  LF687
-F65A : 8D 38    " 8"    bsr  LF694
-F65C : 8D 5C    " \"    bsr  LF6BA
-F65E : 7D 00 13    "}  "    tst  X0013
-F661 : 27 E4    "' "    beq  LF647
-F663 : 7D 00 14    "}  "    tst  X0014
-F666 : 26 E4    "& "    bne  LF64C
-F668 : 7D 00 17    "}  "    tst  X0017
-F66B : 27 DF    "' "    beq  LF64C
-F66D : 2B 05    "+ "    bmi  LF674
-F66F : 7C 00 2F    "| /"    inc  X002F
-F672 : 20 D8    "  "    bra  LF64C
-        ;
-F674        LF674:
-F674 : 7A 00 2F    "z /"    dec  X002F
-F677 : 7A 00 2E    "z ."    dec  X002E
-F67A : 20 D0    "  "    bra  LF64C
-        ;
-F67C        LF67C:
-F67C : 7F 00 14    "   "    clr  X0014
-F67F : 96 2F    " /"    ldaa  X002F
-F681 : 97 2E    " ."    staa  X002E
-F683 : 7F 00 2D    "  -"    clr  X002D
-F686 : 39    "9"    rts
+;NO1
+F64C : 8D 58      bsr  LF6A6
+F64E : 96 2E      ldaa  X002E
+F650 : 91 2F      cmpa  X002F
+F652 : 26 F8      bne  LF64C
+F654 : 59         rolb
+F655 : F7 04 00   stab  X0400
+F658 : 8D 2D      bsr  LF687
+F65A : 8D 38      bsr  LF694
+F65C : 8D 5C      bsr  LF6BA
+F65E : 7D 00 13   tst  X0013
+F661 : 27 E4      beq  LF647
+F663 : 7D 00 14   tst  X0014
+F666 : 26 E4      bne  LF64C
+F668 : 7D 00 17   tst  X0017
+F66B : 27 DF      beq  LF64C
+F66D : 2B 05      bmi  LF674
+F66F : 7C 00 2F   inc  X002F
+F672 : 20 D8      bra  LF64C
+;NO3
+F674 : 7A 00 2F   dec  X002F
+F677 : 7A 00 2E   dec  X002E
+F67A : 20 D0      bra  LF64C
+;NSUB
+F67C : 7F 00 14   clr  X0014
+F67F : 96 2F      ldaa  X002F
+F681 : 97 2E      staa  X002E
+F683 : 7F 00 2D   clr  X002D
+F686 : 39         rts
 ;*************************************;
 ;* 23 CYCLES FOR EACH SUBROUTINE PLUS CALLING OVERHEAD
 ;*************************************;
