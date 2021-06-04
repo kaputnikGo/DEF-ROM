@@ -1,0 +1,135 @@
+Williams Sound ROM IRQ PROCESSING for sound select
+
+Pinball, Speech and Video game ROMS
+
+
+PIA Port B traces to Sound Select (IOJ3) connector
+PB0   J3-3
+PB1   J3-2
+PB2   J3-5
+PB3   J3-4
+PB4   J3-7
+PB5   J3-6(W4) or DS1-2(W9)(speech)
+PB6   DS1-1(chimes or electronic)
+PB7   J3-8(W13/W12)
+
+IOJ3 connector: (NC|8|7|6|5|4|3|2|key)
+All (IOJ3, DS1) held high (5v) by SR1 (4.7k res) until grounded by contact/switch
+
+PIA |b7|b6|b5|b4|b3|b2|b1|b0|
+J3- |8 |SW|6 |7 |4 |5 |2 |3 |
+
+** Video games have W4 jumpered ie:J3-6 -> PIA b5 
+
+============================================================
+PIA sound select mask listing
+
+- MASK GARB TABLE  |8|S|6|7|4|5|2|3|
+VIDEO
+- Bubbles       ANDA 7Fh (0111 1111)(p3,2,5,4,7,6,9)(p9 is DS1-1 switch)
+- Blaster       ANDA 3Fh (0011 1111)(p3,2,5,4,7,6)
+- Joust         ANDA 3Fh (0011 1111)(p3,2,5,4,7,6)
+- Robotron 2048 ANDA 3Fh (0011 1111)(p3,2,5,4,7,6)
+- Defender      ANDA 1Fh (0001 1111)(p3,2,5,4,7)
+- Sinistar      ANDA 1Fh (0001 1111)(p3,2,5,4,7)
+- Stargate      ANDA 1Fh (0001 1111)(p3,2,5,4,7)
+
+
+SPEECH PINBALL
+- Gorgar        ANDA 7Fh (0111 1111) mask for Speech, psha
+-               ANDA 5Fh (0101 1111) check, load params
+-               BITA 20h (0010 0000) pula, Speech
+-               BITA 40h (0100 0000) jump PULSE (chimes?)
+-               ANDA 1Fh (0001 1111) no speech
+
+- Firepower     ANDA 7Fh (0111 1111) mask for Speech, psha
+-               ANDA 5Fh (0101 1111) check, clear B1FLG,B2FLG
+-               BITA 20h (0010 0000) pula, Speech
+-               BITA 40h (0100 0000) jump PULSE (chimes?)
+-               ANDA 1Fh (0001 1111) no speech
+
+- Black Knight  ANDA 7Fh (0111 1111) mask for Speech, psha
+-               BITA 20h (0010 0000) pula, Speech
+-               ANDA 1Fh (0001 1111) no speech
+
+- Pharaoh       ANDA 7Fh (0111 1111) mask for Speech, psha
+-               ANDA 5Fh (0101 1111) check, clear params
+-               BITA 20h (0010 0000) pula, Speech
+-               ANDA 1Fh (0001 1111) no speech
+
+- Thunderball   ANDA 3Fh (0011 1111)
+
+PINBALL (no speech)
+* ROMs 4, 7 have no speech board or ROMs
+- ROM 4 Algar       
+-               ANDA 7Fh (0111 1111) mask for Speech, psha
+-               BITA 20h (0010 0000) pula, Speech
+-               ANDA 1Fh (0001 1111) no speech
+
+- ROM 7 Solar Fire  
+-               ANDA 7Fh (0111 1111) mask for Speech, psha
+-               BITA 20h (0010 0000) pula, Speech
+-               ANDA 1Fh (0001 1111) no speech
+
+
+- Varkon      ANDA 1Fh (0001 1111)
+
+============================================================
+PIA sound select examples:
+
+Robotron 2084 PIA routine (maximum value)
+grounded pins:
+0. JS- |-|-|6|7| |4|5|2|3|
+1. load A with PIA 0402
+1. PIA |1|1|0|0| |0|0|0|0| 
+2. complement 1s A (INVERT INPUT)
+2. com |0|0|1|1| |1|1|1|1| 
+3. and A with value 3F (MASK GARB) 
+3. and |0|0|1|1| |1|1|1|1| 
+
+
+Defender Red Label IRQ routine 
+so to get to JMPTBL (<= 1Bh)
+grounded pins:
+0. JS- |-|-|-|7| |4|-|2|3|
+1. load A with PIA 0402
+1. PIA |1|1|1|0| |0|1|0|0| 
+
+2. complement 1s A (INVERT INPUT)
+2. com |0|0|0|1| |1|0|1|1| 
+
+3. and A with value 1F (MASK GARB) (0001 1111)
+3. and |0|0|0|1| |1|0|1|1| 
+
+4. cmpa #$1B (0001 1011)(SPECIAL SOUND?)
+4. cmp |0|0|0|1| |1|0|1|1| 
+
+5. suba #$0D (SUB OFFSET)(1B - 0D = 0E)(#14)
+5. sub |0|0|0|0| |1|1|0|1| 
+ . A=  |0|0|0|0| |1|1|1|0| 
+ 
+6. asla (DOUBLE FOR ADDRESSING)(1C)(#28 (XPTR, XPTR+1)
+6. asl |0|0|0|1| |1|1|0|0| 
+
+7. ldx  #$FD58 (JMPTBL)
+8. ADDX (GET CORRECT INDEX) X+A = jump addr (14 posible addrs)
+9. jump to addr :
+
+X = $FD58 + ADDX = 
+0  (X+00h)  ;SP1
+1  (X+02h)  ;BG1
+2  (X+04h)  ;BG2INC
+3  (X+06h)  ;LITE
+4  (X+08h)  ;BON2
+5  (X+0Ah)  ;BGEND
+6  (X+0Ch)  ;TURBO
+7  (X+0Eh)  ;APPEAR
+8  (X+10h)  ;THRUST
+9  (X+12h)  ;CANNON
+10 (X+14h)  ;RADIO
+11 (X+16h)  ;HYPER
+12 (X+18h)  ;SCREAM
+13 (X+1Ah)  ;ORGANT
+14 (X+1Ch)  ;ORGANN
+
+

@@ -13,7 +13,7 @@ none    : PSing - early version (pre) of Delta F, Delta A Routine
 SYNTHA  : ??
 SYNTH2  : PTilt - early version (pre) of Tilt
 SYNTH3  : PLiten - early version (pre) of Lightning+Appear Noise Routine
-SYNTH6  : Pulse -  using SND,NOT,WAV tables of amp,length,freq
+SYNTH6  : Pulse -  using SND,NOT,WAV tables of amp,length,freq (early pin DS1-1 Chime synth?)
 SYNTH10 : Tilt (low ramp down)
 -
 SYNTH1  : PGWave - early version (pre) of GWave (ROM 2 only)
@@ -52,7 +52,6 @@ Speech data SPCH ROM -> sound PIA CA2 (0401) pin 39 -> IC1 DIn  pin13(3417) or p
 
 Write to bit3 of CB2 from LO(37h) to HI(3Fh) to LO(37h) for clock (TKSC)(0011 x111)
 then write bit3 of CA2 from LO(34h) to HI(3Ch) to LO(34h) for data (TKSD)(0011 x100)
-
 
 ______________________________________________
 Disassembled by:

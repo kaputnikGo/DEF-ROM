@@ -834,9 +834,9 @@ FBC5 : C6 80      ldab  #$80          ;load B with 80h
 FBC7 : F7 04 02   stab  $0402         ;store B in addr 0402 (PIA)
 FBCA : 7C 00 09   inc  $0009          ;incr addr 0009 <-- origins/clear?
 FBCD : 43         coma                ;complement 1s A (INVERT INPUT)
-FBCE : 84 7F      anda  #$7F          ;and A with 7Fh (MASK GARB)
+FBCE : 84 7F      anda  #$7F          ;and A with 7Fh (MASK GARB)(0111 1111)
 FBD0 : 36         psha                ;push A into stack then SP-1
-FBD1 : 84 5F      anda  #$5F          ;and A with 5Fh
+FBD1 : 84 5F      anda  #$5F          ;and A with 5Fh(0101 1111)
 FBD3 : 81 16      cmpa  #$16          ;compare A with 16h
 FBD5 : 27 03      beq  LFBDA          ;branch Z=1 IRQ1
 FBD7 : 7F 00 07   clr  $0007          ;clear addr 0007
