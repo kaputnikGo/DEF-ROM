@@ -2,6 +2,8 @@ Williams Sound ROM IRQ PROCESSING for sound select
 
 Pinball, Speech and Video game ROMS
 
+- work in progress (as usual)
+
 
 PIA Port B traces to Sound Select (IOJ3) connector
 PB0   J3-3
@@ -21,58 +23,177 @@ J3- |8 |SW|6 |7 |4 |5 |2 |3 |
 
 ** Video games have W4 jumpered ie:J3-6 -> PIA b5 
 
+IRQDAT processing:
+
+
 ============================================================
 PIA sound select mask listing
-
 - MASK GARB TABLE  |8|S|6|7|4|5|2|3|
-VIDEO
-- Bubbles       ANDA 7Fh (0111 1111)(p3,2,5,4,7,6,9)(p9 is DS1-1 switch)
-- Blaster       ANDA 3Fh (0011 1111)(p3,2,5,4,7,6)
-- Joust         ANDA 3Fh (0011 1111)(p3,2,5,4,7,6)
-- Robotron 2048 ANDA 3Fh (0011 1111)(p3,2,5,4,7,6)
-- Defender      ANDA 1Fh (0001 1111)(p3,2,5,4,7)
-- Sinistar      ANDA 1Fh (0001 1111)(p3,2,5,4,7)
-- Stargate      ANDA 1Fh (0001 1111)(p3,2,5,4,7)
 
+
+
+PROM PINBALL (1st electronic sounds)
+- Pinball PROM 1 Disco Fever
+-               BITA 9Fh (1001 1111) check, params
+-               BITA 50h (0101 0000) check, Delta F, Delta A Routine
+-               ANDB 0Fh (0000 1111) electronic sounds
+
+
+----------------------------------------------------------
 
 SPEECH PINBALL
-- Gorgar        ANDA 7Fh (0111 1111) mask for Speech, psha
+- ROM 2 Gorgar 
+-               ANDA 7Fh (0111 1111) mask for Speech, psha
 -               ANDA 5Fh (0101 1111) check, load params
 -               BITA 20h (0010 0000) pula, Speech
 -               BITA 40h (0100 0000) jump PULSE (chimes?)
--               ANDA 1Fh (0001 1111) no speech
+-               ANDA 1Fh (0001 1111) no speech, electronic sounds
 
-- Firepower     ANDA 7Fh (0111 1111) mask for Speech, psha
+- ROM 3 Firepower 
+-               ANDA 7Fh (0111 1111) mask for Speech, psha
 -               ANDA 5Fh (0101 1111) check, clear B1FLG,B2FLG
 -               BITA 20h (0010 0000) pula, Speech
 -               BITA 40h (0100 0000) jump PULSE (chimes?)
--               ANDA 1Fh (0001 1111) no speech
+-               ANDA 1Fh (0001 1111) no speech, electronic sounds
 
-- Black Knight  ANDA 7Fh (0111 1111) mask for Speech, psha
+- ROM 5 Black Knight  
+-               ANDA 7Fh (0111 1111) mask for Speech, psha
 -               BITA 20h (0010 0000) pula, Speech
--               ANDA 1Fh (0001 1111) no speech
+-               ANDA 1Fh (0001 1111) no speech, electronic sounds
+-               IRQDAT processing
 
-- Pharaoh       ANDA 7Fh (0111 1111) mask for Speech, psha
+- ROM 6 Pharaoh 
+-               ANDA 7Fh (0111 1111) mask for Speech, psha
 -               ANDA 5Fh (0101 1111) check, clear params
 -               BITA 20h (0010 0000) pula, Speech
--               ANDA 1Fh (0001 1111) no speech
+-               ANDA 1Fh (0001 1111) no speech, electronic sounds
 
-- Thunderball   ANDA 3Fh (0011 1111)
+- PROTO 1 Thunderball   
+-               ANDA 3Fh (0011 1111) mask for speech
+-               CMPA 20h (0010 0000) check
+-               ANDA 1Fh (0001 1111) psha, no speech, pula, electronic sounds
+
+----------------------------------------------------------
 
 PINBALL (no speech)
-* ROMs 4, 7 have no speech board or ROMs
+- ROM 1 Flash
+-               CMPA 46h (0100 0110) check
+-               BITA 40h (0100 0000) jump PULSE (chimes?)
+-               ANDA 1Fh (0001 1111) electronic sounds
+-               CMPA 18h (0001 1000) bhi PULSE (chimes?)
+
+----------------
+- ROM 2,3 above
+----------------
+
+* ROMs 4, 7, 13 have TALK code but no speech board or speech ROMs
 - ROM 4 Algar       
 -               ANDA 7Fh (0111 1111) mask for Speech, psha
 -               BITA 20h (0010 0000) pula, Speech
--               ANDA 1Fh (0001 1111) no speech
+-               ANDA 1Fh (0001 1111) no speech, electronic sounds
+
 
 - ROM 7 Solar Fire  
 -               ANDA 7Fh (0111 1111) mask for Speech, psha
 -               BITA 20h (0010 0000) pula, Speech
--               ANDA 1Fh (0001 1111) no speech
+-               ANDA 1Fh (0001 1111) no speech, electronic sounds
 
 
-- Varkon      ANDA 1Fh (0001 1111)
+- ROM 13 Time Fantasy
+-               ANDA 7Fh (0111 1111) mask for Speech, psha
+-               ANDA 5Fh (0101 1111) check, clear params
+-               BITA 20h (0010 0000) pula, Speech
+-               BITA 40h (0100 0000) jump PULSE (chimes?)
+-               ANDA 1Fh (0001 1111) electronic sounds
+
+----------------
+- ROM 5,6 above
+----------------
+
+- ROM 8 Hyperball
+-               ANDA 1Fh (0001 1111) electronic sounds
+
+----------------
+- ROM 9 unknown
+----------------
+
+- ROM 10 Varkon 
+-               ANDA 1Fh (0001 1111) electronic sounds
+-               IRQDAT processing
+
+----------------
+- ROM 11 unknown
+----------------
+
+- ROM 12 Cosmic Gunfight
+-               ANDA 1Fh (0001 1111) electronic sounds
+-               IRQDAT processing
+
+----------------
+- ROM 13 above
+----------------
+
+- ROM 14 Warlok
+-               CMPA 46h (0100 0110) check
+-               BITA 40h (0100 0000) jump PULSE (chimes?)
+-               ANDA 1Fh (0001 1111) electronic sounds
+
+
+- ROM 15 Defender 
+-               ANDA 1Fh (0001 1111) electronic sounds
+
+
+- PROTO 2 Rat Race
+-               no masking, just CMPA's and IRQDAT processing
+
+
+----------------------------------------------------------
+
+VIDEO
+- Video ROM 1 Defender      
+-               ANDA 1Fh (0001 1111) electronic sounds (p3,2,5,4,7)
+
+
+- Video ROM 2 Stargate      
+-               ANDA 1Fh (0001 1111) electronic sounds (p3,2,5,4,7)
+
+
+- Video ROM 3 Robotron 2048 
+-               ANDA 3Fh (0011 1111)(p3,2,5,4,7,6)
+-               CMPA 1Fh (0001 1111) electronic sounds 
+
+
+- Video ROM 4 Joust (Video and Pinball)
+-               ANDA 3Fh (0011 1111)(p3,2,5,4,7,6)
+-               CMPA 1Fh (0001 1111) electronic sounds 
+
+----------------
+- Video ROMs 5,6,7 unknown
+----------------
+
+- Video ROM 8 Bubbles (TALK code but no speech board or speech ROMs)
+-               ANDA 7Fh (0111 1111) mask for Speech, psha (p3,2,5,4,7,6,9)(p9 is DS1-1 switch)
+-               ANDA 5Fh (0101 1111) check, load params
+-               BITA 20h (0010 0000) pula, Speech
+-               ANDA 1Fh (0001 1111) electronic sounds
+
+----------------
+- Video ROM 9 unknown
+----------------
+
+- Video ROM 10 Sinistar (TALK and Speech ROMs)
+-               ANDA 1Fh (0001 1111) electronic sounds (p3,2,5,4,7)
+-               CMPA nnh (nn == 02,06,0B,0D,0E,0F,13,1D) check Speech
+
+----------------
+- Video ROMs 11,12,13,14,15,16,17 unknown
+----------------
+
+- Video ROM 18 Blaster       
+-               ANDA 3Fh (0011 1111)(p3,2,5,4,7,6)
+-               CMPA 1Fh (0001 1111) electronic sounds 
+
+
 
 ============================================================
 PIA sound select examples:

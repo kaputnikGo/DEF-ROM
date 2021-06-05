@@ -995,7 +995,7 @@ F579 : 20 13      bra  LF58E     ;branch always IRQ6
 F57B : 81 31      cmpa  #$31     ;compare A with value 31h
 F57D : 22 07      bhi  LF586     ;branch C+Z=0 IRQ4
 F57F : 80 2B      suba  #$2B     ;subtract A with value 2Bh
-F581 : BD FD 8F   jsr  LFD8F     ;jump sub way below
+F581 : BD FD 8F   jsr  LFD8F     ;jump sub WALSH
 F584 : 20 2A      bra  LF5B0     ;branch always IRQ10
 ;IRQ4
 F586 : 80 23      suba  #$23     ;subtract A with value 23h   
@@ -1004,8 +1004,8 @@ F588 : 20 12      bra  LF59C     ;branch always IRQ8
 F58A : 81 0C      cmpa  #$0C     ;compare A with value 0Ch
 F58C : 22 08      bhi  LF596     ;branch C=0 and Z=0 IRQ7
 ;IRQ6
-F58E : BD F4 1F   jsr  LF41F     ;jump sub WVTRAN above
-F591 : BD F4 85   jsr  LF485     ;jump sub SYNTH above
+F58E : BD F4 1F   jsr  LF41F     ;jump sub GWLD
+F591 : BD F4 85   jsr  LF485     ;jump sub GWAVE 
 F594 : 20 1A      bra  LF5B0     ;branch always IRQ10
 ;IRQ7
 F596 : 81 1B      cmpa  #$1B     ;compare A with value 1Bh
@@ -1020,8 +1020,8 @@ F5A4 : AD 00      jsr  $00,x     ;jump sub addr X + 00h
 F5A6 : 20 08      bra  LF5B0     ;branch always IRQ10
 ;IRQ9 
 F5A8 : 80 1C      suba  #$1C     ;subtract A from value 1Ch
-F5AA : BD F0 CA   jsr  LF0CA     ;jump sub WVTRAN1
-F5AD : BD F0 DF   jsr  LF0DF     ;jump sub SYNTH3
+F5AA : BD F0 CA   jsr  LF0CA     ;jump sub VARILD
+F5AD : BD F0 DF   jsr  LF0DF     ;jump sub VARI
 ;IRQ10 
 F5B0 : 96 00      ldaa  $00      ;load A with addr 00
 F5B2 : 9A 01      oraa  $01      ;OR A with addr 01
@@ -1031,9 +1031,9 @@ F5B6 : 4F         clra           ;clear A
 F5B7 : 97 03      staa  $03      ;store A in addr 03
 F5B9 : 96 00      ldaa  $00      ;load A with addr 00
 F5BB : 27 03      beq  LF5C0     ;branch Z=1 IRQ12
-F5BD : 7E F1 CC   jmp  LF1CC     ;jump PRMSYN6
+F5BD : 7E F1 CC   jmp  LF1CC     ;jump FNCALL
 ;IRQ12
-F5C0 : 7E F3 D4   jmp  LF3D4     ;jump WVTRAN above
+F5C0 : 7E F3 D4   jmp  LF3D4     ;jump BG2
 ;*************************************;
 ;ADDX
 ;*************************************;
