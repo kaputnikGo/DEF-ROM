@@ -19,11 +19,15 @@ SYNTH10 : Tilt (low ramp down)
 SYNTH1  : PGWave - early version (pre) of GWave (ROM 2 only)
 -
 Sinistar:
-SYNTH22 : (no source)
+SYNTH22 : (no source for any below)
 SYNTH23 : Stacker1 - 2 stack pula/psha loops with com DAC, no tables, link NMI only(no source)(white noise blast)
 SYNTH24 : Stacker2 - 2 stack pula/psha loops with com DAC, no tables, 10 loops(no source)(white noise blast)
 SYNTH25 : - 4x com 1s to DAC(no source)
 
+Blaster:
+SYNTHZ-1 : (no source for any below)
+SYNTHZ-2 :
+SYNTHZ-3 :
 
 NOTES:
 PULSE : accessed via specific BITA 40h (0100 0000) checks in IRQs for some ROMs.
