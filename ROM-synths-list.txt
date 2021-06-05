@@ -31,6 +31,7 @@ DS switch 1-1 to PIA byte6 Chimes or Electronic sounds, typically found on Type 
 Possible electronic sound substitute for mechanical chime units when not included in early pinballs.
 Pinball ROM 4 (Algar) is last to have a BITA 40h PULSE check, 
 and then, for some reason, ROMs 13 Time Fantasy and 14 Warlok 
+Marked below in ROM listings as "BIT40 : yes/no"
 
 Vari : VARIABLE DUTY CYCLE SQUARE WAVE ROUTINE
 Noise with Whistle Routine : Full version or Half version with no "Noise With Whistle Main Loop"
@@ -134,6 +135,7 @@ Checksum:  B959
 CRC-32:    6C58F0F4
 ORG: $7E00
 DAC: $0400
+BIT40: YES
 ;-------------------------------------;
 SYNTHA (no source)
 PSing (no source)
@@ -147,6 +149,7 @@ Checksum:  D78C
 CRC-32:    D3C713DA
 ORG: $7E00
 DAC: $0400
+BIT40: ?
 ;-------------------------------------;
 SYNTHA (no source)
 PTilt(no source)
@@ -161,6 +164,7 @@ Checksum:  C8AC
 CRC-32:    4D8F6A3C
 ORG: $7E00
 DAC: $8400
+BIT40: NO
 ;-------------------------------------;
 PTilt(no source)
 Delta F, Delta A Routine
@@ -174,6 +178,7 @@ Checksum:  0A2C
 CRC-32:    1C3DEA6E
 ORG: $7E00
 DAC: $0400
+BIT40: ?
 ;-------------------------------------;
 Delta F, Delta A Routine
 PTilt(no source)
@@ -187,6 +192,7 @@ Checksum:  1BC0
 CRC-32:    5DE02E62
 ORG: $7E00
 DAC: $8400
+BIT40: ?
 ;-------------------------------------;
 Delta F, Delta A Routine
 PTilt(no source)
@@ -200,6 +206,7 @@ Checksum: E106
 CRC-32:  F4190CA3
 ORG: $7800
 DAC: $8400
+BIT40: YES
 ;*************************************;
 ROM 1 (Flash) October 1978 (Sys 4)
 Size:  2048 bytes
@@ -207,6 +214,7 @@ Checksum: E106
 CRC-32:  F4190CA3
 ORG: $7800
 DAC: $8400
+BIT40: YES
 ;*************************************;
 ROM 1 (Stellar Wars) March 1979 (Sys 6)
 Size:    2048 bytes
@@ -214,6 +222,7 @@ Checksum:  E106
 CRC-32:    F4190CA3
 ORG: $7800
 DAC: $8400
+BIT40: YES
 ;*************************************;
 ROM 1 (Tri Zone) July 1979 (Sys 6)
 Size:    2048 bytes
@@ -228,6 +237,7 @@ Checksum: E106
 CRC-32:  F4190CA3
 ORG: $7800
 DAC: $8400
+BIT40: YES
 ;*************************************;
 ROM 1 (Scorpion) July 1980 (Sys 6)
 Size:  2048 bytes
@@ -235,6 +245,7 @@ Checksum: E106
 CRC-32:  F4190CA3
 ORG: $7800
 DAC: $8400
+BIT40: YES
 ;-------------------------------------;
 Three Oscillator Sound Generator
 Echo And Decay Routine
@@ -254,6 +265,7 @@ Checksum:  EC44
 CRC-32:    C9103A68
 ORG: $F800
 DAC: $0400
+BIT40: YES
 ;*************************************;
 ROM 2 (Laser Ball) December 1979 (Sys 6)
 Size:    2048 bytes
@@ -261,6 +273,7 @@ Checksum:  EC44
 CRC-32:    C9103A68
 ORG: $F800
 DAC: $0400
+BIT40: YES
 ;*************************************;
 ROM 2 (Blackout, speech) June 1980 (Sys 6)
 Size:    2048 bytes
@@ -268,6 +281,7 @@ Checksum:  EC44
 CRC-32:    C9103A68
 ORG: $F800
 DAC: $0400
+BIT40: YES
 ;*************************************;
 ROM 2 (Alien Poker, speech) October 1980 (Sys 6)
 Size:    2048 bytes
@@ -275,6 +289,7 @@ Checksum:  EC44
 CRC-32:    C9103A68
 ORG: $F800
 DAC: $0400
+BIT40: YES
 ;-------------------------------------;
 Three Oscillator Sound Generator
 Echo And Decay Routine
@@ -294,6 +309,7 @@ Checksum:  BDCA
 CRC-32:    55A10D13
 ORG: $F800
 DAC: $0400
+BIT40: YES
 ;*************************************;
 ROM 3 (Jungle Lord, speech) February 1981 (Sys 7)
 Size:    2048 bytes
@@ -301,6 +317,7 @@ Checksum:  BDCA
 CRC-32:    55A10D13
 ORG: $F800
 DAC: $0400
+BIT40: YES
 ;*************************************;
 ROM 3 (Firepower II) July 1983 (Sys 7)
 Size:    2048 bytes
@@ -308,6 +325,7 @@ Checksum:  BDCA
 CRC-32:    55A10D13
 ORG: $F800
 DAC: $0400
+BIT40: YES
 ;*************************************;
 ROM 3 (Star Light) June 1984 (Sys 7)
 Size:    2048 bytes
@@ -315,6 +333,7 @@ Checksum:  BDCA
 CRC-32:    55A10D13
 ORG: $F800
 DAC: $0400
+BIT40: YES
 ;-------------------------------------;
 Vari
 Lightning+Appear Noise Routine
@@ -333,6 +352,7 @@ Checksum:  C440
 CRC-32:    67EA12E7
 ORG: $F800
 DAC: $0400
+BIT40: YES
 ;*************************************;
 ROM 4 (Barracora) September 1981 (Sys 7)
 Size:    2048 bytes
@@ -340,6 +360,7 @@ Checksum:  C440
 CRC-32:    67EA12E7
 ORG: $F800
 DAC: $0400
+BIT40: YES
 ;-------------------------------------;
 Vari
 Lightning+Appear Noise Routine
@@ -358,6 +379,7 @@ Checksum:  DD2F
 CRC-32:    6D454C0E
 ORG: $F800
 DAC: $0400
+BIT40: NO
 ;-------------------------------------;
 Vari
 Noise with Whistle Routine (Full)
@@ -374,6 +396,7 @@ Checksum:  BF93
 CRC-32:    B0E3A04B
 ORG: $F800
 DAC: $0400
+BIT40: NO
 ;-------------------------------------;
 Vari
 Organ (Tune)
@@ -390,6 +413,7 @@ Checksum:  DA1D
 CRC-32:    05A2230C
 ORG: $F800
 DAC: $0400
+BIT40: NO
 ;-------------------------------------;
 Vari
 Ziren
@@ -461,6 +485,7 @@ Checksum:  ABDE
 CRC-32:    AF41737B
 ORG: $F800
 DAC: $0400
+BIT40: NO
 ;-------------------------------------;
 Vari
 Lightning+Appear Noise Routine
@@ -478,6 +503,15 @@ Checksum:  BDCA
 CRC-32:    55A10D13
 ORG: $F800
 DAC: $0400
+BIT40: YES
+;*************************************;
+ROM 13 (Star Light) June 1984 (Sys 7) (last sys7, rest made as sys9)
+Size:    2048 bytes
+Checksum:  BDCA
+CRC-32:    55A10D13
+ORG: $F800 
+DAC: $0400
+BIT40: YES
 ;-------------------------------------;
 Vari
 Lightning+Appear Noise Routine
@@ -496,6 +530,7 @@ Checksum:  FD04
 CRC-32:    5D8E46D6
 ORG: $F800
 DAC: $0400
+BIT40: YES
 ;-------------------------------------;
 Three Oscillator Sound Generator
 Echo And Decay Routine
@@ -516,6 +551,7 @@ Checksum:  AF3F
 CRC-32:    CABAEC58
 ORG: $F800
 DAC: $0400
+BIT40: NO
 ;-------------------------------------;
 Vari
 Lightning+Appear Noise Routine
@@ -537,6 +573,7 @@ Checksum:  A229
 CRC-32:    CC70AF52
 ORG: $F000
 DAC: $0400
+BIT40: NO
 ;-------------------------------------;
 Vari
 Noise with Whistle Routine (Full)
@@ -556,6 +593,7 @@ Checksum: B486
 CRC-32:  C54B9402
 ORG: $E000
 DAC: $2002
+BIT40: NO
 ;-------------------------------------;
 Organ (Tune)
 Tilt (no source)
@@ -590,6 +628,7 @@ Checksum:  9A11
 CRC-32:    3BBC90BF
 ORG: $F000
 DAC: $0400
+BIT40: NO
 ;-------------------------------------;
 Three Oscillator Sound Generator
 Whist (THE BOMB OOOOOH NOOOOO!)
@@ -606,12 +645,13 @@ Walsh Function Sound Machine V2
 
 
 ;*************************************;
-ROM ?? (Laser Cue) March 1984 (Sys 7) (routines sim to Cosmic Gunfight)
+ROM ?? (Laser Cue) March 1984 (Sys 7) (same routines as Cosmic Gunfight, diff order)
 Size:    2048 bytes
 Checksum:  52FB
 CRC-32:    1888C635
-ORG: 
-DAC:
+ORG: $F800 
+DAC: $0400
+BIT40: NO
 ;-------------------------------------; 
 Vari
 Knocker Routine
@@ -619,7 +659,6 @@ Tilt
 Lightning+Appear Noise Routine
 White Noise Routine
 GWave
-
 
 
 
@@ -722,6 +761,7 @@ Checksum:  BC41
 CRC-32:    FEFD5B48
 ORG: $F800
 DAC: $0400
+BIT40: NO
 ;-------------------------------------;
 Vari
 Lightning+Appear Noise Routine
@@ -742,6 +782,7 @@ Checksum:  A716
 CRC-32:    2FCF6C4D
 ORG: $F800
 DAC: $0400
+BIT40: NO
 ;-------------------------------------; 
 Vari
 Lightning+Appear Noise Routine
@@ -762,6 +803,7 @@ Checksum:  6780
 CRC-32:    C56C1D28
 ORG: $F000
 DAC: $0400
+BIT40: NO
 ;-------------------------------------;
 Three Oscillator Sound Generator
 Echo And Decay Routine 
@@ -792,6 +834,7 @@ Checksum:  AF34
 CRC-32:    F1835BDD
 ORG: $F000
 DAC: $0400
+BIT40: NO
 ;-------------------------------------;
 Three Oscillator Sound Generator
 Echo And Decay Routine
@@ -815,6 +858,7 @@ Checksum:  30A7
 CRC-32:    689CE2AA
 ORG: $F000
 DAC: $0400
+BIT40: NO
 ;-------------------------------------;
 Noise with Whistle Routine (Full)
 Vari
@@ -833,6 +877,7 @@ Checksum:  A822
 CRC-32:    B82F4DDB
 ORG: $F000
 DAC: $0400
+BIT40: NO
 ;-------------------------------------;
 Organ (Tune)
 Walsh Function Sound Machine V2
@@ -865,6 +910,7 @@ Checksum:  D012
 CRC-32:    C33A3145
 ORG: $F000
 DAC: $0400
+BIT40: NO
 ;-------------------------------------;
 Diving Plane Sound
 Knocker Routine

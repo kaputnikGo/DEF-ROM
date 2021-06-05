@@ -14,6 +14,15 @@
         ;
         ;  CPU:    Motorola 6800 (6800/6802/6808 family)
         ;
+        ;Pinball Sound ROM 14, Warlok, 
+        ;
+        ;apparently has : W12 - PB7 Status (input sound select #8)(used in Warlok)
+        ; manual has it jumpered, yet IRQ masks out bit 7, never reads it
+        ;PIA |b7|b6|b5|b4|b3|b2|b1|b0|
+        ;pcb|W12|SW|W4|...
+        ;J3- |8 |SW|6 |7 |4 |5 |2 |3 |
+        ;0402|1 |1 |0 |1 |1 |1 |1 |1 |
+        ; 
         ;
         ;
           org  $F800

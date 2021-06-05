@@ -6,22 +6,23 @@ Pinball, Speech and Video game ROMS
 
 
 PIA Port B traces to Sound Select (IOJ3) connector
+
+IOJ3 connector: (NC|8|7|6|5|4|3|2|key)
+All (IOJ3, DS1) held high (5v) by SR1 (4.7k res) until grounded by contact/switch
+
 PB0   J3-3
 PB1   J3-2
 PB2   J3-5
 PB3   J3-4
 PB4   J3-7
-PB5   J3-6(W4) or DS1-2(W9)(speech)
-PB6   DS1-1(chimes or electronic)
-PB7   J3-8(W13/W12)
-
-IOJ3 connector: (NC|8|7|6|5|4|3|2|key)
-All (IOJ3, DS1) held high (5v) by SR1 (4.7k res) until grounded by contact/switch
+PB5   J3-6(W4) or DS1-2(W9)(referred to as Speech enable in some manuals)
+PB6   DS1-1(chimes or electronic) - always connected to switch 1, no jumpers
+PB7   J3-8(W12) or (W13) to nothing on pcb
 
 PIA |b7|b6|b5|b4|b3|b2|b1|b0|
 J3- |8 |SW|6 |7 |4 |5 |2 |3 |
 
-** Video games have W4 jumpered ie:J3-6 -> PIA b5 
+** Video games *may* have W4 jumpered ie:J3-6 -> PIA b5 
 
 
 ============================================================
@@ -152,6 +153,10 @@ PINBALL (no speech)
 -               IRQDAT processing
 -               CMPA 54h (0101 0100) highest check, VARI
 -               SUBA =   (0010 0010) check, asla, ADDX, JMPTBL
+
+
+- ROM ?? Laser Cue
+-               ANDA 1Fh (0001 1111) electronic sounds
 
 ----------------------------------------------------------
 
