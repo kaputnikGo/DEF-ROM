@@ -10,7 +10,7 @@ List of Synths per ROM/Game (in order of appearance in ROM):
 
 temp    : new name
 none    : PSing - early version (pre) of Delta F, Delta A Routine
-SYNTHA  : ??
+SYNTHA  : proto version of Pulse?
 SYNTH2  : PTilt - early version (pre) of Tilt
 SYNTH3  : PLiten - early version (pre) of Lightning+Appear Noise Routine
 SYNTH6  : Pulse -  using SND,NOT,WAV tables of amp,length,freq (early pin DS1-1 Chime synth?)
@@ -25,12 +25,21 @@ SYNTH24 : Stacker2 - 2 stack pula/psha loops with com DAC, no tables, 10 loops(n
 SYNTH25 : - 4x com 1s to DAC(no source)
 
 
-Notes:
+NOTES:
+PULSE : accessed via specific BITA 40h (0100 0000) checks in IRQs for some ROMs.
+DS switch 1-1 to PIA byte6 Chimes or Electronic sounds, typically found on Type 1 rectangular sound boards.
+Possible electronic sound substitute for mechanical chime units when not included in early pinballs.
+Pinball ROM 4 (Algar) is last to have a BITA 40h PULSE check, 
+and then, for some reason, ROMs 13 Time Fantasy and 14 Warlok 
+
 Vari : VARIABLE DUTY CYCLE SQUARE WAVE ROUTINE
 Noise with Whistle Routine : Full version or Half version with no "Noise With Whistle Main Loop"
 
 Robotron 2084 has 18 different sound output routines, largest of any production ROM.
 Rat Race has 20 different routines.
+
+Several Pinball ROMs have TALK/TALKD code but no (known) Speech board or Speech ROMs:
+ROMs 4 Algar, 7 Solar Fire, 13 Time Fantasy
 
 Notes about PROMS (pre ROM 1) as 512 byte code, multiplied x4 to fit into a 2716.
 All have slighlty different code layouts for each game. Dasmx checksum will be for the 2716 unless noted otherwise.
@@ -38,6 +47,7 @@ Also PIA/DAC addr is 8400 or 0400, assuming on sound board that addr above $400 
 
 
 SPEECH ROM INFO:
+known in code as TALK (IRQ processing) and TALKD (NMI diagnostics)
 Speech ROM ICs: 4($E000), 5($C000), 6($D000), 7($B000)
 
 IC1 Continuously Variable Slope Delta Modulator/Demodulator

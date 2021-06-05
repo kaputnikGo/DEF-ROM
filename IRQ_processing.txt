@@ -23,8 +23,6 @@ J3- |8 |SW|6 |7 |4 |5 |2 |3 |
 
 ** Video games have W4 jumpered ie:J3-6 -> PIA b5 
 
-IRQDAT processing:
-
 
 ============================================================
 PIA sound select mask listing
@@ -33,6 +31,12 @@ PIA sound select mask listing
 
 
 PROM PINBALL (1st electronic sounds)
+- Pinball PROM 1 World Cup
+-               BITB 10h (0001 0000) check, PTILT
+-               BITB 20h (0010 0000) check, electronic sounds
+-               BITA 40h (0100 0000) jump SYNTHA (half PULSE)
+
+
 - Pinball PROM 1 Disco Fever
 -               BITA 9Fh (1001 1111) check, params
 -               BITA 50h (0101 0000) check, Delta F, Delta A Routine
@@ -90,6 +94,7 @@ PINBALL (no speech)
 - ROM 4 Algar       
 -               ANDA 7Fh (0111 1111) mask for Speech, psha
 -               BITA 20h (0010 0000) pula, Speech
+-               BITA 40h (0100 0000) jump PULSE (chimes?)
 -               ANDA 1Fh (0001 1111) no speech, electronic sounds
 
 
@@ -144,8 +149,9 @@ PINBALL (no speech)
 
 
 - PROTO 2 Rat Race
--               no masking, just CMPA's and IRQDAT processing
-
+-               IRQDAT processing
+-               CMPA 54h (0101 0100) highest check, VARI
+-               SUBA =   (0010 0010) check, asla, ADDX, JMPTBL
 
 ----------------------------------------------------------
 
@@ -252,5 +258,36 @@ X = $FD58 + ADDX =
 12 (X+18h)  ;SCREAM
 13 (X+1Ah)  ;ORGANT
 14 (X+1Ch)  ;ORGANN
+
+
+============================================================
+IRQDAT processing:
+Possible params prior to VARILD, GWLD and/or ASLA then JMPTBL 
+
+ROM 5 Black Knight 
+-   sound select in A
+-   loads X with table location, example of vars (02 03 0F 11 12 14 17 1B)
+-   jsr ADDX (add A to X)
+-   load A with X+00h
+-   jsr EFFD (TALK)
+
+ROM 10 Varkon
+-   sound select in A
+-   loads X with table location, example of vars (00 07 8A 88 84 03 8D 80)
+-   jsr ADDX (add A to X)
+-   load A with X+00h
+
+
+ROM 12 Cosmic Gunfight
+-   sound select in A
+-   loads X with table location, example of vars (80 00 01 02 03 89 05 06)
+-   jsr ADDX (add A to X)
+-   load A with X+00h
+
+
+ROM PROTO Rat Race
+-   sound select in A
+-   loads X with table location, example of vars (03 06 0A 04 0E 05 09 00)
+
 
 
