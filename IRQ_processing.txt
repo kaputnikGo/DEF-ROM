@@ -271,6 +271,11 @@ Possible params prior to VARILD, GWLD and/or ASLA then JMPTBL
 
 ROM 5 Black Knight 
 -   sound select in A
+-   ANDA 7Fh (0111 1111) psha
+-   ANDA 1Fh (0001 1111) mask
+-   BITA 20h (0010 0000) pula, Speech
+-   ANDA 1Fh (0001 1111) mask again
+-   CMPA 14h (0001 0100) check, electronic sounds, or
 -   loads X with table location, example of vars (02 03 0F 11 12 14 17 1B)
 -   jsr ADDX (add A to X)
 -   load A with X+00h
@@ -281,6 +286,7 @@ ROM 10 Varkon
 -   loads X with table location, example of vars (00 07 8A 88 84 03 8D 80)
 -   jsr ADDX (add A to X)
 -   load A with X+00h
+-   ANDA 3Fh (0011 1111) VARI, GWAVE, JMPTBL
 
 
 ROM 12 Cosmic Gunfight
@@ -288,11 +294,15 @@ ROM 12 Cosmic Gunfight
 -   loads X with table location, example of vars (80 00 01 02 03 89 05 06)
 -   jsr ADDX (add A to X)
 -   load A with X+00h
+-   ANDA 3Fh (0011 1111) JMPTBL, VARI, GWAVE
 
 
 ROM PROTO Rat Race
 -   sound select in A
 -   loads X with table location, example of vars (03 06 0A 04 0E 05 09 00)
+-   CMPA 2Fh (0010 1111) SUBA 1Ah GWAVE
+-   CMPA 52h (0101 0010) SUBA 30h JMPTBL
+-   CMPA 53h (0101 0011) VARI
 
 
 
