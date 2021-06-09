@@ -170,7 +170,7 @@ VIDEO
 
 
 - Video ROM 3 Robotron 2048 
--               ANDA 3Fh (0011 1111)(p3,2,5,4,7,6)
+-               ANDA 3Fh (0011 1111)(p3,2,5,4,7,6) check, organ tune
 -               CMPA 1Fh (0001 1111) electronic sounds 
 
 

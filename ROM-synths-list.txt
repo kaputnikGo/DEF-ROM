@@ -528,7 +528,7 @@ Tilt (no source)
 
 
 ;*************************************;
-ROM 14 (Warlok) October 1982 (Sys 7)
+ROM 14 (Warlok) October 1982 (Sys 7)(same routines as ROM1 Flash)
 Size:    2048 bytes
 Checksum:  FD04
 CRC-32:    5D8E46D6

@@ -1038,28 +1038,28 @@ F5C0 : 7E F3 D4   jmp  LF3D4     ;jump BG2
 ;ADDX
 ;*************************************;
 F5C3 : DF 0B      stx  $0B       ;store X in addr 0B
-F5C5 : 9B 0C      adda  $0C     ;add A with 0C
-F5C7 : 97 0C      staa  $0C     ;store A in addr 0C
+F5C5 : 9B 0C      adda  $0C      ;add A with 0C
+F5C7 : 97 0C      staa  $0C      ;store A in addr 0C
 F5C9 : 24 03      bcc  LF5CE     ;branch C=0 CAL1
 F5CB : 7C 00 0B   inc  $000B     ;incr value in addr 000B
 ;CAL1 LF5CE:
 F5CE : DE 0B      ldx  $0B       ;load X with 0B
-F5D0 : 39          rts           ;return subroutine
+F5D0 : 39         rts            ;return subroutine
 ;*************************************;
 ;NMI
 ;*************************************; 
-F5D1 : 0F          sei           ;set interrupt mask I=1
+F5D1 : 0F         sei            ;set interrupt mask I=1
 F5D2 : 8E 00 7F   lds  #$007F    ;load SP with 007Fh
 F5D5 : CE FF FF   ldx  #$FFFF    ;load X with FFFFh
-F5D8 : 5F          clrb          ;clear B
+F5D8 : 5F         clrb           ;clear B
 ;NMI1 LF5D9:
-F5D9 : EB 00      addb  $00,x   ;add B with addr X = 00h
-F5DB : 09          dex           ;decr X
+F5D9 : EB 00      addb  $00,x    ;add B with addr X = 00h
+F5DB : 09         dex            ;decr X
 F5DC : 8C F0 00   cpx  #$F000    ;comp X with F000h (ROM start addr) 
 F5DF : 26 F8      bne  LF5D9     ;branch if Z=0 NMI1
-F5E1 : E1 00      cmpb  $00,x   ;comp B with addr X + 00h
+F5E1 : E1 00      cmpb  $00,x    ;comp B with addr X + 00h
 F5E3 : 27 01      beq  LF5E6     ;branch if Z=1 NMI2
-F5E5 : 3E          wai           ;wait interrupt, CCodes to Stack, PC+1 and halt
+F5E5 : 3E         wai            ;wait interrupt, CCodes to Stack, PC+1 and halt
 ;NMI2 LF5E6:
 F5E6 : BD F2 0D   jsr  LF20D     ;jump sub SYNTH above
 F5E9 : 20 E6      bra  LF5D1     ;branch always NMI

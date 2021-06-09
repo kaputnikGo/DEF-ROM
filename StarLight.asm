@@ -15,7 +15,7 @@
         ;  CPU:    Motorola 6800 (6800/6802/6808 family)
         ;
         ;Pinball SOUND ROM 13 Star Light, 1984, last sys7 (100 made) rest made as sys9
-        ;same as Time Fanstasy
+        ;same Checksum as Sound ROM 3 Fireball, Time Fantasy etc.
         ;
         ;
           org  $F800

@@ -14,6 +14,8 @@
         ;
         ;  CPU:    Motorola 6800 (6800/6802/6808 family)
         ;
+        ; Pinball Sound ROM 13, Time Fantasy, march 1983
+        ; Note: same Checksum, CRC as Pinball Sound ROM 3 Firepower
         ;
         ;
           org  $F800
