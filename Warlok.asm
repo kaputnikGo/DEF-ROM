@@ -624,7 +624,7 @@ FB61 : 26 CE      bne  LFB31
 FB63 : 86 80      ldaa  #$80
 FB65 : B7 04 00   staa  X0400
 FB68 : 3E         wai
-;PULSLP
+;CHIMEX
 FB69 : 20 A1      bra  LFB0C
 ;*************************************;
 ;Interrupt Processing
@@ -648,7 +648,7 @@ FB87 : 26 83      bne  LFB0C          ;branch Z=0 CHIME
 FB89 : 84 1F      anda  #$1F          ;and A with 1Fh
 FB8B : 27 14      beq  LFBA1          ;branch Z=1 IRQ2
 FB8D : 81 18      cmpa  #$18          ;compare A with 18h
-FB8F : 22 D8      bhi  LFB69          ;branch C+Z=0 PULSLP
+FB8F : 22 D8      bhi  LFB69          ;branch C+Z=0 CHIMEX
 FB91 : 4A         deca                ;decr A
 FB92 : 48         asla                ;arith shift left A
 FB93 : CE FC F9   ldx  #$FCF9         ;load X with FCF9h (JMPTBL)
