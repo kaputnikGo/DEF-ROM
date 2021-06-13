@@ -50,7 +50,7 @@ org  $7E00
 7E21 : 0E         cli                 ;clear interrupts I=0
 7E22 : 3E         wai                 ;wait interrupts, PC+1
 ;*************************************;
-;unknown synth A (half PULSE, also in ContactPROM without SNDTBL2)
+;unknown synth A (also in ContactPROM without SNDTBL2)
 ;*************************************;
 ;SYNTHA L7E23
 7E23 : DF 01      stx  $01            ;store X in addr 01
@@ -159,15 +159,15 @@ org  $7E00
 7E9B : CE 7F AD   ldx  #$7FAD         ;load X with 7FADh (TBL5)
 7E9E : 20 EC      bra  L7E8C          ;branch always SNALD41
 ;*************************************;
-;early version (pre) Delta F, Delta A Routine (Single Osc)
+;PChime - early (pre) Chime synth, uses SNDTBL,WAVFRM tables
 ;*************************************; 
-;PSING
+;PCHIME
 7EA0 : D7 00      stab  $00           ;store B in addr 00
 7EA2 : CE 00 0C   ldx  #$000C         ;load X with addr 000C
 7EA5 : DF 03      stx  $03            ;store X in addr 03
 7EA7 : CE 7F C1   ldx  #$7FC1         ;load X with 7FC1h (SNDTBL1)
 7EAA : C6 10      ldab  #$10          ;load B with 10h
-;PSING1
+;PCHIM1
 7EAC : A6 00      ldaa  $00,x         ;load A with X+00h
 7EAE : 08         inx                 ;incr X
 7EAF : DF 05      stx  $05            ;store X in addr 05
@@ -177,39 +177,39 @@ org  $7E00
 7EB6 : DF 03      stx  $03            ;store X in addr 03
 7EB8 : DE 05      ldx  $05            ;load X with addr 05
 7EBA : 5A         decb                ;decr B
-7EBB : 26 EF      bne  L7EAC          ;branch Z=0 PSING1
+7EBB : 26 EF      bne  L7EAC          ;branch Z=0 PCHIM1
 7EBD : CE 7F E2   ldx  #$7FE2         ;load X with 7FE2h (WAVFRM)
 7EC0 : E6 00      ldab  $00,x         ;load B with X+00h
-;PSING2
+;PCHIM2
 7EC2 : D7 09      stab  $09           ;store B in addr 09
 7EC4 : DF 05      stx  $05            ;store X in addr 05
-;PSING3
+;PCHIM3
 7EC6 : CE 00 0C   ldx  #$000C         ;load X with 000Ch
 7EC9 : C6 08      ldab  #$08          ;load B with 08h
 7ECB : D7 07      stab  $07           ;store B in addr 07
-;SING2
+;PCHIM4 
 7ECD : A6 00      ldaa  $00,x         ;load A with X+00h
 7ECF : D6 00      ldab  $00           ;load B with addr 00
 7ED1 : 7D 00 09   tst  $0009          ;test addr 0009
-7ED4 : 26 06      bne  L7EDC          ;branch Z=0 PSING4
+7ED4 : 26 06      bne  L7EDC          ;branch Z=0 PCHIM5
 7ED6 : A0 08      suba  $08,x         ;sub A with X+08h
 7ED8 : A7 00      staa  $00,x         ;store A in X+00h
 7EDA : C0 03      subb  #$03          ;sub B with 03h
-;PSING4
+;PCHIM5
 7EDC : 08         inx                 ;incr X
 7EDD : B7 04 00   staa  $0400         ;store A in DAC output SOUND
-;SING3
+;PCHIM6
 7EE0 : 5A         decb                ;decr B
-7EE1 : 26 FD      bne  L7EE0          ;branch Z=0 SING3
+7EE1 : 26 FD      bne  L7EE0          ;branch Z=0 PCHIM6
 7EE3 : 7A 00 07   dec  $0007          ;decr addr 0007
-7EE6 : 26 E5      bne  L7ECD          ;branch Z=0 SING2
+7EE6 : 26 E5      bne  L7ECD          ;branch Z=0 PCHIM4
 7EE8 : 7A 00 09   dec  $0009          ;decr addr 0009
-7EEB : 2A D9      bpl  L7EC6          ;branch N=0 PSING3
+7EEB : 2A D9      bpl  L7EC6          ;branch N=0 PCHIM3
 7EED : DE 05      ldx  $05            ;load X with addr 05
 7EEF : 08         inx                 ;incr X
 7EF0 : E6 00      ldab  $00,x         ;load B with X+00h
-7EF2 : 26 CE      bne  L7EC2          ;branch Z=0 PSING2
-;PSINGX
+7EF2 : 26 CE      bne  L7EC2          ;branch Z=0 PCHIM2
+;PCHIMX
 7EF4 : 3E         wai                 ;wait interrupts, PC+1
 ;*************************************;
 ;early version (pre) of Tilt sound

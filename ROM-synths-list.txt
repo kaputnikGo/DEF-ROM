@@ -6,14 +6,16 @@ List of Synths per ROM/Game (in order of appearance in ROM):
 ;TODO  
 ;find a name based on function for SYNTHs with no sources
 ;separate asm files for complete each Synth + its params and any tables
-; find earliest implementation of Walsh Function Sound Machine V2 (December 1981, Hyperball)
+;find earliest implementation of Walsh Function Sound Machine V2 (December 1981, Hyperball)
+
+;renamed PULSE to Chime 
 
 temp    : new name
-none    : PSing - early version (pre) of Delta F, Delta A Routine
-SYNTHA  : proto version of Pulse?
+none    : PChime - early version (pre) of Chime (only 2 tables)
+SYNTHA  : ??
 SYNTH2  : PTilt - early version (pre) of Tilt
 SYNTH3  : PLiten - early version (pre) of Lightning+Appear Noise Routine
-SYNTH6  : Pulse -  using SND,NOT,WAV tables of amp,length,freq (early pin DS1-1 Chime synth?)
+SYNTH6  : Chime -  using SND,NOT,WAV tables of amp,length,freq (early pin DS1-1 Chime synth?)
 SYNTH10 : Tilt (low ramp down)
 -
 SYNTH1  : PGWave - early version (pre) of GWave (ROM 2 only)
@@ -30,10 +32,10 @@ SYNTHZ-2 :
 SYNTHZ-3 :
 
 NOTES:
-PULSE : accessed via specific BITA 40h (0100 0000) checks in IRQs for some ROMs.
+Chime : accessed via specific BITA 40h (0100 0000) checks in IRQs in some ROMs.
 DS switch 1-1 to PIA byte6 Chimes or Electronic sounds, typically found on Type 1 rectangular sound boards.
-Possible electronic sound substitute for mechanical chime units when not included in early pinballs.
-Pinball ROM 4 (Algar) is last to have a BITA 40h PULSE check, 
+Possible electronic sound substitute for mechanical Chime units when not included in early pinballs.
+Pinball ROM 4 (Algar) is last to have a BITA 40h Chime check, 
 and then, for some reason, ROMs 13 Time Fantasy and 14 Warlok 
 Marked below in ROM listings as "BIT40 : yes/no"
 
@@ -84,12 +86,12 @@ note: [size] is of SOUND routine only, not any parameter loaders or data tables
 
 [NAME]                              [ROM#]    [size]        [PARAMS]    [TABLES]    [UTILITY]   [IRQ]       [JMPTBL]    [ZERO]
 World Cup - March 1978                                                              30 bytes    66 bytes    16 bytes    8 bytes
-SYNTHA (no source)                  [PROM 1]  [28 bytes]    66 bytes    20 bytes
-PSing (no source)                   [PROM 1]  [85 bytes]    0           48 bytes
-PTilt (no source)                   [PROM 1]  [33 bytes]    0           0
+SYNTHA (no source)                  [PROM 1A] [28 bytes]    66 bytes    20 bytes
+PChime (no source)                  [PROM 1A] [85 bytes]    0           48 bytes
+PTilt (no source)                   [PROM 1A] [33 bytes]    0           0
 
 Disco Fever - June 1978                                                             42 bytes    61 bytes    18 bytes    6 bytes
-Delta F, Delta A Routine            [PROM 1]  [90 bytes]    165 bytes   66 bytes
+Delta F, Delta A Routine            [PROM 1B] [90 bytes]    165 bytes   66 bytes
 
 Flash - October 1978                                                                60 bytes    78 bytes    48 bytes    721 bytes
 Three Oscillator Sound Generator    [ROM 1]   [156 bytes]   118 bytes   168 bytes
@@ -97,7 +99,7 @@ Echo And Decay Routine              [ROM 1]   [12 bytes]    0           0
 Diving Plane Sound                  [ROM 1]   [31 bytes]    0           0
 PLiten (no source)                  [ROM 1]   [44 bytes]    14 bytes    0
 Funny "Electric Sound"              [ROM 1]   [71 bytes]    0           0
-Pulse (no source)                   [ROM 1]   [94 bytes]    35 bytes    46 bytes
+Chime (no source)                   [ROM 1]   [94 bytes]    35 bytes    46 bytes
 
 Gorgar - December 1979                                                              60 bytes    172 bytes   16 bytes    51 bytes
 Knocker routine                     [ROM 2]   [76 bytes]    0           30 bytes
@@ -258,7 +260,7 @@ PTilt (no source)
 PLiten (no source)
 Funny "Electric Sound"
 Delta F, Delta A Routine
-Pulse (no source)
+Chime (no source)
 
 
 
@@ -298,7 +300,7 @@ BIT40: YES
 Three Oscillator Sound Generator
 Echo And Decay Routine
 PLiten (no source)
-Pulse (no source)
+Chime (no source)
 Knocker routine
 PGWave (no source)
 Tilt (no source)
@@ -342,7 +344,7 @@ BIT40: YES
 Vari
 Lightning+Appear Noise Routine
 White Noise Routine
-Pulse (no source)
+Chime (no source)
 Knocker routine
 GWave
 Tilt (no source)
@@ -369,7 +371,7 @@ BIT40: YES
 Vari
 Lightning+Appear Noise Routine
 White Noise Routine
-Pulse (no source)
+Chime (no source)
 Knocker Routine
 GWave
 Tilt (no source)
@@ -520,7 +522,7 @@ BIT40: YES
 Vari
 Lightning+Appear Noise Routine
 White Noise Routine 
-Pulse (no source)
+Chime (no source)
 Knocker Routine
 GWave
 Tilt (no source)
@@ -543,7 +545,7 @@ PTilt(no source)
 PLiten(no source)
 Funny "Electric Sound"
 Delta F, Delta A Routine
-Pulse(no source)
+Chime(no source)
 
 
 
