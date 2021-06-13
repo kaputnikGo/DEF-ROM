@@ -15,7 +15,16 @@
         ;  CPU:    Motorola 6800 (6800/6802/6808 family)
         ;
         ; Comet pinball, System 9, 16kB ROM on main MPU board
-        ; PIA audio addr : $2000
+        ; manual schematic addr U49 ROM 2764 $E000 or ROM 27128 $C000
+        ; PIA audio addr : $2000 sound select, $2002 DAC SOUND
+        ; has 4 speech ROMs on Speech board - manual (date 1985) says B000, C000, D000, E000 ??
+        ;
+        ; organ type melody sounds very electronic (blip blop), not like TACCATA organ
+        ;
+        ; $C000 - $DF12 data (speech?)
+        ; $DF13 - $E1BF (FF) zero padding
+        ; $E1C0 - $F1CB routines
+        ; $F4EE - $FFF0 data
         ;
           org  $C000
         ;
@@ -6162,7 +6171,9 @@ DF0F : 92 2A    " *"    sbca  X002A
         ;
 DF11 : 55    "U"    db  $55
         ;
-DF12 : D5 FF    "  "    bitb  X00FF
+DF12 : D5 
+
+DF13 : FF    "  "    bitb  X00FF
 DF14 : FF FF FF    "   "    stx  XFFFF
 DF17 : FF FF FF    "   "    stx  XFFFF
 DF1A : FF FF FF    "   "    stx  XFFFF
@@ -6242,7 +6253,6 @@ DFF5 : FF FF FF    "   "    stx  XFFFF
 DFF8 : FF FF FF    "   "    stx  XFFFF
 DFFB : FF FF FF    "   "    stx  XFFFF
 DFFE : FF FF FF    "   "    stx  XFFFF
-E001        XE001:
 E001 : FF FF FF    "   "    stx  XFFFF
 E004 : FF FF FF    "   "    stx  XFFFF
 E007 : FF FF FF    "   "    stx  XFFFF
@@ -6284,7 +6294,6 @@ E070 : FF FF FF    "   "    stx  XFFFF
 E073 : FF FF FF    "   "    stx  XFFFF
 E076 : FF FF FF    "   "    stx  XFFFF
 E079 : FF FF FF    "   "    stx  XFFFF
-E07C        LE07C:
 E07C : FF FF FF    "   "    stx  XFFFF
 E07F : FF FF FF    "   "    stx  XFFFF
 E082 : FF FF FF    "   "    stx  XFFFF
@@ -6292,7 +6301,6 @@ E085 : FF FF FF    "   "    stx  XFFFF
 E088 : FF FF FF    "   "    stx  XFFFF
 E08B : FF FF FF    "   "    stx  XFFFF
 E08E : FF FF FF    "   "    stx  XFFFF
-E091        XE091:
 E091 : FF FF FF    "   "    stx  XFFFF
 E094 : FF FF FF    "   "    stx  XFFFF
 E097 : FF FF FF    "   "    stx  XFFFF
@@ -6318,7 +6326,6 @@ E0D0 : FF FF FF    "   "    stx  XFFFF
 E0D3 : FF FF FF    "   "    stx  XFFFF
 E0D6 : FF FF FF    "   "    stx  XFFFF
 E0D9 : FF FF FF    "   "    stx  XFFFF
-E0DC        XE0DC:
 E0DC : FF FF FF    "   "    stx  XFFFF
 E0DF : FF FF FF    "   "    stx  XFFFF
 E0E2 : FF FF FF    "   "    stx  XFFFF
@@ -6332,7 +6339,6 @@ E0F7 : FF FF FF    "   "    stx  XFFFF
 E0FA : FF FF FF    "   "    stx  XFFFF
 E0FD : FF FF FF    "   "    stx  XFFFF
 E100 : FF FF FF    "   "    stx  XFFFF
-E103        XE103:
 E103 : FF FF FF    "   "    stx  XFFFF
 E106 : FF FF FF    "   "    stx  XFFFF
 E109 : FF FF FF    "   "    stx  XFFFF
@@ -6378,7 +6384,6 @@ E17E : FF FF FF    "   "    stx  XFFFF
 E181 : FF FF FF    "   "    stx  XFFFF
 E184 : FF FF FF    "   "    stx  XFFFF
 E187 : FF FF FF    "   "    stx  XFFFF
-E18A        XE18A:
 E18A : FF FF FF    "   "    stx  XFFFF
 E18D : FF FF FF    "   "    stx  XFFFF
 E190 : FF FF FF    "   "    stx  XFFFF
@@ -6397,10 +6402,15 @@ E1B4 : FF FF FF    "   "    stx  XFFFF
 E1B7 : FF FF FF    "   "    stx  XFFFF
 E1BA : FF FF FF    "   "    stx  XFFFF
 E1BD : FF FF FF    "   "    stx  XFFFF
-E1C0 : 7E E2 27    "~ '"    jmp  LE227
-E1C3        LE1C3:
-E1C3 : 7E E2 1A    "~  "    jmp  LE21A
-        ;
+;*************************************;
+; Speech jump calls
+;*************************************;
+;LE1C0
+E1C0 : 7E E2 27   jmp  LE227          ;jump SPCALL
+;LE1C3:
+E1C3 : 7E E2 1A   jmp  LE21A          ;jump SPCLA1 (called by NMI)
+;*************************************;
+; data
 E1C6 : A4 34    " 4"    anda  $34,x
 E1C8 : AF 52    " R"    sts  $52,x
 E1CA : 97 54    " T"    staa  X0054
@@ -6446,238 +6456,248 @@ E213 : B1 D3 CD    "   "    cmpa  XD3CD
 E216 : D3 CD    "  "    db  $D3, $CD
         ;
 E218 : D6 92    "  "    ldab  X0092
-E21A        LE21A:
-E21A : CE 80 00    "   "    ldx  #$8000
-E21D : DF 00    "  "    stx  X0000
-E21F : CE DF 13    "   "    ldx  #$DF13
-E222 : DF 02    "  "    stx  X0002
-E224 : 7E E2 D9    "~  "    jmp  LE2D9
-        ;
-E227        LE227:
-E227 : CE E3 6E    "  n"    ldx  #$E36E
-E22A : 84 1F    "  "    anda  #$1F
-E22C : 27 10    "' "    beq  LE23E
-E22E : 81 18    "  "    cmpa  #$18
-E230 : 2C 28    ",("    bge  LE25A
-E232        LE232:
-E232 : 08    " "    inx
-E233 : E6 00    "  "    ldab  $00,x
-E235 : 26 FB    "& "    bne  LE232
-E237 : E6 01    "  "    ldab  $01,x
-E239 : 26 F7    "& "    bne  LE232
-E23B : 4A    "J"    deca
-E23C : 26 F4    "& "    bne  LE232
-E23E        LE23E:
-E23E : 08    " "    inx
-E23F : 08    " "    inx
-E240        LE240:
-E240 : DF 05    "  "    stx  X0005
-E242        LE242:
-E242 : DE 05    "  "    ldx  X0005
-E244 : A6 00    "  "    ldaa  $00,x
-E246 : 27 12    "' "    beq  LE25A
-E248 : 2A 11    "* "    bpl  LE25B
-E24A : E6 01    "  "    ldab  $01,x
-E24C        LE24C:
-E24C : 6D 00    "m "    tst  $00,x
-E24E : 6D 00    "m "    tst  $00,x
-E250 : 5C    "\"    incb
-E251 : 26 F9    "& "    bne  LE24C
-E253 : 4C    "L"    inca
-E254 : 26 F6    "& "    bne  LE24C
-E256 : 08    " "    inx
-E257 : 08    " "    inx
-E258 : 20 E6    "  "    bra  LE240
-E25A        LE25A:
-E25A : 39    "9"    rts
-        ;
-E25B        LE25B:
-E25B : 08    " "    inx
-E25C : DF 05    "  "    stx  X0005
-E25E : 16    " "    tab
-E25F : 8B BF    "  "    adda  #$BF
-E261 : 97 01    "  "    staa  X0001
-E263 : 86 E1    "  "    ldaa  #$E1
-E265 : 89 00    "  "    adca  #$00
-E267 : 97 00    "  "    staa  X0000
-E269 : DE 00    "  "    ldx  X0000
-E26B : A6 03    "  "    ldaa  $03,x
-E26D : 97 03    "  "    staa  X0003
-E26F : A6 02    "  "    ldaa  $02,x
-E271 : 97 02    "  "    staa  X0002
-E273 : A6 01    "  "    ldaa  $01,x
-E275 : 97 01    "  "    staa  X0001
-E277 : A6 00    "  "    ldaa  $00,x
-E279 : 97 00    "  "    staa  X0000
-E27B : C1 13    "  "    cmpb  #$13
-E27D : 25 0E    "% "    bcs  LE28D
-E27F : C1 4B    " K"    cmpb  #$4B
-E281 : 25 05    "% "    bcs  LE288
-E283 : BD E3 21    "  !"    jsr  LE321
-E286 : 20 BA    "  "    bra  LE242
-        ;
-E288        LE288:
-E288 : BD E2 D9    "   "    jsr  LE2D9
-E28B : 20 B5    "  "    bra  LE242
-        ;
-E28D        LE28D:
-E28D : BD E2 92    "   "    jsr  LE292
-E290 : 20 B0    "  "    bra  LE242
-        ;
-E292        LE292:
-E292 : DE 00    "  "    ldx  X0000
-E294 : 5F    "_"    clrb
-E295 : 0D    " "    sec
-E296        LE296:
-E296 : 59    "Y"    rolb
-E297 : 01    " "    nop
-E298 : A6 00    "  "    ldaa  $00,x
-E29A : 08    " "    inx
-E29B : 97 04    "  "    staa  X0004
-E29D        LE29D:
-E29D : 86 37    " 7"    ldaa  #$37
-E29F : B7 20 01    "   "    staa  X2001
-E2A2 : 86 34    " 4"    ldaa  #$34
-E2A4 : D5 04    "  "    bitb  X0004
-E2A6 : 26 15    "& "    bne  LE2BD
-E2A8 : B7 20 03    "   "    staa  X2003
-E2AB : 01    " "    nop
-E2AC : 86 3F    " ?"    ldaa  #$3F
-E2AE : B7 20 01    "   "    staa  X2001
-E2B1 : 58    "X"    aslb
-E2B2 : 25 E2    "% "    bcs  LE296
-E2B4 : 2A 1D    "* "    bpl  LE2D3
-E2B6 : A6 00    "  "    ldaa  $00,x
-E2B8 : 9C 02    "  "    cpx  X0002
-E2BA : 26 E1    "& "    bne  LE29D
-E2BC        LE2BC:
-E2BC : 39    "9"    rts
-        ;
-E2BD        LE2BD:
-E2BD : 86 3C    " <"    ldaa  #$3C
-E2BF : B7 20 03    "   "    staa  X2003
-E2C2 : 86 3F    " ?"    ldaa  #$3F
-E2C4        XE2C4:
-E2C4 : B7 20 01    "   "    staa  X2001
-E2C7 : 58    "X"    aslb
-E2C8 : 25 CC    "% "    bcs  LE296
-E2CA : 2A 07    "* "    bpl  LE2D3
-E2CC        XE2CC:
-E2CC : A6 00    "  "    ldaa  $00,x
-E2CE : 9C 02    "  "    cpx  X0002
-E2D0 : 26 CB    "& "    bne  LE29D
-E2D2 : 39    "9"    rts
-        ;
-E2D3        LE2D3:
-E2D3 : 01    " "    nop
-E2D4 : 01    " "    nop
-E2D5 : A6 00    "  "    ldaa  $00,x
-E2D7 : 20 C4    "  "    bra  LE29D
-        ;
-E2D9        LE2D9:
-E2D9 : DE 00    "  "    ldx  X0000
-E2DB : 5F    "_"    clrb
-E2DC        XE2DC:
-E2DC : 0D    " "    sec
-E2DD        LE2DD:
-E2DD : 59    "Y"    rolb
-E2DE : 01    " "    nop
-E2DF : A6 00    "  "    ldaa  $00,x
-E2E1 : 08    " "    inx
-E2E2 : 97 04    "  "    staa  X0004
-E2E4        LE2E4:
-E2E4 : 01    " "    nop
-E2E5 : 86 37    " 7"    ldaa  #$37
-E2E7 : B7 20 01    "   "    staa  X2001
-E2EA : 86 34    " 4"    ldaa  #$34
-E2EC : D5 04    "  "    bitb  X0004
-E2EE : 26 15    "& "    bne  LE305
-E2F0 : B7 20 03    "   "    staa  X2003
-E2F3 : 01    " "    nop
-E2F4 : 86 3F    " ?"    ldaa  #$3F
-E2F6 : B7 20 01    "   "    staa  X2001
-E2F9 : 58    "X"    aslb
-E2FA : 25 E1    "% "    bcs  LE2DD
-E2FC : 2A 1D    "* "    bpl  LE31B
-E2FE : A6 00    "  "    ldaa  $00,x
-E300 : 9C 02    "  "    cpx  X0002
-E302 : 26 E0    "& "    bne  LE2E4
-E304 : 39    "9"    rts
-        ;
-E305        LE305:
-E305 : 86 3C    " <"    ldaa  #$3C
-E307 : B7 20 03    "   "    staa  X2003
-E30A : 86 3F    " ?"    ldaa  #$3F
-E30C : B7 20 01    "   "    staa  X2001
-E30F : 58    "X"    aslb
-E310 : 25 CB    "% "    bcs  LE2DD
-E312 : 2A 07    "* "    bpl  LE31B
-E314 : A6 00    "  "    ldaa  $00,x
-E316 : 9C 02    "  "    cpx  X0002
-E318 : 26 CA    "& "    bne  LE2E4
-E31A : 39    "9"    rts
-        ;
-E31B        LE31B:
-E31B : 01    " "    nop
-E31C : 01    " "    nop
-E31D : A6 00    "  "    ldaa  $00,x
-E31F : 20 C3    "  "    bra  LE2E4
-        ;
-E321        LE321:
-E321 : DE 00    "  "    ldx  X0000
-E323 : 5F    "_"    clrb
-E324 : 0D    " "    sec
-E325        LE325:
-E325 : 59    "Y"    rolb
-E326 : 01    " "    nop
-E327 : A6 00    "  "    ldaa  $00,x
-E329 : 08    " "    inx
-E32A : 97 04    "  "    staa  X0004
-E32C        LE32C:
-E32C : 01    " "    nop
-E32D : 01    " "    nop
-E32E : 01    " "    nop
-E32F : 01    " "    nop
-E330 : 01    " "    nop
-E331 : 7E E3 34    "~ 4"    jmp  LE334
-        ;
-E334        LE334:
-E334 : 86 37    " 7"    ldaa  #$37
-E336 : B7 20 01    "   "    staa  X2001
-E339 : 86 34    " 4"    ldaa  #$34
-E33B : D5 04    "  "    bitb  X0004
-E33D : 26 15    "& "    bne  LE354
-E33F : B7 20 03    "   "    staa  X2003
-E342 : 01    " "    nop
-E343 : 86 3F    " ?"    ldaa  #$3F
-E345 : B7 20 01    "   "    staa  X2001
-E348 : 58    "X"    aslb
-E349 : 25 DA    "% "    bcs  LE325
-E34B : 2A 1D    "* "    bpl  LE36A
-E34D : A6 00    "  "    ldaa  $00,x
-E34F : 9C 02    "  "    cpx  X0002
-E351 : 26 D9    "& "    bne  LE32C
-E353 : 39    "9"    rts
-        ;
-E354        LE354:
-E354 : 86 3C    " <"    ldaa  #$3C
-E356 : B7 20 03    "   "    staa  X2003
-E359 : 86 3F    " ?"    ldaa  #$3F
-E35B : B7 20 01    "   "    staa  X2001
-E35E : 58    "X"    aslb
-E35F : 25 C4    "% "    bcs  LE325
-E361 : 2A 07    "* "    bpl  LE36A
-E363 : A6 00    "  "    ldaa  $00,x
-E365 : 9C 02    "  "    cpx  X0002
-E367 : 26 C3    "& "    bne  LE32C
-E369 : 39    "9"    rts
-        ;
-E36A        LE36A:
-E36A : 01    " "    nop
-E36B : 01    " "    nop
-E36C : A6 00    "  "    ldaa  $00,x
-E36E : 20 BC    "  "    bra  LE32C
-        ;
+;*************************************;
+; Speech Processor #A1 call
+;*************************************;
+;SPCLA1  LE21A:
+E21A : CE 80 00   ldx  #$8000         ;load X with 8000h
+E21D : DF 00      stx  $00            ;store X in addr 00
+E21F : CE DF 13   ldx  #$DF13         ;load X with DF13h (FF zero pad above?)
+E222 : DF 02      stx  $02            ;store X in addr 02
+E224 : 7E E2 D9   jmp  LE2D9          ;jump SPCHB1
+;*************************************;
+; Speech Calling Routine
+;*************************************;
+;SPCALL LE227:
+E227 : CE E3 6E   ldx  #$E36E         ;load X with E36Eh (bra to spch proc C1)
+E22A : 84 1F      anda  #$1F          ;and A with 1Fh
+E22C : 27 10      beq  LE23E          ;branch Z=1 SPCAL1
+E22E : 81 18      cmpa  #$18          ;compare A with 18h
+E230 : 2C 28      bge  LE25A          ;branch N(+)V=0 SPCALX
+;SPCLP1 LE232:
+E232 : 08         inx                 ;incr X
+E233 : E6 00      ldab  $00,x         ;load B with X+00h
+E235 : 26 FB      bne  LE232          ;branch Z=0 SPCLP1
+E237 : E6 01      ldab  $01,x         ;load B with X+00h
+E239 : 26 F7      bne  LE232          ;branch Z=0 SPCLP1
+E23B : 4A         deca                ;decr A
+E23C : 26 F4      bne  LE232          ;branch Z=0 SPCLP1
+;SPCAL1 LE23E:
+E23E : 08         inx                 ;incr X
+E23F : 08         inx                 ;incr X
+;SPCAL2 LE240:
+E240 : DF 05      stx  $05            ;store X in addr 05
+;SPCALD LE242:
+E242 : DE 05      ldx  $05            ;load X with addr 05
+E244 : A6 00      ldaa  $00,x         ;load A with X+00h
+E246 : 27 12      beq  LE25A          ;branch Z=1 SPCALX
+E248 : 2A 11      bpl  LE25B          ;branch N=0 SPCLDR
+E24A : E6 01      ldab  $01,x         ;load B with X+01h
+;SPCLP2 LE24C:
+E24C : 6D 00      tst  $00,x          ;test X+00h
+E24E : 6D 00      tst  $00,x          ;test X+00h
+E250 : 5C         incb                ;incr B
+E251 : 26 F9      bne  LE24C          ;branch Z=0 SPCLP2
+E253 : 4C         inca                ;incr A
+E254 : 26 F6      bne  LE24C          ;branch Z=0 SPCLP2
+E256 : 08         inx                 ;incr X
+E257 : 08         inx                 ;incr X
+E258 : 20 E6      bra  LE240          ;branch always SPCAL2
+;SPCALX LE25A:
+E25A : 39         rts                 ;return subroutine
+;*************************************;
+; Speech Processor Loader (3x processors)
+;*************************************;
+;SPCLDR LE25B:
+E25B : 08         inx                 ;incr X
+E25C : DF 05      stx  $05            ;store X in addr 05
+E25E : 16         tab                 ;transfer A to B
+E25F : 8B BF      adda  #$BF          ;add A with BFh
+E261 : 97 01      staa  $01           ;store A in addr 01
+E263 : 86 E1      ldaa  #$E1          ;load A with E1h 
+E265 : 89 00      adca  #$00          ;add C+A + 00h
+E267 : 97 00      staa  $00           ;store A in addr 00
+E269 : DE 00      ldx  $00            ;load X with addr 00h (E1BF + 1?)
+E26B : A6 03      ldaa  $03,x         ;load A with X+03h
+E26D : 97 03      staa  $03           ;store A in addr 03
+E26F : A6 02      ldaa  $02,x         ;load A with X+02h
+E271 : 97 02      staa  $02           ;store A in addr 02
+E273 : A6 01      ldaa  $01,x         ;load A with X+01h
+E275 : 97 01      staa  $01           ;store A in addr 01
+E277 : A6 00      ldaa  $00,x         ;load A with X+00h
+E279 : 97 00      staa  $00           ;store A in addr 00
+E27B : C1 13      cmpb  #$13          ;compare B with 13h
+E27D : 25 0E      bcs  LE28D          ;branch C=1 SPCLDA
+E27F : C1 4B      cmpb  #$4B          ;compare B with 4Bh
+E281 : 25 05      bcs  LE288          ;branch C=1 SPCLDB
+E283 : BD E3 21   jsr  LE321          ;jump sub SPCHC1 (long nops)
+E286 : 20 BA      bra  LE242          ;branch always SPCALD
+;SPCLDB LE288:
+E288 : BD E2 D9   jsr  LE2D9          ;jump sub SPCHB1 (mid nops)
+E28B : 20 B5      bra  LE242          ;branch always SPCALD
+;SPCLDA LE28D:
+E28D : BD E2 92   jsr  LE292          ;jump sub SPCHA1 (short nops)
+E290 : 20 B0      bra  LE242          ;branch always SPCALD
+;*************************************;
+; Speech Processing #A1 -  CA2=$2001 Speech CLOCK ,CB2=$2003 Speech DATA pinouts
+;*************************************;
+;SPCHA1 LE292:  - speech processing calls to 2001, 2003
+E292 : DE 00      ldx  $00            ;load X with addr 00
+E294 : 5F         clrb                ;clear B
+E295 : 0D         sec                 ;set C=1
+;SPA1L1 LE296
+E296 : 59         rolb                ;rotate left B
+E297 : 01         nop                 ;(2 cycles)
+E298 : A6 00      ldaa  $00,x         ;load A with X+00h
+E29A : 08         inx                 ;incr X
+E29B : 97 04      staa  $04           ;store A in addr 04
+;SPA1L2 LE29D:
+E29D : 86 37      ldaa  #$37          ;load A with 37h (0011 0111)
+E29F : B7 20 01   staa  $2001         ;store A in (37h) in PIA sound select (CA2 - speech clock)
+E2A2 : 86 34      ldaa  #$34          ;load A with 34h (0011 0100)
+E2A4 : D5 04      bitb  $04           ;bit test B with addr 04
+E2A6 : 26 15      bne  LE2BD          ;branch Z=0 SPCHA2
+E2A8 : B7 20 03   staa  $2003         ;store A in (34h) in PIA CR port B (CB2 - speech data)
+E2AB : 01         nop                 ;(2 cycles)
+E2AC : 86 3F      ldaa  #$3F          ;load A with 3Fh (0011 1111)
+E2AE : B7 20 01   staa  $2001         ;store A in (3Fh) in PIA sound select (CA2 - speech clock)
+E2B1 : 58         aslb                ;arith shift left B
+E2B2 : 25 E2      bcs  LE296          ;branch C=1 SPA1L1
+E2B4 : 2A 1D      bpl  LE2D3          ;branch N=0 SPA2X
+E2B6 : A6 00      ldaa  $00,x         ;load A with X+00h
+E2B8 : 9C 02      cpx  $02            ;compare X with addr 02
+E2BA : 26 E1      bne  LE29D          ;branch Z=0 SPA1L2
+E2BC : 39         rts                 ;return subroutine
+;*************************************;
+;  Speech Processing #A2
+;*************************************;
+;SPCHA2 LE2BD:  - speech processing calls to 2001, 2003
+E2BD : 86 3C      ldaa  #$3C          ;load A with 3Ch (0011 1100)
+E2BF : B7 20 03   staa  $2003         ;store A (3Ch) in PIA CR port B (CB2 - speech data)
+E2C2 : 86 3F      ldaa  #$3F          ;load A with 3Fh (0011 1111)
+E2C4 : B7 20 01   staa  $2001         ;store A (3Fh) in PIA sound select (CA2 - speech clock)
+E2C7 : 58         aslb                ;arith shift left B
+E2C8 : 25 CC      bcs  LE296          ;branch C=1 SPA1L1
+E2CA : 2A 07      bpl  LE2D3          ;branch N=0 SPA2X
+E2CC : A6 00      ldaa  $00,x         ;load A with X+00h
+E2CE : 9C 02      cpx  $02            ;compare X with addr 02
+E2D0 : 26 CB      bne  LE29D          ;branch Z=0 SPA1L2
+E2D2 : 39         rts                 ;return subroutine
+;SPA2X LE2D3:
+E2D3 : 01         nop                 ;(2 cycles)
+E2D4 : 01         nop                 ;(2 cycles)
+E2D5 : A6 00      ldaa  $00,x         ;load A with X+00h
+E2D7 : 20 C4      bra  LE29D          ;branch always SPA1L2
+;*************************************;
+; Speech Processing #B1 (near identical to #A1, diff locations, nop)
+;*************************************;
+;SPCHB1 LE2D9:  - speech processing calls to 2001, 2003
+E2D9 : DE 00      ldx  $00            ;load X with addr 02
+E2DB : 5F         clrb                ;clear B
+E2DC : 0D         sec                 ;set C=1
+;SPB1L1 LE2DD:
+E2DD : 59         rolb                ;rotate left B
+E2DE : 01         nop                 ;(2 cycles)
+E2DF : A6 00      ldaa  $00,x         ;load A with X+00h
+E2E1 : 08         inx                 ;incr X
+E2E2 : 97 04      staa  $04           ;store A in addr 04
+;SPB1L2 LE2E4:
+E2E4 : 01         nop                 ;(2 cycles)(extra nop here)
+E2E5 : 86 37      ldaa  #$37          ;load A with 37h (0011 0111)
+E2E7 : B7 20 01   staa  $2001         ;store A in (37h) in PIA sound select (CA2 - speech clock)
+E2EA : 86 34      ldaa  #$34          ;load A with 34h (0011 0100)
+E2EC : D5 04      bitb  $04           ;bit test B with addr 04
+E2EE : 26 15      bne  LE305          ;branch Z=0 SPCHB2
+E2F0 : B7 20 03   staa  $2003         ;store A in (34h) in PIA CR port B (CB2 - speech data)
+E2F3 : 01         nop                 ;(2 cycles)
+E2F4 : 86 3F      ldaa  #$3F          ;load A with 3Fh (0011 1111)
+E2F6 : B7 20 01   staa  $2001         ;store A in (3Fh) in PIA sound select (CA2 - speech clock)
+E2F9 : 58         aslb                ;arith shift left B
+E2FA : 25 E1      bcs  LE2DD          ;branch C=1 SPB1L1
+E2FC : 2A 1D      bpl  LE31B          ;branch N=0 SPB2X
+E2FE : A6 00      ldaa  $00,x         ;load A with X+00h
+E300 : 9C 02      cpx  $02            ;compare X with addr 02
+E302 : 26 E0      bne  LE2E4          ;branch Z=0 SPB1L2
+E304 : 39         rts                 ;return subroutine
+;*************************************;
+;  Speech Processing #B2 (near identical to #B1, diff locations)
+;*************************************;
+;SPCHB2 LE305:  - speech processing calls to 2001, 2003
+E305 : 86 3C      ldaa  #$3C          ;load A with 3Ch (0011 1100)
+E307 : B7 20 03   staa  $2003         ;store A (3Ch) in PIA CR port B (CB2 - speech data)
+E30A : 86 3F      ldaa  #$3F          ;load A with 3Fh (0011 1111)
+E30C : B7 20 01   staa  $2001         ;store A (3Fh) in PIA sound select (CA2 - speech clock)
+E30F : 58         aslb                ;arith shift left B
+E310 : 25 CB      bcs  LE2DD          ;branch C=1 SPB1L1
+E312 : 2A 07      bpl  LE31B          ;branch N=0 SPB2X
+E314 : A6 00      ldaa  $00,x         ;load A with X+00h
+E316 : 9C 02      cpx  $02            ;compare X with addr 02
+E318 : 26 CA      bne  LE2E4          ;branch Z=0 SPB1L2
+E31A : 39         rts                 ;return subroutine
+;SPB2X LE31B:
+E31B : 01         nop                 ;(2 cycles)
+E31C : 01         nop                 ;(2 cycles)
+E31D : A6 00      ldaa  $00,x         ;load A with X+00h
+E31F : 20 C3      bra  LE2E4          ;branch always SPB1L2
+;*************************************;
+; Speech Processing #C1 (near identical to #A1, diff locations, more nops)
+;*************************************;
+;SPCHC1 LE321:
+E321 : DE 00      ldx  $00            ;load X with addr 00
+E323 : 5F         clrb                ;clear B
+E324 : 0D         sec                 ;set C=1
+;SPC1L1 LE325:
+E325 : 59         rolb                ;rotate left B
+E326 : 01         nop                 ;(2 cycles)
+E327 : A6 00      ldaa  $00,x         ;load A with X+00h
+E329 : 08         inx                 ;incr X
+E32A : 97 04      staa  $04           ;store A in addr 04
+;SPC1L2 LE32C:
+E32C : 01         nop                 ;(2 cycles)(extra nops here)
+E32D : 01         nop                 ;(2 cycles)
+E32E : 01         nop                 ;(2 cycles)
+E32F : 01         nop                 ;(2 cycles)
+E330 : 01         nop                 ;(2 cycles)
+E331 : 7E E3 34   jmp  LE334          ;jump (3 cycles) (*)
+E334 : 86 37      ldaa  #$37          ;load A with 37h (0011 0111)
+E336 : B7 20 01   staa  $2001         ;store A in (37h) in PIA sound select (CA2 - speech clock)
+E339 : 86 34      ldaa  #$34          ;load A with 34h (0011 0100)
+E33B : D5 04      bitb  $04           ;bit test B with addr 04
+E33D : 26 15      bne  LE354          ;branch Z=0 SPCHC2
+E33F : B7 20 03   staa  $2003         ;store A in (34h) in PIA CR port B (CB2 - speech data)
+E342 : 01         nop                 ;(2 cycles)
+E343 : 86 3F      ldaa  #$3F          ;load A with 3Fh (0011 1111)
+E345 : B7 20 01   staa  $2001         ;store A (3Fh) in PIA sound select (CA2 - speech clock)
+E348 : 58         aslb                ;arith shift left B
+E349 : 25 DA      bcs  LE325          ;branch C=1 SPC1L1
+E34B : 2A 1D      bpl  LE36A          ;branch N=0 SPC2X
+E34D : A6 00      ldaa  $00,x         ;load A with X+00h
+E34F : 9C 02      cpx  $02            ;compare X with addr 02
+E351 : 26 D9      bne  LE32C          ;branch Z=0 SPC1L2
+E353 : 39         rts                 ;return subroutine
+;*************************************;
+; Speech Processing #C2 (near identical to #A2, diff locations)
+;*************************************;
+;SPCHC2 LE354: - speech processing calls to 2001, 2003
+E354 : 86 3C      ldaa  #$3C          ;load A with 3Ch (0011 1100)
+E356 : B7 20 03   staa  $2003         ;store A (3Ch) in PIA CR port B (CB2 - speech data)
+E359 : 86 3F      ldaa  #$3F          ;load A with 3Fh (0011 1111)
+E35B : B7 20 01   staa  $2001         ;store A (3Fh) in PIA sound select (CA2 - speech clock)
+E35E : 58         aslb                ;arith shift left B
+E35F : 25 C4      bcs  LE325          ;branch C=1 SPC1L1
+E361 : 2A 07      bpl  LE36A          ;branch N=0 SPC2X
+E363 : A6 00      ldaa  $00,x         ;load A with X+00h
+E365 : 9C 02      cpx  $02            ;compare X with addr 02
+E367 : 26 C3      bne  LE32C          ;branch Z=0 SPC1L2
+E369 : 39         rts                 ;return subroutine
+;SPC2X LE36A:
+E36A : 01         nop                 ;(2 cycles)
+E36B : 01         nop                 ;(2 cycles)
+E36C : A6 00      ldaa  $00,x         ;load A with X+00h
+;SPC2XX (ldx call)
+E36E : 20 BC      bra  LE32C          ;branch always SPC1L2
+;*************************************;
+; data
 E370 : 07    " "    tpa
         ;
 E371 : 00 00    "  "    db  $00, $00
@@ -6757,1855 +6777,1373 @@ E3B7 : 00 00    "  "    db  $00, $00
         ;
 E3B9 : FF FF FF    "   "    stx  XFFFF
 E3BC : FF FF FF    "   "    stx  XFFFF
-E3BF : FF 15 
+E3BF : FF 
+
+E3C0 : 15                             ;checksum ? seek by NMI
 ;*************************************;
 ;Reset and setup power on
 ;*************************************;
 ;RESET
-E3C1 : 0F         sei                 ;set interrupt mask I=1  
-E3C2 : 8E 00 7F    "   "    lds  #$007F
-E3C5 : CE 20 00    "   "    ldx  #$2000
-E3C8 : 6F 01    "o "    clr  $01,x
-E3CA        LE3CA:
-E3CA : 6F 03    "o "    clr  $03,x
-E3CC        LE3CC:
-E3CC : 86 FF    "  "    ldaa  #$FF
-E3CE : A7 02    "  "    staa  $02,x
-E3D0 : 6F 00    "o "    clr  $00,x
-E3D2 : 86 37    " 7"    ldaa  #$37
-E3D4 : A7 01    "  "    staa  $01,x
-E3D6 : 86 3C    " <"    ldaa  #$3C
-E3D8 : A7 03    "  "    staa  $03,x
-E3DA : 6F 00    "o "    clr  $00,x
-E3DC : CE 00 00    "   "    ldx  #$0000
-E3DF : 86 80    "  "    ldaa  #$80
-E3E1        LE3E1:
-E3E1 : 6F 00    "o "    clr  $00,x
-E3E3 : 08    " "    inx
-E3E4 : 4A    "J"    deca
-E3E5 : 26 FA    "& "    bne  LE3E1
-E3E7 : 9F 61    " a"    sts  X0061
-E3E9 : 0E    " "    cli
-E3EA        LE3EA:
-E3EA : 20 FE    "  "    bra  LE3EA
-E3EC        LE3EC:
-E3EC : 7E F0 06    "~  "    jmp  LF006
-        ;
-E3EF : C6 10    "  "    ldab  #$10
-E3F1 : CE 00 00    "   "    ldx  #$0000
-E3F4 : DF 70    " p"    stx  X0070
-E3F6 : CE F4 EE    "   "    ldx  #$F4EE
-E3F9        LE3F9:
-E3F9 : C6 10    "  "    ldab  #$10
-E3FB : 4D    "M"    tsta
-E3FC : 27 07    "' "    beq  LE405
-E3FE        LE3FE:
-E3FE : 08    " "    inx
-E3FF : 5A    "Z"    decb
-E400 : 26 FC    "& "    bne  LE3FE
-E402 : 4A    "J"    deca
-E403 : 26 F4    "& "    bne  LE3F9
-E405        LE405:
-E405 : C6 10    "  "    ldab  #$10
-E407 : BD EE A6    "   "    jsr  LEEA6
-E40A : 96 08    "  "    ldaa  X0008
-E40C : B7 20 02    "   "    staa  X2002
-E40F : D6 00    "  "    ldab  X0000
-E411        LE411:
-E411 : 7A 00 07    "z  "    dec  X0007
-E414 : 27 D6    "' "    beq  LE3EC
-E416 : DE 0C    "  "    ldx  X000C
-E418        LE418:
-E418 : 96 02    "  "    ldaa  X0002
-E41A        LE41A:
-E41A : 4A    "J"    deca
-E41B : 26 FD    "& "    bne  LE41A
-E41D : 96 01    "  "    ldaa  X0001
-E41F        LE41F:
-E41F : 4A    "J"    deca
-E420 : 26 FD    "& "    bne  LE41F
-E422 : A6 00    "  "    ldaa  $00,x
-E424        LE424:
-E424 : 4A    "J"    deca
-E425 : 26 FD    "& "    bne  LE424
-E427 : 73 20 02    "s  "    com  X2002
-E42A : 5A    "Z"    decb
-E42B : 26 EB    "& "    bne  LE418
-E42D : D6 00    "  "    ldab  X0000
-E42F : 7A 00 06    "z  "    dec  X0006
-E432 : 26 0D    "& "    bne  LE441
-E434 : 96 05    "  "    ldaa  X0005
-E436 : 97 06    "  "    staa  X0006
-E438        XE438:
-E438 : 96 01    "  "    ldaa  X0001
-E43A : 9B 0A    "  "    adda  X000A
-E43C        XE43C:
-E43C : 94 0B    "  "    anda  X000B
-E43E : 4C    "L"    inca
-E43F : 97 01    "  "    staa  X0001
-E441        LE441:
-E441 : 08    " "    inx
-E442 : 9C 0E    "  "    cpx  X000E
-E444 : 26 D2    "& "    bne  LE418
-E446 : B6 20 02    "   "    ldaa  X2002
-E449 : 2B 04    "+ "    bmi  LE44F
-E44B : 9B 09    "  "    adda  X0009
-E44D : 9B 09    "  "    adda  X0009
-E44F        LE44F:
-E44F : 90 09    "  "    suba  X0009
-E451 : 7A 00 04    "z  "    dec  X0004
-E454 : 26 BB    "& "    bne  LE411
-E456 : 96 03    "  "    ldaa  X0003
-E458 : 97 04    "  "    staa  X0004
-E45A : 96 02    "  "    ldaa  X0002
-E45C : 84 0F    "  "    anda  #$0F
-E45E : 4A    "J"    deca
-E45F : 26 02    "& "    bne  LE463
-E461 : 86 0F    "  "    ldaa  #$0F
-E463        LE463:
-E463 : 97 02    "  "    staa  X0002
-E465 : 20 AA    "  "    bra  LE411
-        ;
-E467 : CE 00 02    "   "    ldx  #$0002
-E46A : DF 70    " p"    stx  X0070
-E46C : CE F5 3E    "  >"    ldx  #$F53E
-E46F : 16    " "    tab
-E470 : 4F    "O"    clra
-E471 : 58    "X"    aslb
-E472 : 89 00    "  "    adca  #$00
-E474 : 58    "X"    aslb
-E475 : 89 00    "  "    adca  #$00
-E477 : BD EE 7E    "  ~"    jsr  LEE7E
-E47A : A6 00    "  "    ldaa  $00,x
-E47C : 97 00    "  "    staa  X0000
-E47E : A6 01    "  "    ldaa  $01,x
-E480 : 97 01    "  "    staa  X0001
-E482 : EE 02    "  "    ldx  $02,x
-E484 : C6 0D    "  "    ldab  #$0D
-E486 : BD EE A6    "   "    jsr  LEEA6
-E489 : 96 07    "  "    ldaa  X0007
-E48B : B7 20 02    "   "    staa  X2002
-E48E : D6 00    "  "    ldab  X0000
-E490        LE490:
-E490 : DE 0B    "  "    ldx  X000B
-E492        LE492:
-E492 : 96 02    "  "    ldaa  X0002
-E494        LE494:
-E494 : 4A    "J"    deca
-E495 : 26 FD    "& "    bne  LE494
-E497 : A6 00    "  "    ldaa  $00,x
-E499        LE499:
-E499 : 4A    "J"    deca
-E49A : 26 FD    "& "    bne  LE499
-E49C : 73 20 02    "s  "    com  X2002
-E49F : 5A    "Z"    decb
-E4A0 : 26 F0    "& "    bne  LE492
-E4A2 : 7A 00 05    "z  "    dec  X0005
-E4A5 : 26 0C    "& "    bne  LE4B3
-E4A7 : 96 04    "  "    ldaa  X0004
-E4A9 : 97 05    "  "    staa  X0005
-E4AB : B6 20 02    "   "    ldaa  X2002
-E4AE : 90 08    "  "    suba  X0008
-E4B0 : B7 20 02    "   "    staa  X2002
-E4B3        LE4B3:
-E4B3 : D6 00    "  "    ldab  X0000
-E4B5 : 08    " "    inx
-E4B6 : 9C 0D    "  "    cpx  X000D
-E4B8 : 26 D8    "& "    bne  LE492
-E4BA : 7A 00 09    "z  "    dec  X0009
-E4BD : 27 0B    "' "    beq  LE4CA
-E4BF : 7A 20 02    "z  "    dec  X2002
-E4C2 : 96 02    "  "    ldaa  X0002
-E4C4 : 9B 01    "  "    adda  X0001
-E4C6 : 97 02    "  "    staa  X0002
-E4C8 : 20 C6    "  "    bra  LE490
-E4CA        LE4CA:
-E4CA : 7E F0 06    "~  "    jmp  LF006
-        ;
-E4CD        LE4CD:
-E4CD : A6 01    "  "    ldaa  $01,x
-E4CF : CE 00 1E    "   "    ldx  #$001E
-E4D2 : 80 02    "  "    suba  #$02
-E4D4        LE4D4:
-E4D4 : 23 15    "# "    bls  LE4EB
-E4D6 : 81 03    "  "    cmpa  #$03
-E4D8 : 27 09    "' "    beq  LE4E3
-E4DA : C6 01    "  "    ldab  #$01
-E4DC : E7 00    "  "    stab  $00,x
-E4DE : 08    " "    inx
-E4DF : 80 02    "  "    suba  #$02
-E4E1 : 20 F1    "  "    bra  LE4D4
-        ;
-E4E3        LE4E3:
-E4E3 : C6 91    "  "    ldab  #$91
-E4E5 : E7 00    "  "    stab  $00,x
-E4E7 : 6F 01    "o "    clr  $01,x
-E4E9 : 08    " "    inx
-E4EA : 08    " "    inx
-E4EB        LE4EB:
-E4EB : C6 7E    " ~"    ldab  #$7E
-E4ED : E7 00    "  "    stab  $00,x
-E4EF : C6 E5    "  "    ldab  #$E5
-E4F1 : E7 01    "  "    stab  $01,x
-E4F3 : C6 4C    " L"    ldab  #$4C
-E4F5 : E7 02    "  "    stab  $02,x
-E4F7 : 39    "9"    rts
-        ;
-E4F8 : 16    " "    tab
-E4F9 : 4F    "O"    clra
-E4FA : 58    "X"    aslb
-E4FB : 89 00    "  "    adca  #$00
-E4FD : D7 6F    " o"    stab  X006F
-E4FF : 58    "X"    aslb
-E500 : 89 00    "  "    adca  #$00
-E502 : DB 6F    " o"    addb  X006F
-E504 : 89 00    "  "    adca  #$00
-E506 : CE F7 24    "  $"    ldx  #$F724
-E509 : BD EE 7E    "  ~"    jsr  LEE7E
-E50C : A6 02    "  "    ldaa  $02,x
-E50E : 97 12    "  "    staa  X0012
-E510 : D6 60    " `"    ldab  X0060
-E512 : C5 08    "  "    bitb  #$08
-E514 : 27 02    "' "    beq  LE518
-E516 : 97 50    " P"    staa  X0050
-E518        LE518:
-E518 : A6 03    "  "    ldaa  $03,x
-E51A : 97 13    "  "    staa  X0013
-E51C : C5 08    "  "    bitb  #$08
-E51E : 27 02    "' "    beq  LE522
-E520 : 97 51    " Q"    staa  X0051
-E522        LE522:
-E522 : A6 04    "  "    ldaa  $04,x
-E524 : 97 14    "  "    staa  X0014
-E526 : A6 05    "  "    ldaa  $05,x
-E528 : 97 1D    "  "    staa  X001D
-E52A : 97 15    "  "    staa  X0015
-E52C : EE 00    "  "    ldx  $00,x
-E52E : DF 6A    " j"    stx  X006A
-E530 : CE 00 00    "   "    ldx  #$0000
-E533 : DF 70    " p"    stx  X0070
-E535 : C6 12    "  "    ldab  #$12
-E537 : DE 6A    " j"    ldx  X006A
-E539 : DF 67    " g"    stx  X0067
-E53B : BD EE A6    "   "    jsr  LEEA6
-E53E : DE 12    "  "    ldx  X0012
-E540 : 09    " "    dex
-E541 : 09    " "    dex
-E542 : 09    " "    dex
-E543 : 09    " "    dex
-E544 : DF 12    "  "    stx  X0012
-E546 : A6 00    "  "    ldaa  $00,x
-E548 : 97 69    " i"    staa  X0069
-E54A : 20 07    "  "    bra  LE553
-        ;
-E54C        LE54C:
-E54C : DE 18    "  "    ldx  X0018
-E54E : 09    " "    dex
-E54F : DF 18    "  "    stx  X0018
-E551 : 26 53    "&S"    bne  LE5A6
-E553        LE553:
-E553 : DE 12    "  "    ldx  X0012
-E555 : 08    " "    inx
-E556 : 08    " "    inx
-E557 : 08    " "    inx
-E558 : 08    " "    inx
-E559        LE559:
-E559 : A6 00    "  "    ldaa  $00,x
-E55B : 26 1D    "& "    bne  LE57A
-E55D : A6 01    "  "    ldaa  $01,x
-E55F : 26 0E    "& "    bne  LE56F
-E561 : DF 12    "  "    stx  X0012
-E563 : EE 02    "  "    ldx  $02,x
-E565        LE565:
-E565 : 86 16    "  "    ldaa  #$16
-E567        LE567:
-E567 : 4A    "J"    deca
-E568 : 26 FD    "& "    bne  LE567
-E56A : 09    " "    dex
-E56B : 26 F8    "& "    bne  LE565
-E56D : 20 E4    "  "    bra  LE553
-        ;
-E56F        LE56F:
-E56F : 7A 00 14    "z  "    dec  X0014
-E572 : 27 26    "'&"    beq  LE59A
-E574 : EE 01    "  "    ldx  $01,x
-E576 : DF 12    "  "    stx  X0012
-E578 : 20 DF    "  "    bra  LE559
-        ;
-E57A        LE57A:
-E57A : 97 16    "  "    staa  X0016
-E57C : 97 17    "  "    staa  X0017
-E57E : A6 02    "  "    ldaa  $02,x
-E580 : 97 18    "  "    staa  X0018
-E582 : A6 03    "  "    ldaa  $03,x
-E584 : 97 19    "  "    staa  X0019
-E586 : DF 12    "  "    stx  X0012
-E588 : BD E4 CD    "   "    jsr  LE4CD
-E58B : CE 00 00    "   "    ldx  #$0000
-E58E : DF 70    " p"    stx  X0070
-E590 : DE 67    " g"    ldx  X0067
-E592 : C6 12    "  "    ldab  #$12
-E594 : BD EE A6    "   "    jsr  LEEA6
-E597 : 7E E5 4C    "~ L"    jmp  LE54C
-        ;
-E59A        LE59A:
-E59A : 96 60    " `"    ldaa  X0060
-E59C : 85 08    "  "    bita  #$08
-E59E : 27 03    "' "    beq  LE5A3
-E5A0 : 7E F0 15    "~  "    jmp  LF015
-E5A3        LE5A3:
-E5A3 : 7E F0 06    "~  "    jmp  LF006
-        ;
-E5A6        LE5A6:
-E5A6        XE5A6:
-E5A6 : 96 00    "  "    ldaa  X0000
-E5A8 : F6 20 02    "   "    ldab  X2002
-E5AB : 2B 09    "+ "    bmi  LE5B6
-E5AD : AC 00    "  "    cpx  $00,x
-E5AF : AC 00    "  "    cpx  $00,x
-E5B1 : 8C 00 00    "   "    cpx  #$0000
-E5B4 : 20 0F    "  "    bra  LE5C5
-        ;
-E5B6        LE5B6:
-E5B6 : 7A 00 1D    "z  "    dec  X001D
-E5B9 : 27 05    "' "    beq  LE5C0
-E5BB : BC E5 A6    "   "    cpx  XE5A6
-E5BE : 20 05    "  "    bra  LE5C5
-        ;
-E5C0        LE5C0:
-E5C0 : D6 15    "  "    ldab  X0015
-E5C2 : D7 1D    "  "    stab  X001D
-E5C4 : 43    "C"    coma
-E5C5        LE5C5:
-E5C5 : B7 20 02    "   "    staa  X2002
-E5C8 : 7A 00 17    "z  "    dec  X0017
-E5CB : 26 07    "& "    bne  LE5D4
-E5CD : 96 16    "  "    ldaa  X0016
-E5CF : 97 17    "  "    staa  X0017
-E5D1 : 73 20 02    "s  "    com  X2002
-E5D4        LE5D4:
-E5D4 : 96 01    "  "    ldaa  X0001
-E5D6 : 26 06    "& "    bne  LE5DE
-E5D8 : 4C    "L"    inca
-E5D9 : 97 01    "  "    staa  X0001
-E5DB : 7F 00 10    "   "    clr  X0010
-E5DE        LE5DE:
-E5DE : 81 04    "  "    cmpa  #$04
-E5E0 : 26 08    "& "    bne  LE5EA
-E5E2 : 08    " "    inx
-E5E3 : 08    " "    inx
-E5E4 : 08    " "    inx
-E5E5 : CE 00 02    "   "    ldx  #$0002
-E5E8 : 20 18    "  "    bra  LE602
-        ;
-E5EA        LE5EA:
-E5EA : 81 03    "  "    cmpa  #$03
-E5EC : 26 07    "& "    bne  LE5F5
-E5EE : 08    " "    inx
-E5EF : 01    " "    nop
-E5F0 : CE 00 06    "   "    ldx  #$0006
-E5F3 : 20 0D    "  "    bra  LE602
-        ;
-E5F5        LE5F5:
-E5F5 : 81 02    "  "    cmpa  #$02
-E5F7 : 26 05    "& "    bne  LE5FE
-E5F9 : CE 00 0A    "   "    ldx  #$000A
-E5FC : 20 04    "  "    bra  LE602
-        ;
-E5FE        LE5FE:
-E5FE : 08    " "    inx
-E5FF : CE 00 0E    "   "    ldx  #$000E
-E602        LE602:
-E602 : 96 00    "  "    ldaa  X0000
-E604 : 6A 00    "j "    dec  $00,x
-E606 : 26 17    "& "    bne  LE61F
-E608 : AB 02    "  "    adda  $02,x
-E60A : 6A 03    "j "    dec  $03,x
-E60C : 26 0A    "& "    bne  LE618
-E60E : 7A 00 01    "z  "    dec  X0001
-E611 : 01    " "    nop
-E612 : CE 00 00    "   "    ldx  #$0000
-E615 : 7E E6 28    "~ ("    jmp  LE628
-        ;
-E618        LE618:
-E618 : E6 01    "  "    ldab  $01,x
-E61A : E7 00    "  "    stab  $00,x
-E61C : 7E E6 28    "~ ("    jmp  LE628
-        ;
-E61F        LE61F:
-E61F : C6 05    "  "    ldab  #$05
-E621        LE621:
-E621 : 5A    "Z"    decb
-E622 : 26 FD    "& "    bne  LE621
-E624 : 01    " "    nop
-E625 : 7E E6 28    "~ ("    jmp  LE628
-        ;
-E628        LE628:
-E628 : 97 00    "  "    staa  X0000
-E62A : 7E 00 1E    "~  "    jmp  L001E
-        ;
-E62D : CE E6 DA    "   "    ldx  #$E6DA
-E630 : 48    "H"    asla
-E631 : BD EE 70    "  p"    jsr  LEE70
-E634 : EE 00    "  "    ldx  $00,x
-E636 : A6 00    "  "    ldaa  $00,x
-E638 : 97 00    "  "    staa  X0000
-E63A : 97 01    "  "    staa  X0001
-E63C : A6 01    "  "    ldaa  $01,x
-E63E : 97 05    "  "    staa  X0005
-E640 : 97 06    "  "    staa  X0006
-E642 : EE 02    "  "    ldx  $02,x
-E644 : DF 07    "  "    stx  X0007
-E646 : A6 00    "  "    ldaa  $00,x
-E648 : 97 02    "  "    staa  X0002
-E64A : A6 01    "  "    ldaa  $01,x
-E64C : 97 09    "  "    staa  X0009
-E64E : A6 02    "  "    ldaa  $02,x
-E650 : 97 0A    "  "    staa  X000A
-E652 : A6 03    "  "    ldaa  $03,x
-E654 : 97 0B    "  "    staa  X000B
-E656 : EE 04    "  "    ldx  $04,x
-E658 : DF 03    "  "    stx  X0003
-E65A        LE65A:
-E65A : DE 03    "  "    ldx  X0003
-E65C : 09    " "    dex
-E65D : DF 03    "  "    stx  X0003
-E65F : 27 53    "'S"    beq  LE6B4
-E661 : 96 02    "  "    ldaa  X0002
-E663        LE663:
-E663 : 4A    "J"    deca
-E664 : 26 FD    "& "    bne  LE663
-E666 : BD EE 54    "  T"    jsr  LEE54
-E669 : 26 01    "& "    bne  LE66C
-E66B : 53    "S"    comb
-E66C        LE66C:
-E66C : 4D    "M"    tsta
-E66D : 26 01    "& "    bne  LE670
-E66F : 43    "C"    coma
-E670        LE670:
-E670 : 94 00    "  "    anda  X0000
-E672 : D4 01    "  "    andb  X0001
-E674 : D7 6E    " n"    stab  X006E
-E676 : C6 08    "  "    ldab  #$08
-E678 : D7 6F    " o"    stab  X006F
-E67A : 5F    "_"    clrb
-E67B        LE67B:
-E67B : 44    "D"    lsra
-E67C : 24 03    "$ "    bcc  LE681
-E67E : F7 20 02    "   "    stab  X2002
-E681        LE681:
-E681        XE681:
-E681 : CB 05    "  "    addb  #$05
-E683 : 7A 00 6F    "z o"    dec  X006F
-E686 : 26 F3    "& "    bne  LE67B
-E688 : 96 6E    " n"    ldaa  X006E
-E68A        XE68A:
-E68A : C6 08    "  "    ldab  #$08
-E68C : D7 6F    " o"    stab  X006F
-E68E : D6 0A    "  "    ldab  X000A
-E690        LE690:
-E690 : 44    "D"    lsra
-E691 : 24 03    "$ "    bcc  LE696
-E693 : F7 20 02    "   "    stab  X2002
-E696        LE696:
-E696 : C0 05    "  "    subb  #$05
-E698 : 7A 00 6F    "z o"    dec  X006F
-E69B : 26 F3    "& "    bne  LE690
-E69D : 7A 00 06    "z  "    dec  X0006
-E6A0 : 26 B8    "& "    bne  LE65A
-E6A2 : 96 05    "  "    ldaa  X0005
-E6A4 : 97 06    "  "    staa  X0006
-E6A6 : 96 02    "  "    ldaa  X0002
-E6A8 : 9B 09    "  "    adda  X0009
-E6AA : 97 02    "  "    staa  X0002
-E6AC : 96 0A    "  "    ldaa  X000A
-E6AE : 9B 0B    "  "    adda  X000B
-E6B0 : 97 0A    "  "    staa  X000A
-E6B2 : 20 A6    "  "    bra  LE65A
-        ;
-E6B4        LE6B4:
-E6B4 : DE 07    "  "    ldx  X0007
-E6B6 : 08    " "    inx
-E6B7 : 08    " "    inx
-E6B8 : 08    " "    inx
-E6B9 : 08    " "    inx
-E6BA : 08    " "    inx
-E6BB : 08    " "    inx
-E6BC : DF 07    "  "    stx  X0007
-E6BE : A6 00    "  "    ldaa  $00,x
-E6C0        XE6C0:
-E6C0 : 26 03    "& "    bne  LE6C5
-E6C2 : 7E F0 06    "~  "    jmp  LF006
-        ;
-E6C5        LE6C5:
-E6C5 : 97 02    "  "    staa  X0002
-E6C7 : A6 01    "  "    ldaa  $01,x
-E6C9 : 97 09    "  "    staa  X0009
-E6CB : A6 02    "  "    ldaa  $02,x
-E6CD : 97 0A    "  "    staa  X000A
-E6CF : A6 03    "  "    ldaa  $03,x
-E6D1 : 97 0B    "  "    staa  X000B
-E6D3 : EE 04    "  "    ldx  $04,x
-E6D5 : DF 03    "  "    stx  X0003
-E6D7 : 7E E6 5A    "~ Z"    jmp  LE65A
-        ;
-E6DA : E6 EE    "  "    ldab  $EE,x
-E6DC : E6 F2    "  "    ldab  $F2,x
-E6DE : E6 F6    "  "    ldab  $F6,x
-E6E0 : E6 FA    "  "    ldab  $FA,x
-E6E2 : E6 FE    "  "    ldab  $FE,x
-E6E4 : E7 02    "  "    stab  $02,x
-E6E6 : E7 06    "  "    stab  $06,x
-E6E8 : E7 0A    "  "    stab  $0A,x
-E6EA : E7 0E    "  "    stab  $0E,x
-E6EC : E7 12    "  "    stab  $12,x
-E6EE : FF 50 FF    " P "    stx  X50FF
-        ;
-E6F1 : 7B    "{"    db  $7B
-        ;
-E6F2 : FF 50 FF    " P "    stx  X50FF
-E6F5 : AE 81    "  "    lds  $81,x
-E6F7 : 50    "P"    negb
-E6F8 : FF 7B 81    " { "    stx  X7B81
-E6FB        XE6FB:
-E6FB : 50    "P"    negb
-E6FC : FF AE 81    "   "    stx  XAE81
-E6FF : 50    "P"    negb
-E700 : FF B7 81    "   "    stx  XB781
-E703 : 50    "P"    negb
-E704 : FF C6 FF    "   "    stx  XC6FF
-E707 : 50    "P"    negb
-E708 : FF C6 FF    "   "    stx  XC6FF
-E70B : 50    "P"    negb
-E70C : FF C6 FF    "   "    stx  XC6FF
-E70F : 50    "P"    negb
-E710 : FF DB 81    "   "    stx  XDB81
-E713 : 50    "P"    negb
-E714 : FF DB D6    "   "    stx  XDBD6
-E717 : 60 C4    "` "    neg  $C4,x
-E719 : 70 CA 01    "p  "    neg  XCA01
-E71C : CA 08    "  "    orab  #$08
-E71E : D7 60    " `"    stab  X0060
-E720 : 48    "H"    asla
-E721 : CE F9 76    "  v"    ldx  #$F976
-E724 : BD EE 70    "  p"    jsr  LEE70
-E727 : EE 00    "  "    ldx  $00,x
-E729 : DF 0B    "  "    stx  X000B
-E72B : DF 6A    " j"    stx  X006A
-E72D : CE 00 00    "   "    ldx  #$0000
-E730 : DF 70    " p"    stx  X0070
-E732 : DE 6A    " j"    ldx  X006A
-E734 : 09    " "    dex
-E735 : A6 00    "  "    ldaa  $00,x
-E737 : 97 0A    "  "    staa  X000A
-E739 : 08    " "    inx
-E73A : C6 0A    "  "    ldab  #$0A
-E73C : BD EE A6    "   "    jsr  LEEA6
-E73F : 96 01    "  "    ldaa  X0001
-E741 : B7 20 02    "   "    staa  X2002
-E744 : 20 3D    " ="    bra  LE783
-        ;
-E746 : 96 60    " `"    ldaa  X0060
-E748 : 84 70    " p"    anda  #$70
-E74A : 8A 01    "  "    oraa  #$01
-E74C : 8A 08    "  "    oraa  #$08
-E74E : 97 60    " `"    staa  X0060
-E750 : 20 31    " 1"    bra  LE783
-E752        LE752:
-E752 : 7E F0 06    "~  "    jmp  LF006
-        ;
-E755        LE755:
-E755 : DE 0B    "  "    ldx  X000B
-E757 : 86 0A    "  "    ldaa  #$0A
-E759 : BD EE 70    "  p"    jsr  LEE70
-E75C        LE75C:
-E75C : DF 0B    "  "    stx  X000B
-E75E : A6 00    "  "    ldaa  $00,x
-E760 : 26 0B    "& "    bne  LE76D
-E762 : 7A 00 0A    "z  "    dec  X000A
-E765 : 27 EB    "' "    beq  LE752
-E767 : EE 01    "  "    ldx  $01,x
-E769 : DF 6A    " j"    stx  X006A
-E76B : 20 EF    "  "    bra  LE75C
-        ;
-E76D        LE76D:
-E76D : CE 00 00    "   "    ldx  #$0000
-E770 : DF 70    " p"    stx  X0070
-E772 : DE 6A    " j"    ldx  X006A
-E774 : C6 0A    "  "    ldab  #$0A
-E776 : BD EE A6    "   "    jsr  LEEA6
-E779 : 96 01    "  "    ldaa  X0001
-E77B : B7 20 02    "   "    staa  X2002
-E77E : CE A5 C8    "   "    ldx  #$A5C8
-E781 : DF 61    " a"    stx  X0061
-E783        LE783:
-E783 : DE 08    "  "    ldx  X0008
-E785 : 09    " "    dex
-E786 : DF 08    "  "    stx  X0008
-E788 : 27 CB    "' "    beq  LE755
-E78A : 96 05    "  "    ldaa  X0005
-E78C        LE78C:
-E78C : 4A    "J"    deca
-E78D : 26 FD    "& "    bne  LE78C
-E78F : BD EE 54    "  T"    jsr  LEE54
-E792 : 94 03    "  "    anda  X0003
-E794 : D4 04    "  "    andb  X0004
-E796 : D7 6E    " n"    stab  X006E
-E798 : C6 08    "  "    ldab  #$08
-E79A : D7 6F    " o"    stab  X006F
-E79C : 5F    "_"    clrb
-E79D        LE79D:
-E79D : 44    "D"    lsra
-E79E : 24 0A    "$ "    bcc  LE7AA
-E7A0 : DB 00    "  "    addb  X0000
-E7A2 : D7 0D    "  "    stab  X000D
-E7A4 : 73 20 02    "s  "    com  X2002
-E7A7        LE7A7:
-E7A7 : 5A    "Z"    decb
-E7A8 : 26 FD    "& "    bne  LE7A7
-E7AA        LE7AA:
-E7AA : 73 20 02    "s  "    com  X2002
-E7AD : D6 0D    "  "    ldab  X000D
-E7AF : 7A 00 6F    "z o"    dec  X006F
-E7B2 : 26 E9    "& "    bne  LE79D
-E7B4 : 7A 00 07    "z  "    dec  X0007
-E7B7 : 26 CA    "& "    bne  LE783
-E7B9 : 96 06    "  "    ldaa  X0006
-E7BB : 97 07    "  "    staa  X0007
-E7BD : B6 20 02    "   "    ldaa  X2002
-E7C0 : 2A 04    "* "    bpl  LE7C6
-E7C2 : 90 02    "  "    suba  X0002
-E7C4 : 90 02    "  "    suba  X0002
-E7C6        LE7C6:
-E7C6 : 9B 02    "  "    adda  X0002
-E7C8 : B7 20 02    "   "    staa  X2002
-E7CB : 20 B6    "  "    bra  LE783
-        ;
-E7CD        XE7CD:
-E7CD : CE 00 E0    "   "    ldx  #$00E0
-E7D0 : C6 80    "  "    ldab  #$80
-E7D2        LE7D2:
-E7D2 : 86 20    "  "    ldaa  #$20
-E7D4 : BD EE 70    "  p"    jsr  LEE70
-E7D7        LE7D7:
-E7D7 : 09    " "    dex
-E7D8 : 26 FD    "& "    bne  LE7D7
-E7DA : 7F 20 02    "   "    clr  X2002
-E7DD        LE7DD:
-E7DD : 5A    "Z"    decb
-E7DE : 26 FD    "& "    bne  LE7DD
-E7E0 : 73 20 02    "s  "    com  X2002
-E7E3 : DE 6A    " j"    ldx  X006A
-E7E5 : 8C 10 00    "   "    cpx  #$1000
-E7E8 : 26 E8    "& "    bne  LE7D2
-E7EA : 7E F0 06    "~  "    jmp  LF006
-        ;
-E7ED : 96 60    " `"    ldaa  X0060
-E7EF : 84 07    "  "    anda  #$07
-E7F1 : 97 60    " `"    staa  X0060
-E7F3 : CE E8 34    "  4"    ldx  #$E834
-E7F6 : DF 02    "  "    stx  X0002
-E7F8        LE7F8:
-E7F8 : DE 02    "  "    ldx  X0002
-E7FA        XE7FA:
-E7FA : A6 00    "  "    ldaa  $00,x
-E7FC : 27 33    "'3"    beq  LE831
-E7FE : E6 01    "  "    ldab  $01,x
-E800 : C4 F0    "  "    andb  #$F0
-E802 : D7 01    "  "    stab  X0001
-E804 : E6 01    "  "    ldab  $01,x
-E806 : 08    " "    inx
-E807 : 08    " "    inx
-E808 : DF 02    "  "    stx  X0002
-E80A : 97 00    "  "    staa  X0000
-E80C : C4 0F    "  "    andb  #$0F
-E80E        LE80E:
-E80E : 96 01    "  "    ldaa  X0001
-E810 : B7 20 02    "   "    staa  X2002
-E813 : 96 00    "  "    ldaa  X0000
-E815        LE815:
-E815 : CE 00 05    "   "    ldx  #$0005
-E818        LE818:
-E818 : 09    " "    dex
-E819 : 26 FD    "& "    bne  LE818
-E81B : 4A    "J"    deca
-E81C : 26 F7    "& "    bne  LE815
-E81E : 7F 20 02    "   "    clr  X2002
-E821 : 96 00    "  "    ldaa  X0000
-E823        LE823:
-E823 : CE 00 05    "   "    ldx  #$0005
-E826        LE826:
-E826 : 09    " "    dex
-E827 : 26 FD    "& "    bne  LE826
-E829 : 4A    "J"    deca
-E82A : 26 F7    "& "    bne  LE823
-E82C : 5A    "Z"    decb
-E82D : 26 DF    "& "    bne  LE80E
-E82F : 20 C7    "  "    bra  LE7F8
-E831        LE831:
-E831 : 7E F0 06    "~  "    jmp  LF006
-        ;
-E834 : 01    " "    nop
-        ;
-E835 : FC 02 FC 03  "    "    db  $FC, $02, $FC, $03
-        ;
-E839 : F8 04 F8    "   "    eorb  X04F8
-E83C : 06    " "    tap
-E83D : F8 08 F4    "   "    eorb  X08F4
-E840 : 0C    " "    clc
-E841 : F4 10 F4    "   "    andb  X10F4
-E844 : 20 F2    "  "    bra  LE838
-        ;
-E846 : 40    "@"    nega
-E847 : F1 60 F1    " ` "    cmpb  X60F1
-E84A : 80 F1    "  "    suba  #$F1
-E84C : A0 F1    "  "    suba  $F1,x
-E84E : C0 F1    "  "    subb  #$F1
-        ;
-E850 : 00 00    "  "    db  $00, $00
-        ;
-E852 : CE E8 CB    "   "    ldx  #$E8CB
-E855 : 16    " "    tab
-E856 : 86 0D    "  "    ldaa  #$0D
-E858 : BD EE 8B    "   "    jsr  LEE8B
-E85B : 96 0B    "  "    ldaa  X000B
-E85D : 97 14    "  "    staa  X0014
-E85F : 96 09    "  "    ldaa  X0009
-E861 : 97 12    "  "    staa  X0012
-E863 : 96 0A    "  "    ldaa  X000A
-E865 : 97 13    "  "    staa  X0013
-E867 : 96 06    "  "    ldaa  X0006
-E869 : 97 11    "  "    staa  X0011
-E86B : 96 04    "  "    ldaa  X0004
-E86D : 97 16    "  "    staa  X0016
-E86F : 96 00    "  "    ldaa  X0000
-E871 : 97 17    "  "    staa  X0017
-E873        LE873:
-E873 : 96 17    "  "    ldaa  X0017
-E875 : 97 0D    "  "    staa  X000D
-E877 : 96 0C    "  "    ldaa  X000C
-E879 : 97 15    "  "    staa  X0015
-E87B : 96 01    "  "    ldaa  X0001
-E87D : 97 0E    "  "    staa  X000E
-E87F : 96 02    "  "    ldaa  X0002
-E881 : 97 10    "  "    staa  X0010
-E883 : DE 07    "  "    ldx  X0007
-E885 : 96 14    "  "    ldaa  X0014
-E887 : B7 20 02    "   "    staa  X2002
-E88A : 96 11    "  "    ldaa  X0011
-E88C        LE88C:
-E88C : D6 0E    "  "    ldab  X000E
-E88E : D7 0F    "  "    stab  X000F
-E890        LE890:
-E890 : 48    "H"    asla
-E891 : 24 05    "$ "    bcc  LE898
-E893 : 73 20 02    "s  "    com  X2002
-E896 : 98 11    "  "    eora  X0011
-E898        LE898:
-E898 : D6 0D    "  "    ldab  X000D
-E89A        LE89A:
-E89A : 5A    "Z"    decb
-E89B : 26 FD    "& "    bne  LE89A
-E89D : 7A 00 0F    "z  "    dec  X000F
-E8A0 : 26 EE    "& "    bne  LE890
-E8A2 : D6 0D    "  "    ldab  X000D
-E8A4 : DB 10    "  "    addb  X0010
-E8A6 : D7 0D    "  "    stab  X000D
-E8A8        LE8A8:
-E8A8 : D6 15    "  "    ldab  X0015
-E8AA        XE8AA:
-E8AA : DB 14    "  "    addb  X0014
-E8AC : D7 14    "  "    stab  X0014
-E8AE : F7 20 02    "   "    stab  X2002
-E8B1 : 09    " "    dex
-E8B2 : 26 D8    "& "    bne  LE88C
-E8B4 : 7A 00 12    "z  "    dec  X0012
-E8B7 : 27 0F    "' "    beq  LE8C8
-E8B9 : D6 14    "  "    ldab  X0014
-E8BB : D0 13    "  "    subb  X0013
-E8BD : D7 14    "  "    stab  X0014
-E8BF : D6 16    "  "    ldab  X0016
-E8C1 : DB 17    "  "    addb  X0017
-E8C3 : D7 17    "  "    stab  X0017
-E8C5 : 7E E8 73    "~ s"    jmp  LE873
-E8C8        LE8C8:
-E8C8 : 7E F0 06    "~  "    jmp  LF006
-        ;
-E8CB : 01    " "    nop
-E8CC : FF 01 00    "   "    stx  X0100
-        ;
-E8CF : 00 00    "  "    db  $00, $00
-        ;
-E8D1 : 4D    "M"    tsta
-        ;
-E8D2 : 00    " "    db  $00
-        ;
-E8D3 : FF 01 00    "   "    stx  X0100
-E8D6 : FF 00 01    "   "    stx  X0001
-E8D9 : FF 01 00    "   "    stx  X0100
-        ;
-E8DC : 00 00    "  "    db  $00, $00
-        ;
-E8DE : 4D    "M"    tsta
-        ;
-E8DF : 00    " "    db  $00
-        ;
-E8E0 : 10    " "    sba
-        ;
-E8E1 : 04    " "    db  $04
-        ;
-E8E2 : 20 FF    "  "    bra  LE8E3
-        ;
-E8E4 : 00    " "    db  $00
-        ;
-E8E5 : CE E9 4C    "  L"    ldx  #$E94C
-E8E8 : 16    " "    tab
-E8E9 : 86 09    "  "    ldaa  #$09
-E8EB : BD EE 8B    "   "    jsr  LEE8B
-E8EE : 86 55    " U"    ldaa  #$55
-E8F0 : 97 11    "  "    staa  X0011
-E8F2 : 96 08    "  "    ldaa  X0008
-E8F4 : 97 10    "  "    staa  X0010
-E8F6 : 96 01    "  "    ldaa  X0001
-E8F8 : 97 09    "  "    staa  X0009
-E8FA : 96 02    "  "    ldaa  X0002
-E8FC : 97 0A    "  "    staa  X000A
-E8FE : 96 03    "  "    ldaa  X0003
-E900 : 97 0B    "  "    staa  X000B
-E902 : DE 06    "  "    ldx  X0006
-E904        XE904:
-E904 : DF 0E    "  "    stx  X000E
-E906 : DE 04    "  "    ldx  X0004
-E908 : DF 0C    "  "    stx  X000C
-E90A        LE90A:
-E90A : F6 20 02    "   "    ldab  X2002
-E90D : 96 11    "  "    ldaa  X0011
-E90F : 48    "H"    asla
-E910 : 24 02    "$ "    bcc  LE914
-E912 : 98 00    "  "    eora  X0000
-E914        LE914:
-E914 : 97 11    "  "    staa  X0011
-E916 : D1 11    "  "    cmpb  X0011
-E918 : 24 1F    "$ "    bcc  LE939
-E91A        LE91A:
-E91A : F7 20 02    "   "    stab  X2002
-E91D : DB 09    "  "    addb  X0009
-E91F : 25 E9    "% "    bcs  LE90A
-E921 : D1 11    "  "    cmpb  X0011
-E923 : 24 E5    "$ "    bcc  LE90A
-E925 : 09    " "    dex
-E926 : 26 F2    "& "    bne  LE91A
-E928        LE928:
-E928 : DE 0E    "  "    ldx  X000E
-E92A : 09    " "    dex
-E92B : DF 0E    "  "    stx  X000E
-E92D : 27 1A    "' "    beq  LE949
-E92F : DE 0C    "  "    ldx  X000C
-E931 : 96 09    "  "    ldaa  X0009
-E933 : 9B 10    "  "    adda  X0010
-E935 : 97 09    "  "    staa  X0009
-E937 : 20 D1    "  "    bra  LE90A
-        ;
-E939        LE939:
-E939 : F7 20 02    "   "    stab  X2002
-E93C : D0 09    "  "    subb  X0009
-E93E : 25 CA    "% "    bcs  LE90A
-E940 : D1 11    "  "    cmpb  X0011
-E942 : 23 C6    "# "    bls  LE90A
-E944 : 09    " "    dex
-E945 : 26 F2    "& "    bne  LE939
-E947 : 20 DF    "  "    bra  LE928
-E949        LE949:
-E949 : 7E F0 06    "~  "    jmp  LF006
-        ;
-E94C : 84 01    "  "    anda  #$01
-E94E : 01    " "    nop
-E94F : 01    " "    nop
-        ;
-E950 : 00    " "    db  $00
-        ;
-E951 : 80 00    "  "    suba  #$00
-E953 : 40    "@"    nega
-E954 : 01    " "    nop
-        ;
-E955 : 42    "B"    db  $42
-        ;
-E956 : 01    " "    nop
-E957 : 01    " "    nop
-E958 : 01    " "    nop
-        ;
-E959 : 00    " "    db  $00
-        ;
-E95A : 80 00    "  "    suba  #$00
-E95C : 40    "@"    nega
-E95D : 01    " "    nop
-        ;
-E95E : 21    "!"    db  $21
-        ;
-E95F : 01    " "    nop
-E960 : 01    " "    nop
-E961 : 01    " "    nop
-        ;
-E962 : 00    " "    db  $00
-        ;
-E963 : 80 00    "  "    suba  #$00
-E965 : 40    "@"    nega
-E966 : 01    " "    nop
-E967 : 28 01    "( "    bvc  LE96A
-E969 : 01    " "    nop
-E96A        LE96A:
-E96A : 01    " "    nop
-        ;
-E96B : 00    " "    db  $00
-        ;
-E96C : 80 00    "  "    suba  #$00
-E96E : 40    "@"    nega
-E96F : 01    " "    nop
-E970 : 48    "H"    asla
-E971 : 01    " "    nop
-E972 : 01    " "    nop
-E973 : 01    " "    nop
-        ;
-E974 : 00    " "    db  $00
-        ;
-E975 : 80 00    "  "    suba  #$00
-E977 : 40    "@"    nega
-E978 : 01    " "    nop
-E979 : 90 01    "  "    suba  X0001
-E97B : 01    " "    nop
-E97C : 01    " "    nop
-        ;
-E97D : 00    " "    db  $00
-        ;
-E97E : 80 00    "  "    suba  #$00
-E980 : 40    "@"    nega
-E981 : 01    " "    nop
-E982 : 82 01    "  "    sbca  #$01
-E984 : 01    " "    nop
-E985 : 01    " "    nop
-        ;
-E986 : 00    " "    db  $00
-        ;
-E987 : 80 00    "  "    suba  #$00
-E989 : 40    "@"    nega
-E98A : 01    " "    nop
-E98B : 88 01    "  "    eora  #$01
-E98D : 01    " "    nop
-E98E : 01    " "    nop
-        ;
-E98F : 00    " "    db  $00
-        ;
-E990 : 80 00    "  "    suba  #$00
-E992 : 40    "@"    nega
-E993 : 01    " "    nop
-E994 : 81 01    "  "    cmpa  #$01
-E996 : 01    " "    nop
-E997 : 01    " "    nop
-        ;
-E998 : 00    " "    db  $00
-        ;
-E999 : 80 00    "  "    suba  #$00
-E99B : 40    "@"    nega
-E99C : 01    " "    nop
-E99D : 82 01    "  "    sbca  #$01
-E99F : 01    " "    nop
-E9A0 : 01    " "    nop
-        ;
-E9A1 : 00    " "    db  $00
-        ;
-E9A2 : 80 00    "  "    suba  #$00
-E9A4 : 40    "@"    nega
-E9A5 : 01    " "    nop
-E9A6 : CE EA 43    "  C"    ldx  #$EA43
-E9A9 : 16    " "    tab
-E9AA : 86 0C    "  "    ldaa  #$0C
-E9AC : BD EE 8B    "   "    jsr  LEE8B
-E9AF : 96 00    "  "    ldaa  X0000
-E9B1 : 97 0D    "  "    staa  X000D
-E9B3 : 96 09    "  "    ldaa  X0009
-E9B5 : 97 17    "  "    staa  X0017
-E9B7 : 96 0A    "  "    ldaa  X000A
-E9B9 : 97 18    "  "    staa  X0018
-E9BB : 96 01    "  "    ldaa  X0001
-E9BD : 97 0E    "  "    staa  X000E
-E9BF        LE9BF:
-E9BF : 96 0B    "  "    ldaa  X000B
-E9C1 : 43    "C"    coma
-E9C2 : 97 0C    "  "    staa  X000C
-E9C4 : 96 07    "  "    ldaa  X0007
-E9C6 : 97 15    "  "    staa  X0015
-E9C8 : 96 08    "  "    ldaa  X0008
-E9CA : 97 16    "  "    staa  X0016
-E9CC        LE9CC:
-E9CC : 4F    "O"    clra
-E9CD : 97 0F    "  "    staa  X000F
-E9CF : 97 10    "  "    staa  X0010
-E9D1 : 96 0D    "  "    ldaa  X000D
-E9D3 : 97 11    "  "    staa  X0011
-E9D5 : 96 0E    "  "    ldaa  X000E
-E9D7 : 97 12    "  "    staa  X0012
-E9D9 : D6 04    "  "    ldab  X0004
-E9DB : DE 05    "  "    ldx  X0005
-E9DD : DF 13    "  "    stx  X0013
-E9DF        LE9DF:
-E9DF : 96 10    "  "    ldaa  X0010
-E9E1 : 9B 12    "  "    adda  X0012
-E9E3 : 97 10    "  "    staa  X0010
-E9E5 : 96 0F    "  "    ldaa  X000F
-E9E7 : 99 11    "  "    adca  X0011
-E9E9 : 97 0F    "  "    staa  X000F
-E9EB : 81 80    "  "    cmpa  #$80
-E9ED : 22 03    "" "    bhi  LE9F2
-E9EF : 4F    "O"    clra
-E9F0 : 20 03    "  "    bra  LE9F5
-        ;
-E9F2        LE9F2:
-E9F2 : 96 0C    "  "    ldaa  X000C
-E9F4 : 01    " "    nop
-E9F5        LE9F5:
-E9F5 : B7 20 02    "   "    staa  X2002
-E9F8 : 5A    "Z"    decb
-E9F9 : 26 18    "& "    bne  LEA13
-E9FB : 96 12    "  "    ldaa  X0012
-E9FD : 9B 03    "  "    adda  X0003
-E9FF : 97 12    "  "    staa  X0012
-EA01 : 96 11    "  "    ldaa  X0011
-EA03 : 99 02    "  "    adca  X0002
-EA05 : 97 11    "  "    staa  X0011
-EA07 : D6 04    "  "    ldab  X0004
-EA09 : DE 13    "  "    ldx  X0013
-EA0B : 09    " "    dex
-EA0C : DF 13    "  "    stx  X0013
-EA0E : 27 14    "' "    beq  LEA24
-EA10 : 7E E9 DF    "~  "    jmp  LE9DF
-        ;
-EA13        LEA13:
-EA13 : 08    " "    inx
-EA14 : 09    " "    dex
-EA15        XEA15:
-EA15 : 08    " "    inx
-EA16 : 09    " "    dex
-EA17 : 08    " "    inx
-EA18 : 09    " "    dex
-EA19 : 08    " "    inx
-EA1A : 09    " "    dex
-EA1B : 08    " "    inx
-EA1C : 09    " "    dex
-EA1D : 08    " "    inx
-EA1E : 09    " "    dex
-EA1F : 01    " "    nop
-EA20 : 01    " "    nop
-EA21 : 01    " "    nop
-EA22 : 20 BB    "  "    bra  LE9DF
-        ;
-EA24        LEA24:
-EA24 : 7A 00 15    "z  "    dec  X0015
-EA27 : 27 09    "' "    beq  LEA32
-EA29 : 96 0C    "  "    ldaa  X000C
-EA2B : 90 16    "  "    suba  X0016
-EA2D : 97 0C    "  "    staa  X000C
-EA2F : 7E E9 CC    "~  "    jmp  LE9CC
-        ;
-EA32        LEA32:
-EA32 : 7A 00 17    "z  "    dec  X0017
-EA35 : 27 09    "' "    beq  LEA40
-EA37 : 96 0D    "  "    ldaa  X000D
-EA39 : 9B 18    "  "    adda  X0018
-EA3B : 97 0D    "  "    staa  X000D
-EA3D : 7E E9 BF    "~  "    jmp  LE9BF
-EA40        LEA40:
-EA40        XEA40:
-EA40 : 7E F0 06    "~  "    jmp  LF006
-        ;
-EA43 : 49    "I"    rola
-        ;
-EA44 : 00    " "    db  $00
-        ;
-EA45 : FF FE 08    "   "    stx  XFE08
-        ;
-EA48 : 00    " "    db  $00
-        ;
-EA49 : 67 08    "g "    asr  $08,x
-EA4B : 20 01    "  "    bra  LEA4E
-        ;
-EA4D : 00 00    "  "    db  $00, $00
-        ;
-EA4F : 31    "1"    ins
-        ;
-EA50 : 00    " "    db  $00
-        ;
-EA51 : FF FE 10    "   "    stx  XFE10
-        ;
-EA54 : 00    " "    db  $00
-        ;
-EA55 : 67 08    "g "    asr  $08,x
-EA57 : 20 01    "  "    bra  LEA5A
-        ;
-EA59 : 00 00    "  "    db  $00, $00
-        ;
-EA5B : 09    " "    dex
-        ;
-EA5C : 00    " "    db  $00
-        ;
-EA5D : CA 19    "  "    orab  #$19
-EA5F : 01    " "    nop
-        ;
-EA60 : 00    " "    db  $00
-        ;
-EA61 : 28 5F    "(_"    bvc  LEAC2
-EA63 : F7 FC FF    "   "    stab  XFCFF
-EA66 : 20 01    "  "    bra  LEA69
-        ;
-EA68 : 00    " "    db  $00
-        ;
-EA69        LEA69:
-EA69 : 19    " "    daa
-EA6A : 90 02    "  "    suba  X0002
-        ;
-EA6C : 00 18    "  "    db  $00, $18
-        ;
-EA6E : 20 02    "  "    bra  LEA72
-        ;
-EA70 : 19    " "    daa
-EA71 : 06    " "    tap
-EA72        LEA72:
-EA72 : 50    "P"    negb
-        ;
-EA73 : 3A 00 21    ": !"    db  $3A, $00, $21
-        ;
-EA76 : F9 02 09    "   "    adcb  X0209
-        ;
-EA79 : 62 1A    "b "    db  $62, $1A
-        ;
-EA7B : 9F EB    "  "    sts  X00EB
-EA7D : EF 07    "  "    stx  $07,x
-EA7F : 09    " "    dex
-        ;
-EA80 : 00    " "    db  $00
-        ;
-EA81 : 11    " "    cba
-EA82 : 20 55    " U"    bra  LEAD9
-        ;
-EA84 : 47    "G"    asra
-EA85 : 01    " "    nop
-EA86 : 01    " "    nop
-EA87 : 20 01    "  "    bra  LEA8A
-        ;
-EA89 : 06    " "    tap
-EA8A        LEA8A:
-EA8A : A0 01    "  "    suba  $01,x
-        ;
-EA8C : 00 21    " !"    db  $00, $21
-        ;
-EA8E : F9 04 01    "   "    adcb  X0401
-        ;
-EA91 : 62 04    "b "    db  $62, $04
-        ;
-EA93 : 90 01    "  "    suba  X0001
-EA95 : 10    " "    sba
-        ;
-EA96 : 02    " "    db  $02
-        ;
-EA97 : 01    " "    nop
-        ;
-EA98 : 00 21    " !"    db  $00, $21
-        ;
-EA9A : F9 04 01    "   "    adcb  X0401
-        ;
-EA9D : 62 04    "b "    db  $62, $04
-        ;
-EA9F : 90 02    "  "    suba  X0002
-EAA1        LEAA1:
-EAA1 : 10    " "    sba
-EAA2 : 50    "P"    negb
-        ;
-EAA3 : 00 00    "  "    db  $00, $00
-        ;
-EAA5 : F0 90 04    "   "    subb  X9004
-EAA8 : 01    " "    nop
-EAA9 : 30    "0"    tsx
-EAAA : 20 02    "  "    bra  LEAAE
-        ;
-EAAC : 01    " "    nop
-EAAD        LEAAD:
-EAAD : 06    " "    tap
-        ;
-EAAE        LEAAE:
-EAAE : 00 00 00    "   "    db  $00, $00, $00
-        ;
-EAB1 : F0 90 01    "   "    subb  X9001
-EAB4 : 01    " "    nop
-EAB5 : 30    "0"    tsx
-EAB6 : 20 02    "  "    bra  LEABA
-        ;
-EAB8 : 02    " "    db  $02
-        ;
-EAB9 : 06    " "    tap
-        ;
-EABA        LEABA:
-EABA : 00    " "    db  $00
-        ;
-EABB : 09    " "    dex
-        ;
-EABC : 00    " "    db  $00
-        ;
-EABD : 22 20    "" "    bhi  LEADF
-        ;
-EABF : 02    " "    db  $02
-        ;
-EAC0 : 47    "G"    asra
-EAC1 : 01    " "    nop
-EAC2        LEAC2:
-EAC2 : 01    " "    nop
-EAC3 : 20 01    "  "    bra  LEAC6
-        ;
-EAC5 : 06    " "    tap
-EAC6        LEAC6:
-EAC6 : 09    " "    dex
-EAC7 : 09    " "    dex
-        ;
-EAC8 : 00    " "    db  $00
-        ;
-EAC9 : 11    " "    cba
-EACA : 20 99    "  "    bra  LEA65
-        ;
-EACC : 47    "G"    asra
-EACD : 01    " "    nop
-EACE : 01    " "    nop
-EACF : 20 01    "  "    bra  LEAD2
-        ;
-EAD1 : 06    " "    tap
-EAD2        LEAD2:
-EAD2 : A0 09    "  "    suba  $09,x
-        ;
-EAD4 : 00    " "    db  $00
-        ;
-EAD5 : 11    " "    cba
-EAD6 : 20 33    " 3"    bra  LEB0B
-        ;
-EAD8 : 47    "G"    asra
-EAD9        LEAD9:
-EAD9 : 01    " "    nop
-EADA : 01    " "    nop
-EADB : 20 01    "  "    bra  LEADE
-        ;
-EADD : 06    " "    tap
-EADE        LEADE:
-EADE : A0 09    "  "    suba  $09,x
-        ;
-EAE0 : 00    " "    db  $00
-        ;
-EAE1 : 11    " "    cba
-EAE2 : 20 22    " ""    bra  LEB06
-        ;
-EAE4 : 47    "G"    asra
-EAE5 : 01    " "    nop
-EAE6 : 01    " "    nop
-EAE7 : 20 01    "  "    bra  LEAEA
-        ;
-EAE9 : 06    " "    tap
-EAEA        LEAEA:
-EAEA : A0 09    "  "    suba  $09,x
-        ;
-EAEC : 00    " "    db  $00
-        ;
-EAED : 81 20    "  "    cmpa  #$20
-EAEF : 99 00    "  "    adca  X0000
-EAF1 : 30    "0"    tsx
-EAF2 : 01    " "    nop
-EAF3 : 20 01    "  "    bra  LEAF6
-        ;
-EAF5 : 06    " "    tap
-EAF6        LEAF6:
-EAF6 : 09    " "    dex
-EAF7 : 29 00    ") "    bvs  LEAF9
-EAF9        LEAF9:
-EAF9 : 81 20    "  "    cmpa  #$20
-EAFB : 99 00    "  "    adca  X0000
-EAFD : 30    "0"    tsx
-EAFE        XEAFE:
-EAFE : 01    " "    nop
-EAFF : 20 01    "  "    bra  LEB02
-        ;
-EB01 : 06    " "    tap
-EB02        LEB02:
-EB02 : 09    " "    dex
-EB03 : 77 00 81    "w  "    asr  X0081
-EB06        LEB06:
-EB06 : 20 99    "  "    bra  LEAA1
-        ;
-EB08 : 00    " "    db  $00
-        ;
-EB09 : 30    "0"    tsx
-EB0A : 01    " "    nop
-EB0B        LEB0B:
-EB0B : 20 01    "  "    bra  LEB0E
-        ;
-EB0D : 06    " "    tap
-EB0E        LEB0E:
-EB0E : 09    " "    dex
-EB0F : 77 00 81    "w  "    asr  X0081
-EB12 : 20 99    "  "    bra  LEAAD
-        ;
-EB14 : 00    " "    db  $00
-        ;
-EB15 : 30    "0"    tsx
-EB16 : 01    " "    nop
-EB17 : 20 01    "  "    bra  LEB1A
-        ;
-EB19 : 06    " "    tap
-        ;
-EB1A        LEB1A:
-EB1A : 02    " "    db  $02
-        ;
-EB1B : 01    " "    nop
-        ;
-EB1C : 00 21    " !"    db  $00, $21
-        ;
-EB1E : 08    " "    inx
-        ;
-EB1F : 04    " "    db  $04
-        ;
-EB20 : 01    " "    nop
-        ;
-EB21 : 62 04    "b "    db  $62, $04
-        ;
-EB23 : 90 01    "  "    suba  X0001
-EB25 : 10    " "    sba
-EB26 : 20 01    "  "    bra  LEB29
-        ;
-EB28 : 00 21    " !"    db  $00, $21
-        ;
-EB2A : 07    " "    tpa
-        ;
-EB2B : 04    " "    db  $04
-        ;
-EB2C : 01    " "    nop
-        ;
-EB2D : 62 04    "b "    db  $62, $04
-        ;
-EB2F : 90 01    "  "    suba  X0001
-EB31 : 10    " "    sba
-        ;
-EB32 : 00    " "    db  $00
-        ;
-EB33 : 91 00    "  "    cmpa  X0000
-        ;
-EB35 : 21    "!"    db  $21
-        ;
-EB36 : 07    " "    tpa
-        ;
-EB37 : 04    " "    db  $04
-        ;
-EB38 : 01    " "    nop
-        ;
-EB39 : 62 04    "b "    db  $62, $04
-        ;
-EB3B : 90 01    "  "    suba  X0001
-EB3D : 10    " "    sba
-        ;
-EB3E : 00    " "    db  $00
-        ;
-EB3F : 91 00    "  "    cmpa  X0000
-        ;
-EB41 : 21 03 04    "!  "    db  $21, $03, $04
-        ;
-EB44 : 01    " "    nop
-        ;
-EB45 : 62 04    "b "    db  $62, $04
-        ;
-EB47 : 90 01    "  "    suba  X0001
-EB49 : 10    " "    sba
-        ;
-EB4A : 00    " "    db  $00
-        ;
-EB4B : 91 00    "  "    cmpa  X0000
-        ;
-EB4D : 02    " "    db  $02
-        ;
-EB4E : 07    " "    tpa
-        ;
-EB4F : 04    " "    db  $04
-        ;
-EB50 : 01    " "    nop
-        ;
-EB51 : 62 04    "b "    db  $62, $04
-        ;
-EB53 : 90 01    "  "    suba  X0001
-EB55 : 10    " "    sba
-        ;
-EB56 : 00    " "    db  $00
-        ;
-EB57        XEB57:
-EB57 : 91 00    "  "    cmpa  X0000
-EB59 : 11    " "    cba
-EB5A : 07    " "    tpa
-        ;
-EB5B : 04    " "    db  $04
-        ;
-EB5C : 01    " "    nop
-        ;
-EB5D : 62 04    "b "    db  $62, $04
-        ;
-EB5F : 90 01    "  "    suba  X0001
-EB61 : 10    " "    sba
-        ;
-EB62 : 00    " "    db  $00
-        ;
-EB63 : 99 00    "  "    adca  X0000
-EB65 : 0A    " "    clv
-EB66 : 07    " "    tpa
-EB67 : 07    " "    tpa
-EB68 : 01    " "    nop
-EB69 : 01    " "    nop
-        ;
-EB6A : 02    " "    db  $02
-        ;
-EB6B : E0 01    "  "    subb  $01,x
-EB6D : 90 01    "  "    suba  X0001
-        ;
-EB6F : 4B 00    "K "    db  $4B, $00
-        ;
-EB71 : FF FF 0A    "   "    stx  XFF0A
-        ;
-EB74 : 00    " "    db  $00
-        ;
-EB75 : 67 08    "g "    asr  $08,x
-EB77 : 20 01    "  "    bra  LEB7A
-        ;
-EB79 : 00 00    "  "    db  $00, $00
-        ;
-EB7B : 4D    "M"    tsta
-        ;
-EB7C : 00    " "    db  $00
-        ;
-EB7D : FF FF 0A    "   "    stx  XFF0A
-        ;
-EB80 : 00    " "    db  $00
-        ;
-EB81 : 67 08    "g "    asr  $08,x
-EB83 : 20 01    "  "    bra  LEB86
-        ;
-EB85 : 00 00    "  "    db  $00, $00
-        ;
-EB87 : 01    " "    nop
-        ;
-EB88 : 00    " "    db  $00
-        ;
-EB89 : 57    "W"    asrb
-EB8A : 90 02    "  "    suba  X0002
-        ;
-EB8C : 00 18    "  "    db  $00, $18
-        ;
-EB8E : 20 10    "  "    bra  LEBA0
-        ;
-EB90 : 40    "@"    nega
-EB91 : 06    " "    tap
-EB92 : 50    "P"    negb
-EB93        LEB93:
-EB93 : CE 00 00    "   "    ldx  #$0000
-EB96 : DF 11    "  "    stx  X0011
-EB98 : DF 13    "  "    stx  X0013
-EB9A : 96 00    "  "    ldaa  X0000
-EB9C : 97 0F    "  "    staa  X000F
-EB9E : 96 01    "  "    ldaa  X0001
-EBA0        LEBA0:
-EBA0 : 97 10    "  "    staa  X0010
-EBA2 : 96 02    "  "    ldaa  X0002
-EBA4 : 97 15    "  "    staa  X0015
-EBA6 : 96 03    "  "    ldaa  X0003
-EBA8 : 97 16    "  "    staa  X0016
-EBAA : 96 04    "  "    ldaa  X0004
-EBAC : 97 17    "  "    staa  X0017
-EBAE : DE 07    "  "    ldx  X0007
-EBB0 : DF 0D    "  "    stx  X000D
-EBB2 : 96 05    "  "    ldaa  X0005
-EBB4 : 97 0B    "  "    staa  X000B
-EBB6        XEBB6:
-EBB6 : 96 06    "  "    ldaa  X0006
-EBB8 : 97 0C    "  "    staa  X000C
-EBBA : CE 55 AA    " U "    ldx  #$55AA
-EBBD : DF 09    "  "    stx  X0009
-EBBF : D6 0E    "  "    ldab  X000E
-EBC1 : 39    "9"    rts
-        ;
-EBC2 : CE EC 27    "  '"    ldx  #$EC27
-EBC5 : 16    " "    tab
-EBC6 : 86 09    "  "    ldaa  #$09
-EBC8 : BD EE 8B    "   "    jsr  LEE8B
-EBCB : BD EB 93    "   "    jsr  LEB93
-EBCE        LEBCE:
-EBCE : 96 0A    "  "    ldaa  X000A
-EBD0 : 44    "D"    lsra
-EBD1 : 44    "D"    lsra
-EBD2 : 44    "D"    lsra
-EBD3 : 98 0A    "  "    eora  X000A
-EBD5 : 44    "D"    lsra
-EBD6 : 76 00 09    "v  "    ror  X0009
-EBD9 : 76 00 0A    "v  "    ror  X000A
-EBDC : 96 0B    "  "    ldaa  X000B
-EBDE : 24 01    "$ "    bcc  LEBE1
-EBE0 : 4F    "O"    clra
-EBE1        LEBE1:
-EBE1 : DE 13    "  "    ldx  X0013
-EBE3 : AB 18    "  "    adda  $18,x
-EBE5 : 46    "F"    rora
-EBE6 : DE 11    "  "    ldx  X0011
-EBE8 : A7 18    "  "    staa  $18,x
-EBEA : B7 20 02    "   "    staa  X2002
-EBED : 96 12    "  "    ldaa  X0012
-EBEF : 4C    "L"    inca
-EBF0 : 84 1F    "  "    anda  #$1F
-EBF2 : 97 12    "  "    staa  X0012
-EBF4 : 9B 15    "  "    adda  X0015
-EBF6 : 84 1F    "  "    anda  #$1F
-EBF8 : 97 14    "  "    staa  X0014
-EBFA : 96 0F    "  "    ldaa  X000F
-EBFC        LEBFC:
-EBFC : 4A    "J"    deca
-EBFD : 26 FD    "& "    bne  LEBFC
-EBFF : 5A    "Z"    decb
-EC00 : 26 CC    "& "    bne  LEBCE
-EC02 : 7A 00 0D    "z  "    dec  X000D
-EC05 : 2A C7    "* "    bpl  LEBCE
-EC07 : 96 07    "  "    ldaa  X0007
-EC09 : 97 0D    "  "    staa  X000D
-EC0B : D6 0E    "  "    ldab  X000E
-EC0D : 96 0F    "  "    ldaa  X000F
-EC0F : 9B 10    "  "    adda  X0010
-EC11 : 97 0F    "  "    staa  X000F
-EC13 : 96 15    "  "    ldaa  X0015
-EC15 : 9B 16    "  "    adda  X0016
-EC17 : 97 15    "  "    staa  X0015
-EC19 : 96 0B    "  "    ldaa  X000B
-EC1B : 9B 0C    "  "    adda  X000C
-EC1D : 97 0B    "  "    staa  X000B
-EC1F : 7A 00 17    "z  "    dec  X0017
-EC22 : 26 AA    "& "    bne  LEBCE
-EC24 : 7E F0 06    "~  "    jmp  LF006
-        ;
-EC27 : 01    " "    nop
-        ;
-EC28 : 00 00    "  "    db  $00, $00
-        ;
-EC2A : 01    " "    nop
-EC2B : 40    "@"    nega
-EC2C : FF FC 00    "   "    stx  XFC00
-EC2F : FF 01 00    "   "    stx  X0100
-        ;
-EC32 : 00    " "    db  $00
-        ;
-EC33 : 01    " "    nop
-EC34 : 40    "@"    nega
-EC35        XEC35:
-EC35 : FF FC 00    "   "    stx  XFC00
-EC38 : 80 01    "  "    suba  #$01
-        ;
-EC3A : 00 00    "  "    db  $00, $00
-        ;
-EC3C : 01    " "    nop
-EC3D : 40    "@"    nega
-EC3E : FF FC 00    "   "    stx  XFC00
-EC41 : 40    "@"    nega
-EC42 : 01    " "    nop
-EC43 : 01    " "    nop
-        ;
-EC44 : 00    " "    db  $00
-        ;
-EC45 : 01    " "    nop
-EC46 : 40    "@"    nega
-EC47 : FF 00 00    "   "    stx  X0000
-EC4A : FF 40 FF    " @ "    stx  X40FF
-EC4D : 40    "@"    nega
-EC4E : FF 40 FF    " @ "    stx  X40FF
-        ;
-EC51 : 00 00    "  "    db  $00, $00
-        ;
-EC53 : FF 20 FF    "   "    stx  X20FF
-EC56 : 20 FF    "  "    bra  LEC57
-EC58 : 20 FF    "  "    bra  LEC59
-        ;
-EC5A : 00 00    "  "    db  $00, $00
-        ;
-EC5C : FF 01 00    "   "    stx  X0100
-        ;
-EC5F : 00    " "    db  $00
-        ;
-EC60 : 01    " "    nop
-EC61 : 40    "@"    nega
-EC62 : FF 00 00    "   "    stx  X0000
-EC65 : FF 10 00    "   "    stx  X1000
-        ;
-EC68 : 00    " "    db  $00
-        ;
-EC69 : 01    " "    nop
-EC6A : 40    "@"    nega
-EC6B : FF FC 01    "   "    stx  XFC01
-EC6E : FF 01 00    "   "    stx  X0100
-EC71 : 40    "@"    nega
-EC72 : FE 40 FF    " @ "    ldx  X40FF
-        ;
-EC75 : 00 00    "  "    db  $00, $00
-        ;
-EC77 : FF 40 FF    " @ "    stx  X40FF
-        ;
-EC7A : 00    " "    db  $00
-        ;
-EC7B : 01    " "    nop
-EC7C : 40    "@"    nega
-EC7D : FF FF 00    "   "    stx  XFF00
-EC80 : A0 02    "  "    suba  $02,x
-EC82 : 01    " "    nop
-        ;
-EC83 : 00    " "    db  $00
-        ;
-EC84 : 01    " "    nop
-EC85 : 0F    " "    sei
-EC86 : FF FA 00    "   "    stx  XFA00
-EC89 : FF 01 01    "   "    stx  X0101
-EC8C : 3F    "?"    swi
-EC8D : FF 40 FF    " @ "    stx  X40FF
-        ;
-EC90 : 00 00    "  "    db  $00, $00
-        ;
-EC92 : 80 01    "  "    suba  #$01
-EC94 : 01    " "    nop
-        ;
-EC95 : 00    " "    db  $00
-        ;
-EC96 : 01    " "    nop
-EC97 : 0B    " "    sev
-EC98 : FF FC 01    "   "    stx  XFC01
-EC9B : FF 01 01    "   "    stx  X0101
-EC9E : 3F    "?"    swi
-EC9F : FF 40 FF    " @ "    stx  X40FF
-        ;
-ECA2 : FC    " "    db  $FC
-        ;
-ECA3 : 01    " "    nop
-ECA4 : FF 01 00    "   "    stx  X0100
-ECA7 : 40    "@"    nega
-ECA8 : FF 40 FF    " @ "    stx  X40FF
-        ;
-ECAB : 00 00    "  "    db  $00, $00
-        ;
-ECAD : FF 01 01    "   "    stx  X0101
-        ;
-ECB0 : 00    " "    db  $00
-        ;
-ECB1 : 01    " "    nop
-ECB2 : 10    " "    sba
-ECB3 : FF FA 00    "   "    stx  XFA00
-ECB6        LECB6:
-ECB6 : FF 48 FF    " H "    stx  X48FF
-ECB9 : 40    "@"    nega
-ECBA : FF 10 FF    "   "    stx  X10FF
-ECBD : F0 00 FF    "   "    subb  X00FF
-ECC0 : 20 FF    "  "    bra  LECC1
-ECC2 : 20 FF    "  "    bra  LECC3
-ECC4 : 20 F0    "  "    bra  LECB6
-        ;
-ECC6        LECC6:
-ECC6 : F9 00 A0    "   "    adcb  X00A0
-        ;
-ECC9 : 18    " "    db  $18
-        ;
-ECCA : FF 00 02    "   "    stx  X0002
-ECCD : 10    " "    sba
-ECCE : FF FC 00    "   "    stx  XFC00
-ECD1 : F0 EC FE    "   "    subb  XECFE
-        ;
-ECD4 : ED 14 ED    "   "    db  $ED, $14, $ED
-        ;
-ECD7 : 27 ED    "' "    beq  LECC6
-ECD9 : 2B ED    "+ "    bmi  LECC8
-ECDB : 37    "7"    pshb
-        ;
-ECDC : ED    " "    db  $ED
-        ;
-ECDD : C5 ED    "  "    bitb  #$ED
-        ;
-ECDF : CD ED    "  "    db  $CD, $ED
-        ;
-ECE1 : D7 EE    "  "    stab  X00EE
-ECE3 : 0E    " "    cli
-        ;
-ECE4 : ED    " "    db  $ED
-        ;
-ECE5 : 09    " "    dex
-        ;
-ECE6 : ED    " "    db  $ED
-        ;
-ECE7 : 2F ED    "/ "    ble  LECD6
-ECE9 : 33    "3"    pulb
-ECEA        XECEA:
-ECEA : 48    "H"    asla
-ECEB : CE EC D2    "   "    ldx  #$ECD2
-ECEE : BD EE 70    "  p"    jsr  LEE70
-ECF1 : EE 00    "  "    ldx  $00,x
-ECF3 : AD 00    "  "    jsr  $00,x            ;INFO: index jump
-ECF5 : 7E F0 06    "~  "    jmp  LF006
-        ;
-ECF8 : 01    " "    nop
-ECF9 : 01    " "    nop
-ECFA : 01    " "    nop
-ECFB : FF 03 E8    "   "    stx  X03E8
-ECFE        XECFE:
-ECFE : CE EC F8    "   "    ldx  #$ECF8
-ED01 : 20 14    "  "    bra  LED17
-        ;
-ED03 : 01    " "    nop
-ED04 : 01    " "    nop
-ED05 : 10    " "    sba
-ED06 : 4D    "M"    tsta
-ED07 : 01    " "    nop
-        ;
-ED08 : 00    " "    db  $00
-        ;
-ED09 : CE ED 03    "   "    ldx  #$ED03
-ED0C : 20 09    "  "    bra  LED17
-        ;
-ED0E : 01    " "    nop
-ED0F : 01    " "    nop
-ED10 : 01    " "    nop
-ED11 : 40    "@"    nega
-ED12 : 10    " "    sba
-        ;
-ED13 : 00    " "    db  $00
-        ;
-ED14 : CE ED 0E    "   "    ldx  #$ED0E
-ED17        LED17:
-ED17 : A6 00    "  "    ldaa  $00,x
-ED19 : 97 06    "  "    staa  X0006
-ED1B : A6 01    "  "    ldaa  $01,x
-ED1D : 97 07    "  "    staa  X0007
-ED1F : A6 02    "  "    ldaa  $02,x
-ED21 : E6 03    "  "    ldab  $03,x
-ED23 : EE 04    "  "    ldx  $04,x
-ED25 : 20 17    "  "    bra  LED3E
-        ;
-ED27 : C6 02    "  "    ldab  #$02
-ED29 : 20 0E    "  "    bra  LED39
-        ;
-ED2B : C6 03    "  "    ldab  #$03
-ED2D : 20 0A    "  "    bra  LED39
-        ;
-ED2F : C6 05    "  "    ldab  #$05
-ED31 : 20 06    "  "    bra  LED39
-        ;
-ED33 : C6 06    "  "    ldab  #$06
-ED35 : 20 02    "  "    bra  LED39
-        ;
-ED37 : C6 04    "  "    ldab  #$04
-ED39        LED39:
-ED39 : 4F    "O"    clra
-ED3A : 97 07    "  "    staa  X0007
-ED3C : 97 06    "  "    staa  X0006
-ED3E        LED3E:
-ED3E : 97 05    "  "    staa  X0005
-ED40 : D7 00    "  "    stab  X0000
-ED42 : DF 03    "  "    stx  X0003
-ED44 : 7F 00 02    "   "    clr  X0002
-ED47 : 86 6C    " l"    ldaa  #$6C
-ED49 : 97 01    "  "    staa  X0001
-ED4B : 97 61    " a"    staa  X0061
-ED4D : 86 E6    "  "    ldaa  #$E6
-ED4F : 97 02    "  "    staa  X0002
-ED51 : 97 62    " b"    staa  X0062
-ED53 : B7 20 02    "   "    staa  X2002
-ED56        LED56:
-ED56 : DE 03    "  "    ldx  X0003
-ED58 : B6 20 02    "   "    ldaa  X2002
-ED5B        LED5B:
-ED5B : 16    " "    tab
-ED5C : 54    "T"    lsrb
-ED5D : 54    "T"    lsrb
-ED5E : 54    "T"    lsrb
-ED5F : D8 02    "  "    eorb  X0002
-ED61 : 54    "T"    lsrb
-ED62 : 76 00 01    "v  "    ror  X0001
-ED65 : 76 00 02    "v  "    ror  X0002
-ED68 : D6 00    "  "    ldab  X0000
-ED6A : 7D 00 06    "}  "    tst  X0006
-ED6D : 27 04    "' "    beq  LED73
-ED6F : D4 01    "  "    andb  X0001
-ED71 : DB 07    "  "    addb  X0007
-ED73        LED73:
-ED73 : D7 61    " a"    stab  X0061
-ED75 : D6 62    " b"    ldab  X0062
-ED77 : 91 02    "  "    cmpa  X0002
-ED79 : 22 12    "" "    bhi  LED8D
-ED7B        LED7B:
-ED7B : 09    " "    dex
-ED7C : 27 26    "'&"    beq  LEDA4
-ED7E : B7 20 02    "   "    staa  X2002
-ED81 : DB 62    " b"    addb  X0062
-ED83 : 99 61    " a"    adca  X0061
-ED85 : 25 16    "% "    bcs  LED9D
-ED87 : 91 02    "  "    cmpa  X0002
-ED89 : 23 F0    "# "    bls  LED7B
-ED8B : 20 10    "  "    bra  LED9D
-        ;
-ED8D        LED8D:
-ED8D : 09    " "    dex
-ED8E : 27 14    "' "    beq  LEDA4
-ED90 : B7 20 02    "   "    staa  X2002
-ED93 : D0 62    " b"    subb  X0062
-ED95 : 92 61    " a"    sbca  X0061
-ED97 : 25 04    "% "    bcs  LED9D
-ED99 : 91 02    "  "    cmpa  X0002
-ED9B : 22 F0    "" "    bhi  LED8D
-ED9D        LED9D:
-ED9D : 96 02    "  "    ldaa  X0002
-ED9F : B7 20 02    "   "    staa  X2002
-EDA2 : 20 B7    "  "    bra  LED5B
-        ;
-EDA4        LEDA4:
-EDA4 : D6 05    "  "    ldab  X0005
-EDA6 : 27 B3    "' "    beq  LED5B
-EDA8 : 96 00    "  "    ldaa  X0000
-EDAA : D6 62    " b"    ldab  X0062
-EDAC : 44    "D"    lsra
-EDAD : 56    "V"    rorb
-EDAE : 44    "D"    lsra
-EDAF : 56    "V"    rorb
-EDB0 : 44    "D"    lsra
-EDB1 : 56    "V"    rorb
-EDB2 : 43    "C"    coma
-EDB3 : 50    "P"    negb
-EDB4 : 82 FF    "  "    sbca  #$FF
-EDB6 : DB 62    " b"    addb  X0062
-EDB8 : 99 00    "  "    adca  X0000
-EDBA : D7 62    " b"    stab  X0062
-EDBC : 97 00    "  "    staa  X0000
-EDBE : 26 96    "& "    bne  LED56
-EDC0 : C1 07    "  "    cmpb  #$07
-EDC2 : 26 92    "& "    bne  LED56
-EDC4 : 39    "9"    rts
-        ;
+E3C1 : 0F         sei                 ;set interrupt mask I=1
+E3C2 : 8E 00 7F   lds  #$007F         ;load stack pointer with 007Fh (ENDRAM)
+E3C5 : CE 20 00   ldx  #$2000         ;load X with 2000h (PIA addr)
+E3C8 : 6F 01      clr  $01,x          ;clear addr X+01h (2001 PIA1 CR port A)
+E3CA : 6F 03      clr  $03,x          ;clear addr X+03h (2003 PIA1 CR port B)
+E3CC : 86 FF      ldaa  #$FF          ;load A with FFh
+E3CE : A7 02      staa  $02,x         ;store A in addr X+02h (2002 PIA1 PR/DDR port B out)
+E3D0 : 6F 00      clr  $00,x          ;clear addr X+00h (2000 PIA1 PR/DDR port A in)
+E3D2 : 86 37      ldaa  #$37          ;load A with 37h (CA2 low, IRQ allowed)
+E3D4 : A7 01      staa  $01,x         ;store A in addr X+01h (2001 PIA1 CR port A)
+E3D6 : 86 3C      ldaa  #$3C          ;load A with 3Ch (CB2 set init high, no IRQs)
+E3D8 : A7 03      staa  $03,x         ;store A in addr X + 03h (2003 PIA1 CR port B)
+E3DA : 6F 00      clr  $00,x          ;clear addr X+00h (2000 PIA1 PR/DDR port A in)
+E3DC : CE 00 00   ldx  #$0000         ;load X with 0000h
+E3DF : 86 80      ldaa  #$80          ;load A with 80h
+;RSTCLR - clear LOCRAM 00-7F
+E3E1 : 6F 00      clr  $00,x          ;clear addr X+00h
+E3E3 : 08         inx                 ;incr X
+E3E4 : 4A         deca                ;decr A
+E3E5 : 26 FA      bne  LE3E1          ;branch Z=0 RSTCLR
+;
+E3E7 : 9F 61      sts  $61            ;store SP in addr 61
+E3E9 : 0E         cli                 ;clear interrupts i+0
+;STDBY 
+E3EA : 20 FE      bra  LE3EA          ;branch always STDBY
+;RESETX
+E3EC : 7E F0 06   jmp  LF006          ;jump ENDSND
+;*************************************;
+; SYNTH (system) 9 (first) 1
+;*************************************;
+;SYNTH91
+E3EF : C6 10      ldab  #$10          ;load B with 10h
+E3F1 : CE 00 00   ldx  #$0000         ;load X with 0000h
+E3F4 : DF 70      stx  $70            ;store X in addr 70
+E3F6 : CE F4 EE   ldx  #$F4EE         ;load X with F4EEh (data)
+;LE3F9:
+E3F9 : C6 10      ldab  #$10          ;load B with 10h
+E3FB : 4D         tsta                ;test A 
+E3FC : 27 07      beq  LE405          ;branch Z=1
+;LE3FE:
+E3FE : 08         inx                 ;incr X
+E3FF : 5A         decb                ;decr B
+E400 : 26 FC      bne  LE3FE          ;branch Z=0
+E402 : 4A         deca                ;decr A
+E403 : 26 F4      bne  LE3F9          ;branch Z=0
+;LE405:
+E405 : C6 10      ldab  #$10          ;load B with 10h
+E407 : BD EE A6   jsr  LEEA6          ;jump sub TRANS
+E40A : 96 08      ldaa  $08           ;load A with addr 08
+E40C : B7 20 02   staa  $2002         ;store A in DAC output SOUND
+E40F : D6 00      ldab  $00           ;load B with addr 00
+;LE411:
+E411 : 7A 00 07   dec  $0007          ;decr addr 0007
+E414 : 27 D6      beq  LE3EC          ;branch Z=1
+E416 : DE 0C      ldx  $0C            ;load X with addr 0C
+;LE418:
+E418 : 96 02      ldaa  $02           ;load A with addr 02
+;LE41A:
+E41A : 4A         deca                ;decr A
+E41B : 26 FD      bne  LE41A          ;branch Z=0
+E41D : 96 01      ldaa  $01           ;load A with addr 01
+;LE41F:
+E41F : 4A         deca                ;decr A
+E420 : 26 FD      bne  LE41F          ;branch Z=0
+E422 : A6 00      ldaa  $00,x         ;load A with X=00h
+;LE424:
+E424 : 4A         deca                ;decr A
+E425 : 26 FD      bne  LE424          ;branch Z=0
+E427 : 73 20 02   com  $2002          ;complement 1s in DAC output SOUND
+E42A : 5A         decb                ;decr B
+E42B : 26 EB      bne  LE418          ;branch Z=0
+E42D : D6 00      ldab  $00           ;load B with addr 00
+E42F : 7A 00 06   dec  $0006          ;decr addr 0006
+E432 : 26 0D      bne  LE441          ;branch Z=0
+E434 : 96 05      ldaa  $05           ;load A with addr 05
+E436 : 97 06      staa  $06           ;store A in addr 06
+E438 : 96 01      ldaa  $01           ;load A with addr 01
+E43A : 9B 0A      adda  $0A           ;add A with addr 0A
+E43C : 94 0B      anda  $0B           ;and A with addr 0B
+E43E : 4C         inca                ;incr A
+E43F : 97 01      staa  $01           ;store A in addr 01
+;LE441:
+E441 : 08         inx                 ;incr X
+E442 : 9C 0E      cpx  $0E            ;compare X with addr 0E
+E444 : 26 D2      bne  LE418          ;branch Z=0
+E446 : B6 20 02   ldaa  $2002         ;load A with DAC
+E449 : 2B 04      bmi  LE44F          ;branch N=1
+E44B : 9B 09      adda  $09           ;add A with addr 09
+E44D : 9B 09      adda  $09           ;add A with addr 09
+;LE44F:
+E44F : 90 09      suba  $09           ;sub A with addr 09
+E451 : 7A 00 04   dec  $0004          ;decr addr 0004
+E454 : 26 BB      bne  LE411          ;branch Z=0
+E456 : 96 03      ldaa  $03           ;load A with addr 03
+E458 : 97 04      staa  $04           ;store A in addr 04
+E45A : 96 02      ldaa  $02           ;load A with addr 02
+E45C : 84 0F      anda  #$0F          ;and A with 0Fh
+E45E : 4A         deca                ;decr A
+E45F : 26 02      bne  LE463          ;branch Z=0
+E461 : 86 0F      ldaa  #$0F          ;load A with 0Fh
+;LE463:
+E463 : 97 02      staa  $02           ;store A in addr 02
+E465 : 20 AA      bra  LE411          ;branch always 
+;*************************************;
+; SYNTH  system 9 second 2
+;*************************************;
+;SYNTH92
+E467 : CE 00 02   ldx  #$0002         ;load X with 0002h
+E46A : DF 70      stx  $70            ;store X in addr 70
+E46C : CE F5 3E   ldx  #$F53E         ;load X with F53Eh (data)
+E46F : 16         tab                 ;transfer A to B
+E470 : 4F         clra                ;clear A
+E471 : 58         aslb                ;arith shift left B
+E472 : 89 00      adca  #$00          ;add C+A + 00h
+E474 : 58         aslb                ;arith shift left B
+E475 : 89 00      adca  #$00          ;add C+A + 00h
+E477 : BD EE 7E   jsr  LEE7E          ;jump sub ADDBX
+E47A : A6 00      ldaa  $00,x         ;load A with X+00h
+E47C : 97 00      staa  $00           ;store A in addr 00
+E47E : A6 01      ldaa  $01,x         ;load A with X+01h
+E480 : 97 01      staa  $01           ;store A in addr 01
+E482 : EE 02      ldx  $02,x          ;load X with X+02h
+E484 : C6 0D      ldab  #$0D          ;load B with 0Dh
+E486 : BD EE A6   jsr  LEEA6          ;jump sub TRANS
+E489 : 96 07      ldaa  $07           ;load A with addr 07
+E48B : B7 20 02   staa  $2002         ;store A in DAC output SOUND
+E48E : D6 00      ldab  $00           ;load B with addr 00
+;LE490:
+E490 : DE 0B      ldx  $0B            ;load X with addr 0B
+;LE492:
+E492 : 96 02      ldaa  $02           ;load A with addr 02
+;LE494:
+E494 : 4A         deca                ;decr A
+E495 : 26 FD      bne  LE494          ;branch Z=0
+E497 : A6 00      ldaa  $00,x         ;load A with X+00h
+;LE499:
+E499 : 4A         deca                ;decr A
+E49A : 26 FD      bne  LE499          ;branch Z=0
+E49C : 73 20 02   com  $2002          ;complement 1s DAC output SOUND
+E49F : 5A         decb                ;decr B
+E4A0 : 26 F0      bne  LE492          ;branch Z=0
+E4A2 : 7A 00 05   dec  $0005          ;decr addr 0005
+E4A5 : 26 0C      bne  LE4B3          ;branch Z=0
+E4A7 : 96 04      ldaa  $04           ;load A with addr 04
+E4A9 : 97 05      staa  $05           ;store A in addr 05
+E4AB : B6 20 02   ldaa  $2002         ;load A with DAC
+E4AE : 90 08      suba  $08
+E4B0 : B7 20 02   staa  $2002         ;store A in DAC output SOUND
+;LE4B3:
+E4B3 : D6 00      ldab  $00           ;load B with addr 00
+E4B5 : 08         inx                 ;incr X
+E4B6 : 9C 0D      cpx  $0D            ;compare X with addr 0D
+E4B8 : 26 D8      bne  LE492          ;branch Z=0
+E4BA : 7A 00 09   dec  $0009          ;decr addr 0009
+E4BD : 27 0B      beq  LE4CA          ;branch Z=1
+E4BF : 7A 20 02   dec  $2002          ;decr DAC output SOUND
+E4C2 : 96 02      ldaa  $02           ;load A with addr 02
+E4C4 : 9B 01      adda  $01           ;add A with addr 01
+E4C6 : 97 02      staa  $02           ;store A in addr 02
+E4C8 : 20 C6      bra  LE490          ;branch always
+;LE4CA:
+E4CA : 7E F0 06   jmp  LF006          ;jump ENDSND
+;*************************************;
+; Organ Loader jump writer
+;*************************************;
+;ORGNLD
+E4CD : A6 01      ldaa  $01,x         ;load A with X+01h
+;ORGANL - addr 001E is nop to jmp write space for organloader
+E4CF : CE 00 1E   ldx  #$001E         ;load X with addr 001E (#RDELAY)
+E4D2 : 80 02      suba  #$02          ;sub A with 02h
+;LDLP
+E4D4 : 23 15      bls  LE4EB          ;branch C+Z=1 LD1
+E4D6 : 81 03      cmpa  #$03          ;compare A with 03h
+E4D8 : 27 09      beq  LE4E3          ;branch Z=1 LD2
+E4DA : C6 01      ldab  #$01          ;load B with 01h (nop)
+E4DC : E7 00      stab  $00,x         ;store B in addr X+00h
+E4DE : 08         inx                 ;incr X
+E4DF : 80 02      suba  #$02          ;sub A with 02h
+E4E1 : 20 F1      bra  LE4D4          ;branch always LDLP
+;LD2
+E4E3 : C6 91      ldab  #$91          ;load B with 91h
+E4E5 : E7 00      stab  $00,x         ;store B in addr X+00h
+E4E7 : 6F 01      clr  $01,x          ;clear X+01h
+E4E9 : 08         inx                 ;incr X
+E4EA : 08         inx                 ;incr X
+;LD1 - writes 7E E5 4C (jmp $E54C)
+E4EB : C6 7E      ldab  #$7E          ;load B with 7Eh
+E4ED : E7 00      stab  $00,x         ;store B in addr X+00h
+E4EF : C6 E5      ldab  #$E5          ;load B with E5h
+E4F1 : E7 01      stab  $01,x         ;store B in addr X+01h
+E4F3 : C6 4C      ldab  #$4C          ;load B with 4Ch
+E4F5 : E7 02      stab  $02,x         ;store B in addr X+02h
+E4F7 : 39         rts                 ;return subroutine
+;*************************************;
+; SYNTH93  system 9 third 3
+;*************************************;
+;SYNTH93
+E4F8 : 16         tab                 ;transfer A to B
+E4F9 : 4F         clra                ;clear A
+E4FA : 58         aslb                ;arith shift left B
+E4FB : 89 00      adca  #$00          ;add C+A + 00h
+E4FD : D7 6F      stab  $6F           ;store B in addr 6F
+E4FF : 58         aslb                ;arith shift left B
+E500 : 89 00      adca  #$00          ;add C+A + 00h
+E502 : DB 6F      addb  $6F           ;store B in addr 6F
+E504 : 89 00      adca  #$00          ;add C+A + 00h
+E506 : CE F7 24   ldx  #$F724         ;load X with F724h (data organ tune?)
+E509 : BD EE 7E   jsr  LEE7E          ;jump sub ADDBX
+E50C : A6 02      ldaa  $02,x         ;load A with X+02h
+E50E : 97 12      staa  $12           ;store A in addr 12
+E510 : D6 60      ldab  $60           ;load B with addr 60
+E512 : C5 08      bitb  #$08          ;bit test B with 08h
+E514 : 27 02      beq  LE518          ;branch Z=1 
+E516 : 97 50      staa  $50           ;store A in addr 50
+;LE518:
+E518 : A6 03      ldaa  $03,x         ;load A with X+03h
+E51A : 97 13      staa  $13           ;store A in addr 13
+E51C : C5 08      bitb  #$08          ;bit test B with 08h
+E51E : 27 02      beq  LE522          ;branch Z=1 
+E520 : 97 51      staa  $51           ;store A in addr 51
+;LE522:
+E522 : A6 04      ldaa  $04,x         ;load A with X+04h
+E524 : 97 14      staa  $14           ;store A in addr 14
+E526 : A6 05      ldaa  $05,x         ;load A with X+05h
+E528 : 97 1D      staa  $1D           ;store A in addr 1D
+E52A : 97 15      staa  $15           ;store A in addr 15
+E52C : EE 00      ldx  $00,x          ;load X with X+00h
+E52E : DF 6A      stx  $6A            ;store X in addr 6A
+E530 : CE 00 00   ldx  #$0000         ;load X with 0000h
+E533 : DF 70      stx  $70            ;store X in addr 70
+E535 : C6 12      ldab  #$12          ;load B with 12h
+E537 : DE 6A      ldx  $6A            ;load X with 6A
+E539 : DF 67      stx  $67            ;store X in addr 67
+E53B : BD EE A6   jsr  LEEA6          ;jump sub TRANS
+;LE53E
+E53E : DE 12      ldx  $12            ;load X with addr 12
+E540 : 09         dex                 ;decr X
+E541 : 09         dex                 ;decr X
+E542 : 09         dex                 ;decr X
+E543 : 09         dex                 ;decr X
+E544 : DF 12      stx  $12            ;store X in addr 12
+E546 : A6 00      ldaa  $00,x         ;load A with X+00h
+E548 : 97 69      staa  $69           ;store A in addr 69
+E54A : 20 07      bra  LE553          ;branch always 
+;LE54C:
+E54C : DE 18      ldx  $18            ;load X with addr 18
+E54E : 09         dex                 ;decr X
+E54F : DF 18      stx  $18            ;store X in addr 18
+E551 : 26 53      bne  LE5A6          ;branch Z=0
+;LE553:
+E553 : DE 12      ldx  $12            ;load X with addr 12
+E555 : 08         inx                 ;incr X
+E556 : 08         inx                 ;incr X
+E557 : 08         inx                 ;incr X
+E558 : 08         inx                 ;incr X
+;LE559:
+E559 : A6 00      ldaa  $00,x         ;load A with X+00h
+E55B : 26 1D      bne  LE57A          ;branch Z=0
+E55D : A6 01      ldaa  $01,x         ;load A with X+01h
+E55F : 26 0E      bne  LE56F          ;branch Z=0
+E561 : DF 12      stx  $12            ;store X in addr 12
+E563 : EE 02      ldx  $02,x          ;load X with X+02h
+;LE565:
+E565 : 86 16      ldaa  #$16          ;load A with 16h
+;LE567:
+E567 : 4A         deca                ;decr A
+E568 : 26 FD      bne  LE567          ;branch Z=0
+E56A : 09         dex                 ;decr X
+E56B : 26 F8      bne  LE565          ;branch Z=0
+E56D : 20 E4      bra  LE553          ;branch always
+;LE56F:
+E56F : 7A 00 14   dec  $0014          ;decr addr 0014
+E572 : 27 26      beq  LE59A          ;branch Z=1
+E574 : EE 01      ldx  $01,x          ;load X with X+01h
+E576 : DF 12      stx  $12            ;store X in addr 12
+E578 : 20 DF      bra  LE559          ;branch always
+;LE57A:
+E57A : 97 16      staa  $16           ;store A in addr 16
+E57C : 97 17      staa  $17           ;store A in addr 17
+E57E : A6 02      ldaa  $02,x         ;load A with X+02h
+E580 : 97 18      staa  $18           ;store A in addr 18
+E582 : A6 03      ldaa  $03,x         ;load A with X+03h
+E584 : 97 19      staa  $19           ;store A in addr 19
+E586 : DF 12      stx  $12            ;store X in addr 12
+E588 : BD E4 CD   jsr  LE4CD          ;jump sub ORGNLD
+E58B : CE 00 00   ldx  #$0000         ;load X with 0000h
+E58E : DF 70      stx  $70            ;store X in addr 70
+E590 : DE 67      ldx  $67            ;load X with addr 67
+E592 : C6 12      ldab  #$12          ;load B with 12h
+E594 : BD EE A6   jsr  LEEA6          ;jump sub TRANS
+E597 : 7E E5 4C   jmp  LE54C          ;jump
+;LE59A:
+E59A : 96 60      ldaa  $60           ;load A with addr 60
+E59C : 85 08      bita  #$08          ;bit test B with 08h
+E59E : 27 03      beq  LE5A3          ;branch Z=1
+E5A0 : 7E F0 15   jmp  LF015          ;jump
+;LE5A3:
+E5A3 : 7E F0 06   jmp  LF006          ;jump ENDSND
+;LE5A6:
+E5A6 : 96 00      ldaa  $00           ;load A with addr 00
+E5A8 : F6 20 02   ldab  $2002         ;load B with DAC
+E5AB : 2B 09      bmi  LE5B6          ;branch N=1
+E5AD : AC 00      cpx  $00,x          ;compare X with X+00h
+E5AF : AC 00      cpx  $00,x          ;compare X with X+00h 
+E5B1 : 8C 00 00   cpx  #$0000         ;compare X with 0000h
+E5B4 : 20 0F      bra  LE5C5          ;branch always
+;LE5B6:
+E5B6 : 7A 00 1D   dec  $001D          ;decr addr 001D
+E5B9 : 27 05      beq  LE5C0          ;branch Z=1
+E5BB : BC E5 A6   cpx  $E5A6          ;compare X with addr E5A6
+E5BE : 20 05      bra  LE5C5          ;branch always
+;LE5C0:
+E5C0 : D6 15      ldab  $15           ;load B with addr 15
+E5C2 : D7 1D      stab  $1D           ;store B in addr 1D
+E5C4 : 43         coma                ;complement 1s A
+;LE5C5:
+E5C5 : B7 20 02   staa  $2002         ;store A in DAC output SOUND
+E5C8 : 7A 00 17   dec  $0017          ;decr addr 0017
+E5CB : 26 07      bne  LE5D4          ;branch Z=0
+E5CD : 96 16      ldaa  $16           ;load A with addr 16
+E5CF : 97 17      staa  $17           ;store A in addr 17
+E5D1 : 73 20 02   com  $2002          ;complement 1s DAC output SOUND
+;LE5D4:
+E5D4 : 96 01      ldaa  $01           ;load A with addr 01
+E5D6 : 26 06      bne  LE5DE          ;branch Z=0
+E5D8 : 4C         inca                ;incr A
+E5D9 : 97 01      staa  $01           ;store A in addr 01
+E5DB : 7F 00 10   clr  $0010          ;clear addr 0010
+;LE5DE:
+E5DE : 81 04      cmpa  #$04          ;compare A with 04h
+E5E0 : 26 08      bne  LE5EA          ;branch Z=0
+E5E2 : 08         inx                 ;incr X
+E5E3 : 08         inx                 ;incr X
+E5E4 : 08         inx                 ;incr X
+E5E5 : CE 00 02   ldx  #$0002         ;load X with 0002h
+E5E8 : 20 18      bra  LE602          ;branch always
+;LE5EA:
+E5EA : 81 03      cmpa  #$03          ;compare A with 03h
+E5EC : 26 07      bne  LE5F5          ;branch Z=0
+E5EE : 08         inx                 ;incr X
+E5EF : 01         nop                 ;
+E5F0 : CE 00 06   ldx  #$0006         ;load X with 0006h
+E5F3 : 20 0D      bra  LE602          ;branch always
+;LE5F5:
+E5F5 : 81 02      cmpa  #$02          ;compare A with 02h
+E5F7 : 26 05      bne  LE5FE          ;branch Z=0
+E5F9 : CE 00 0A   ldx  #$000A         ;load X with 000Ah
+E5FC : 20 04      bra  LE602          ;branch always
+;LE5FE:
+E5FE : 08         inx                 ;incr X
+E5FF : CE 00 0E   ldx  #$000E         ;load X with 000Eh
+;LE602:
+E602 : 96 00      ldaa  $00           ;load A with addr 00
+E604 : 6A 00      dec  $00,x          ;decr addr X+00h
+E606 : 26 17      bne  LE61F          ;branch Z=0
+E608 : AB 02      adda  $02,x         ;add A with X+02h
+E60A : 6A 03      dec  $03,x          ;decr addr X+03h
+E60C : 26 0A      bne  LE618          ;branch Z=0
+E60E : 7A 00 01   dec  $0001          ;decr addr 0001
+E611 : 01         nop                 ;
+E612 : CE 00 00   ldx  #$0000         ;load X with 0000h
+E615 : 7E E6 28   jmp  LE628          ;jump
+;LE618:
+E618 : E6 01      ldab  $01,x         ;load B with X+01h
+E61A : E7 00      stab  $00,x         ;store B in addr X+00h
+E61C : 7E E6 28   jmp  LE628          ;jump
+;LE61F:
+E61F : C6 05      ldab  #$05          ;load B with 05h
+;LE621:
+E621 : 5A         decb                ;decr B
+E622 : 26 FD      bne  LE621          ;branch Z=0
+E624 : 01         nop                 ;
+E625 : 7E E6 28   jmp  LE628          ;jump
+;LE628:
+E628 : 97 00      staa  $00           ;store A in addr 00
+E62A : 7E 00 1E   jmp  L001E          ;jump
+;*************************************;
+; SYNTH system 9 fourth 4
+;*************************************;
+;SYNTH94
+E62D : CE E6 DA   ldx  #$E6DA         ;load X with E6DAh (tbl4 load 4 bytes?)
+E630 : 48         asla                ;arith shoftleft A
+E631 : BD EE 70   jsr  LEE70          ;jump sub ADDX
+E634 : EE 00      ldx  $00,x          ;load X with X+00h
+E636 : A6 00      ldaa  $00,x         ;load A with X+00h
+E638 : 97 00      staa  $00           ;store A in addr 00
+E63A : 97 01      staa  $01           ;store A in addr 01
+E63C : A6 01      ldaa  $01,x         ;load A with X+01h
+E63E : 97 05      staa  $05           ;store A in addr 05
+E640 : 97 06      staa  $06           ;store A in addr 06
+E642 : EE 02      ldx  $02,x          ;load X with X+02h
+E644 : DF 07      stx  $07            ;store X in addr 07
+E646 : A6 00      ldaa  $00,x         ;load A with X+00h
+E648 : 97 02      staa  $02           ;store A in addr 02
+E64A : A6 01      ldaa  $01,x         ;load A with X+01h
+E64C : 97 09      staa  $09           ;store A in addr 09
+E64E : A6 02      ldaa  $02,x         ;load A with X+02h
+E650 : 97 0A      staa  $0A           ;store A in addr 0A
+E652 : A6 03      ldaa  $03,x         ;load A with X+03h
+E654 : 97 0B      staa  $0B           ;store A in addr 0B
+E656 : EE 04      ldx  $04,x          ;load X with X+04h
+E658 : DF 03      stx  $03            ;store X in addr 03
+;LE65A:
+E65A : DE 03      ldx  $03            ;load X with addr 03
+E65C : 09         dex                 ;decr X
+E65D : DF 03      stx  $03            ;store X in addr 03
+E65F : 27 53      beq  LE6B4          ;branch Z=1
+E661 : 96 02      ldaa  $02           ;load A with addr 02
+;LE663:
+E663 : 4A         deca                ;decr A
+E664 : 26 FD      bne  LE663          ;branch Z=0
+E666 : BD EE 54   jsr  LEE54          ;jump sub
+E669 : 26 01      bne  LE66C          ;branch Z=0
+E66B : 53         comb                ;complement 1s B
+;LE66C:
+E66C : 4D         tsta                ;test A
+E66D : 26 01      bne  LE670          ;branch Z=0
+E66F : 43         coma                ;complement 1s A
+;LE670:
+E670 : 94 00      anda  $00           ;and A with addr 00
+E672 : D4 01      andb  $01           ;and B with addr 01
+E674 : D7 6E      stab  $6E           ;store B in addr 6E
+E676 : C6 08      ldab  #$08          ;load B with 08h
+E678 : D7 6F      stab  $6F           ;store B in addr 6F
+E67A : 5F         clrb                ;clear B
+;LE67B:
+E67B : 44         lsra                ;logic shift right A
+E67C : 24 03      bcc  LE681          ;branch C=0
+E67E : F7 20 02   stab  $2002         ;store B in DAC output SOUND
+;LE681:
+E681 : CB 05      addb  #$05          ;add B with 05h
+E683 : 7A 00 6F   dec  $006F          ;decr addr 006F
+E686 : 26 F3      bne  LE67B          ;branch Z=0
+E688 : 96 6E      ldaa  $6E           ;load A with addr 6E
+E68A : C6 08      ldab  #$08          ;load B with 08h
+E68C : D7 6F      stab  $6F           ;store B in addr 6F
+E68E : D6 0A      ldab  $0A           ;load B with addr 0A
+;LE690:
+E690 : 44         lsra                ;logic shift right A
+E691 : 24 03      bcc  LE696          ;branch C=0
+E693 : F7 20 02   stab  $2002         ;store B in DAC output SOUND
+;LE696:
+E696 : C0 05      subb  #$05          ;sub B with 05h
+E698 : 7A 00 6F   dec  $006F          ;decr addr 006F
+E69B : 26 F3      bne  LE690          ;branch Z=0
+E69D : 7A 00 06   dec  $0006          ;decr addr 0006
+E6A0 : 26 B8      bne  LE65A          ;branch Z=0
+E6A2 : 96 05      ldaa  $05           ;load A with addr 05
+E6A4 : 97 06      staa  $06           ;store A in addr 06
+E6A6 : 96 02      ldaa  $02           ;load A with addr 05
+E6A8 : 9B 09      adda  $09           ;add A with addr 09
+E6AA : 97 02      staa  $02           ;store A in addr 02
+E6AC : 96 0A      ldaa  $0A           ;load A with addr 05
+E6AE : 9B 0B      adda  $0B           ;add A with addr 0B
+E6B0 : 97 0A      staa  $0A           ;store A in addr 0A
+E6B2 : 20 A6      bra  LE65A          ;branch always 
+;LE6B4:
+E6B4 : DE 07      ldx  $07            ;load X with addr 07
+E6B6 : 08         inx                 ;incr X
+E6B7 : 08         inx                 ;incr X
+E6B8 : 08         inx                 ;incr X
+E6B9 : 08         inx                 ;incr X
+E6BA : 08         inx                 ;incr X
+E6BB : 08         inx                 ;incr X
+E6BC : DF 07      stx  $07            ;store X in addr 07
+E6BE : A6 00      ldaa  $00,x         ;load A with X+00h
+E6C0 : 26 03      bne  LE6C5          ;branch Z=0
+E6C2 : 7E F0 06   jmp  LF006          ;jump ENDSND
+;LE6C5:
+E6C5 : 97 02      staa  $02           ;store A in addr 02
+E6C7 : A6 01      ldaa  $01,x         ;load A with X+01h
+E6C9 : 97 09      staa  $09           ;store A in addr 09
+E6CB : A6 02      ldaa  $02,x         ;load A with X+02h
+E6CD : 97 0A      staa  $0A           ;store A in addr 0A
+E6CF : A6 03      ldaa  $03,x         ;load A with X+03h
+E6D1 : 97 0B      staa  $0B           ;store A in addr 0B
+E6D3 : EE 04      ldx  $04,x          ;load X with X+04h
+E6D5 : DF 03      stx  $03            ;store X in addr 03
+E6D7 : 7E E6 5A   jmp  LE65A          ;jump 
+;*************************************;
+;jmptb4 synth above - pointers ?
+;*************************************;
+E6DA : E6 EE                          ;
+E6DC : E6 F2                          ;
+E6DE : E6 F6                          ;
+E6E0 : E6 FA                          ;
+E6E2 : E6 FE                          ;
+E6E4 : E7 02                          ;
+E6E6 : E7 06                          ;
+E6E8 : E7 0A                          ;
+E6EA : E7 0E                          ;
+E6EC : E7 12                          ;
+;
+E6EE : FF 50 FF 7B 
+;
+E6F2 : FF 50 FF AE 
+;
+E6F6 : 81 50 FF 7B 
+;
+E6FA : 81 50 FF AE 
+;
+E6FE : 81 50 FF B7 
+;
+E702 : 81 50 FF C6 
+;
+E706 : FF 50 FF C6 
+;
+E70A : FF 50 FF C6 
+;
+E70E : FF 50 FF DB 
+;
+E712 : 81 50 FF DB 
+;*************************************;
+;Synth 95 loader
+;*************************************;
+;SN95LD
+E716 : D6 60      ldab  $60           ;
+E718 : C4 70      andb  #$70          ;
+E71A : CA 01      orab  #$01          ;
+E71C : CA 08      orab  #$08          ;
+E71E : D7 60      stab  $60           ;
+;*************************************;
+; SYNTH system 9 fifth 5
+;*************************************;
+;SYNTH95
+E720 : 48         asla                ;arith shift left A
+E721 : CE F9 76   ldx  #$F976         ;load X with F976h (jmptb3 to data?)
+E724 : BD EE 70   jsr  LEE70          ;jump sub ADDX
+E727 : EE 00      ldx  $00,x          ;load X with X+00h
+E729 : DF 0B      stx  $0B            ;store X in addr 0B
+E72B : DF 6A      stx  $6A            ;store X in addr 6A
+E72D : CE 00 00   ldx  #$0000         ;load X with 0000h
+E730 : DF 70      stx  $70            ;store X in addr 70
+E732 : DE 6A      ldx  $6A            ;load X with addr 6A
+E734 : 09         dex                 ;decr X
+E735 : A6 00      ldaa  $00,x         ;load A with X+00h
+E737 : 97 0A      staa  $0A           ;store A in addr 0A
+E739 : 08         inx                 ;incr X
+E73A : C6 0A      ldab  #$0A          ;load B with 0Ah
+E73C : BD EE A6   jsr  LEEA6          ;jump sub TRANS
+E73F : 96 01      ldaa  $01           ;load A with 01h
+E741 : B7 20 02   staa  $2002         ;store A in DAC output SOUND
+E744 : 20 3D      bra  LE783          ;branch always
+;LE746
+E746 : 96 60      ldaa  $60           ;load A with addr 60
+E748 : 84 70      anda  #$70          ;and A with 70h
+E74A : 8A 01      oraa  #$01          ;or A with 01h
+E74C : 8A 08      oraa  #$08          ;or A with 08h
+E74E : 97 60      staa  $60           ;store A in addr 60
+E750 : 20 31      bra  LE783          ;branch always 
+;LE752:
+E752 : 7E F0 06   jmp  LF006          ;jump ENDSND
+;
+;LE755:
+E755 : DE 0B      ldx  $0B            ;load X with addr 0B
+E757 : 86 0A      ldaa  #$0A          ;load A with 0Ah
+E759 : BD EE 70   jsr  LEE70          ;jump sub ADDX
+;LE75C:
+E75C : DF 0B      stx  $0B            ;store X in addr 0B
+E75E : A6 00      ldaa  $00,x         ;load A with X+00h
+E760 : 26 0B      bne  LE76D          ;branch Z=0 
+E762 : 7A 00 0A   dec  $000A          ;decr addr 000A
+E765 : 27 EB      beq  LE752          ;branch Z=1
+E767 : EE 01      ldx  $01,x          ;load X with X+01h
+E769 : DF 6A      stx  $6A            ;store X in addr 6A
+E76B : 20 EF      bra  LE75C          ;branch always 
+;LE76D:
+E76D : CE 00 00   ldx  #$0000         ;load X with 0000h
+E770 : DF 70      stx  $70            ;store X in addr 70
+E772 : DE 6A      ldx  $6A            ;load X with addr 6A
+E774 : C6 0A      ldab  #$0A          ;load B with 0Ah
+E776 : BD EE A6   jsr  LEEA6          ;jump sub TRANS
+E779 : 96 01      ldaa  $01           ;load A with addr 01
+E77B : B7 20 02   staa  $2002         ;store A in DAC output SOUND
+E77E : CE A5 C8   ldx  #$A5C8         ;load X with A5C8h
+E781 : DF 61      stx  $61            ;store X in addr 61
+;LE783:
+E783 : DE 08      ldx  $08            ;load X with addr 08
+E785 : 09         dex                 ;decr X
+E786 : DF 08      stx  $08            ;store X in addr 08
+E788 : 27 CB      beq  LE755          ;branch Z=1
+E78A : 96 05      ldaa  $05           ;load A wit haddr 05
+;LE78C:
+E78C : 4A         deca                ;decr A
+E78D : 26 FD      bne  LE78C          ;branch Z=0
+E78F : BD EE 54   jsr  LEE54          ;jump sub 
+E792 : 94 03      anda  $03           ;and A with addr 03
+E794 : D4 04      andb  $04           ;and B with addr 04
+E796 : D7 6E      stab  $6E           ;store B in addr 6E
+E798 : C6 08      ldab  #$08          ;load B with 08h
+E79A : D7 6F      stab  $6F           ;store B in addr 6F
+E79C : 5F         clrb                ;clear B
+;LE79D:
+E79D : 44         lsra                ;logic shift right A
+E79E : 24 0A      bcc  LE7AA          ;branch C=0
+E7A0 : DB 00      addb  $00           ;add B with addr 00
+E7A2 : D7 0D      stab  $0D           ;store B in addr 0D
+E7A4 : 73 20 02   com  $2002          ;complement 1s DAC output SOUND
+;LE7A7:
+E7A7 : 5A         decb                ;decr B
+E7A8 : 26 FD      bne  LE7A7          ;branch Z=0
+;LE7AA:
+E7AA : 73 20 02   com  $2002          ;complement 1s DAC output SOUND
+E7AD : D6 0D      ldab  $0D           ;load B with addr 0D
+E7AF : 7A 00 6F   dec  $006F          ;decr addr 006F
+E7B2 : 26 E9      bne  LE79D          ;branch Z=0
+E7B4 : 7A 00 07   dec  $0007          ;decr addr 0007
+E7B7 : 26 CA      bne  LE783          ;branch Z=0
+E7B9 : 96 06      ldaa  $06           ;load A with addr 06
+E7BB : 97 07      staa  $07           ;store A in addr 07
+E7BD : B6 20 02   ldaa  $2002         ;load A with DAC
+E7C0 : 2A 04      bpl  LE7C6          ;branch N=0
+E7C2 : 90 02      suba  $02           ;sub A with addr 02
+E7C4 : 90 02      suba  $02           ;sub A with addr 02
+;LE7C6:
+E7C6 : 9B 02      adda  $02           ;add A with addr 02
+E7C8 : B7 20 02   staa  $2002         ;store A in DAC output SOUND
+E7CB : 20 B6      bra  LE783          ;branch always
+;*************************************;
+;Tilt sound, buzz saw down
+;*************************************;
+;TILT
+E7CD : CE 00 E0   ldx  #$00E0
+E7D0 : C6 80      ldab  #$80
+;TILT1
+E7D2 : 86 20      ldaa  #$20
+E7D4 : BD EE 70   jsr  LEE70          ;jump sub ADDX
+;TILT2
+E7D7 : 09         dex
+E7D8 : 26 FD      bne  LE7D7
+E7DA : 7F 20 02   clr  X2002
+;TILT3
+E7DD : 5A         decb
+E7DE : 26 FD      bne  LE7DD
+E7E0 : 73 20 02   com  X2002
+E7E3 : DE 6A      ldx  X006A
+E7E5 : 8C 10 00   cpx  #$1000
+E7E8 : 26 E8      bne  LE7D2
+E7EA : 7E F0 06   jmp  LF006          ;jump ENDSND
+;*************************************;
+;Knocker Routine
+;*************************************;
+;KNOCK:
+E7ED : 96 60      ldaa  X0060
+E7EF : 84 07      anda  #$07
+E7F1 : 97 60      staa  X0060
+E7F3 : CE E8 34   ldx  #$E834
+E7F6 : DF 02      stx  X0002
+;SQLP
+E7F8 : DE 02      ldx  X0002
+E7FA : A6 00      ldaa  $00,x
+E7FC : 27 33      beq  LE831
+E7FE : E6 01      ldab  $01,x
+E800 : C4 F0      andb  #$F0
+E802 : D7 01      stab  X0001
+E804 : E6 01      ldab  $01,x
+E806 : 08         inx
+E807 : 08         inx
+E808 : DF 02      stx  X0002
+E80A : 97 00      staa  X0000
+E80C : C4 0F      andb  #$0F
+;LP0
+E80E : 96 01      ldaa  X0001
+E810 : B7 20 02   staa  X2002
+E813 : 96 00      ldaa  X0000
+;LP1
+E815 : CE 00 05   ldx  #$0005
+;LP11
+E818 : 09         dex
+E819 : 26 FD      bne  LE818
+E81B : 4A         deca
+E81C : 26 F7      bne  LE815
+E81E : 7F 20 02   clr  X2002
+E821 : 96 00      ldaa  X0000
+;LP2
+E823 : CE 00 05   ldx  #$0005
+;LP22
+E826 : 09         dex
+E827 : 26 FD      bne  LE826
+E829 : 4A         deca
+E82A : 26 F7      bne  LE823
+E82C : 5A         decb
+E82D : 26 DF      bne  LE80E
+E82F : 20 C7      bra  LE7F8
+;END
+E831 : 7E F0 06   jmp  LF006          ;jump ENDSND
+;*************************************;
+;* KNOCKER PATTERN
+;*************************************;
+E834 : 01FC 02FC 03F8 04F8 06F8 08F4  ;KNKTAB
+E840 : 0CF4 10F4 20F2 40F1 60F1 80F1  ;
+E84C : A0F1 C0F1 0000                 ;
+;*************************************;
+; SYNTH system 9 sixth 6
+;*************************************;
+;SYNTH96
+E852 : CE E8 CB   ldx  #$E8CB         ;load X with E8CBh (data below)
+E855 : 16         tab                 ;transfer A to B
+E856 : 86 0D      ldaa  #$0D          ;load A with addr 0D
+E858 : BD EE 8B   jsr  LEE8B          ;jump sub TRNSLD
+E85B : 96 0B      ldaa  $0B           ;load A with addr 0B
+E85D : 97 14      staa  $14           ;store A in addr 14
+E85F : 96 09      ldaa  $09           ;load A with addr 09
+E861 : 97 12      staa  $12           ;store A in addr 12
+E863 : 96 0A      ldaa  $0A           ;load A with addr 0A
+E865 : 97 13      staa  $13           ;store A in addr 13
+E867 : 96 06      ldaa  $06           ;load A with addr 06
+E869 : 97 11      staa  $11           ;store A in addr 11
+E86B : 96 04      ldaa  $04           ;load A with addr 04
+E86D : 97 16      staa  $16           ;store A in addr 16
+E86F : 96 00      ldaa  $00           ;load A with addr 00
+E871 : 97 17      staa  $17           ;store A in addr 17
+;LE873:
+E873 : 96 17      ldaa  $17           ;load A with addr 17
+E875 : 97 0D      staa  $0D           ;store A in addr 0D
+E877 : 96 0C      ldaa  $0C           ;load A with addr 0C
+E879 : 97 15      staa  $15           ;store A in addr 15
+E87B : 96 01      ldaa  $01           ;load A with addr 01
+E87D : 97 0E      staa  $0E           ;store A in addr 0E
+E87F : 96 02      ldaa  $02           ;load A with addr 02
+E881 : 97 10      staa  $10           ;store A in addr 10
+E883 : DE 07      ldx  $07            ;load X with addr 07
+E885 : 96 14      ldaa  $14           ;load A with addr 14
+E887 : B7 20 02   staa  $2002         ;store A in DAC output SOUND
+E88A : 96 11      ldaa  $11           ;load A with addr 11
+;LE88C:
+E88C : D6 0E      ldab  $0E           ;load B with addr 0E
+E88E : D7 0F      stab  $0F           ;store B in addr 0F
+;LE890:
+E890 : 48         asla                ;arith shift left A
+E891 : 24 05      bcc  LE898          ;branch C=0
+E893 : 73 20 02   com  $2002          ;complement 1s DAC output SOUND
+E896 : 98 11      eora  $11           ;exclusive or A with addr 11
+;LE898:
+E898 : D6 0D      ldab  $0D           ;load B with addr 0D
+;LE89A:
+E89A : 5A         decb                ;decr B
+E89B : 26 FD      bne  LE89A          ;branch Z=0
+E89D : 7A 00 0F   dec  $000F          ;decr addr 000F
+E8A0 : 26 EE      bne  LE890          ;branch Z=0
+E8A2 : D6 0D      ldab  $0D           ;load B with addr 0D
+E8A4 : DB 10      addb  $10           ;add B with addr 10
+E8A6 : D7 0D      stab  $0D           ;store B in addr 0D
+;LE8A8:
+E8A8 : D6 15      ldab  $15           ;load B with addr 15
+E8AA : DB 14      addb  $14           ;add B with addr 14
+E8AC : D7 14      stab  $14           ;store B in addr 14
+E8AE : F7 20 02   stab  $2002         ;store B in DAC output SOUND
+E8B1 : 09         dex                 ;decr X
+E8B2 : 26 D8      bne  LE88C          ;branch Z=0
+E8B4 : 7A 00 12   dec  $0012          ;decr addr 0012
+E8B7 : 27 0F      beq  LE8C8          ;branch Z=1
+E8B9 : D6 14      ldab  $14           ;load B with addr 14
+E8BB : D0 13      subb  $13           ;sub B with addr 13
+E8BD : D7 14      stab  $14           ;store B in addr 14
+E8BF : D6 16      ldab  $16           ;load B with addr 14
+E8C1 : DB 17      addb  $17           ;add B with addr 17
+E8C3 : D7 17      stab  $17           ;store B in addr 17
+E8C5 : 7E E8 73   jmp  LE873          ;jump 
+;LE8C8:
+E8C8 : 7E F0 06   jmp  LF006          ;jump ENDSND
+;*************************************;
+; data synth above (13 bytes)
+;*************************************;
+E8CB : 01 FF 01 00 00 00              ;
+E8D1 : 4D 00 FF 01 00 FF              ;
+E8D7 : 00                             ;
+;
+E8D8 : 01 FF 01 00 00 00              ;
+E8DE : 4D 00 10 04 20 FF              ;
+E8E4 : 00                             ;
+;*************************************;
+; SYNTH system 9 seventh 7
+;*************************************;
+;SYNTH97
+E8E5 : CE E9 4C   ldx  #$E94C         ;load X with E94Ch (data below)
+E8E8 : 16         tab                 ;transfer A to B
+E8E9 : 86 09      ldaa  #$09          ;load A with 09h
+E8EB : BD EE 8B   jsr  LEE8B          ;jump sub TRNSLD
+E8EE : 86 55      ldaa  #$55          ;load with 55h
+E8F0 : 97 11      staa  $11           ;store A in addr 11
+E8F2 : 96 08      ldaa  $08           ;load A with addr 08
+E8F4 : 97 10      staa  $10           ;store A in addr 10
+E8F6 : 96 01      ldaa  $01           ;load A with addr 01
+E8F8 : 97 09      staa  $09           ;store A in addr 09
+E8FA : 96 02      ldaa  $02           ;load A with addr 02
+E8FC : 97 0A      staa  $0A           ;store A in addr 0A
+E8FE : 96 03      ldaa  $03           ;load A with addr 03
+E900 : 97 0B      staa  $0B           ;store A in addr 0B
+E902 : DE 06      ldx  $06            ;load X with addr 06
+E904 : DF 0E      stx  $0E            ;store X in addr 0E
+E906 : DE 04      ldx  $04            ;load X with addr 04
+E908 : DF 0C      stx  $0C            ;store X in addr 0C
+;LE90A:
+E90A : F6 20 02   ldab  $2002         ;load B with DAC
+E90D : 96 11      ldaa  $11           ;load A with addr 11
+E90F : 48         asla                ;arith shift left A
+E910 : 24 02      bcc  LE914          ;branch C=0
+E912 : 98 00      eora  $00           ;exclusive or A with addr 00
+;LE914:
+E914 : 97 11      staa  $11           ;store A in addr 11
+E916 : D1 11      cmpb  $11           ;compare B with addr 11
+E918 : 24 1F      bcc  LE939          ;branch C=0
+;LE91A:
+E91A : F7 20 02   stab  $2002         ;store B in DAC output SOUND
+E91D : DB 09      addb  $09           ;add B with addr 09
+E91F : 25 E9      bcs  LE90A          ;branch C=1 
+E921 : D1 11      cmpb  $11           ;compare B with addr 11
+E923 : 24 E5      bcc  LE90A          ;branch C=0
+E925 : 09         dex                 ;decr X
+E926 : 26 F2      bne  LE91A          ;branch Z=0
+;LE928:
+E928 : DE 0E      ldx  $0E            ;load X with addr 0E
+E92A : 09         dex                 ;decr X
+E92B : DF 0E      stx  $0E            ;store X in addr 0E
+E92D : 27 1A      beq  LE949          ;branch Z=1
+E92F : DE 0C      ldx  $0C            ;load X with addr 0C
+E931 : 96 09      ldaa  $09           ;load A with addr 09
+E933 : 9B 10      adda  $10           ;add A with addr 10
+E935 : 97 09      staa  $09           ;store A in addr 09
+E937 : 20 D1      bra  LE90A          ;branch always 
+;LE939:
+E939 : F7 20 02   stab  $2002         ;store B in DAC output SOUND
+E93C : D0 09      subb  $09           ;sub B with addr 09
+E93E : 25 CA      bcs  LE90A          ;branch C=1
+E940 : D1 11      cmpb  $11           ;compare B with addr 11
+E942 : 23 C6      bls  LE90A          ;branch C+Z=1
+E944 : 09         dex                 ;decr X
+E945 : 26 F2      bne  LE939          ;branch Z=0
+E947 : 20 DF      bra  LE928           
+;LE949:
+E949 : 7E F0 06   jmp  LF006          ;jump ENDSND
+;*************************************;
+; data synth above  (9 bytes)
+;*************************************;
+E94C : 84 01 01 01 00 80 00 40 01     ;
+;
+E955 : 42 01 01 01 00 80 00 40 01     ;
+;
+E95E : 21 01 01 01 00 80 00 40 01     ;
+;
+E967 : 28 01 01 01 00 80 00 40 01     ;
+;
+E970 : 48 01 01 01 00 80 00 40 01     ;
+;
+E979 : 90 01 01 01 00 80 00 40 01     ;
+;
+E982 : 82 01 01 01 00 80 00 40 01     ;
+;
+E98B : 88 01 01 01 00 80 00 40 01     ;
+;
+E994 : 81 01 01 01 00 80 00 40 01     ;
+;
+E99D : 82 01 01 01 00 80 00 40 01     ;
+;*************************************;
+; SYNTH system 9 eighth 8
+;*************************************;
+;SYNTH98
+E9A6 : CE EA 43   ldx  #$EA43         ;load X with EA43h (data below)
+E9A9 : 16         tab                 ;transfer A to B
+E9AA : 86 0C      ldaa  #$0C          ;load A with 0Ch (#12)
+E9AC : BD EE 8B   jsr  LEE8B          ;jump sub TRNSLD
+E9AF : 96 00      ldaa  $00           ;load A with addr 00
+E9B1 : 97 0D      staa  $0D           ;store A in addr 0D
+E9B3 : 96 09      ldaa  $09           ;load A with addr 09
+E9B5 : 97 17      staa  $17           ;store A in addr 17
+E9B7 : 96 0A      ldaa  $0A           ;load A with addr 0A
+E9B9 : 97 18      staa  $18           ;store A in addr 18
+E9BB : 96 01      ldaa  $01           ;load A with addr 01
+E9BD : 97 0E      staa  $0E           ;store A in addr 0E
+;LE9BF:
+E9BF : 96 0B      ldaa  $0B           ;load A with addr 0B
+E9C1 : 43         coma                ;complement 1s A
+E9C2 : 97 0C      staa  $0C           ;store A in addr 0C
+E9C4 : 96 07      ldaa  $07           ;load A with addr 07
+E9C6 : 97 15      staa  $15           ;store A in addr 15
+E9C8 : 96 08      ldaa  $08           ;load A with addr 08
+E9CA : 97 16      staa  $16           ;store A in addr 16
+;LE9CC:
+E9CC : 4F         clra                ;clear A
+E9CD : 97 0F      staa  $0F           ;store A in addr 0F
+E9CF : 97 10      staa  $10           ;store A in addr 10
+E9D1 : 96 0D      ldaa  $0D           ;load A with addr 0D
+E9D3 : 97 11      staa  $11           ;store A in addr 11
+E9D5 : 96 0E      ldaa  $0E           ;load A with addr 0E
+E9D7 : 97 12      staa  $12           ;store A in addr 12
+E9D9 : D6 04      ldab  $04           ;load B with addr 04
+E9DB : DE 05      ldx  $05            ;load X with addr 05
+E9DD : DF 13      stx  $13            ;store X in addr 13
+;LE9DF:
+E9DF : 96 10      ldaa  $10           ;load A with addr 10
+E9E1 : 9B 12      adda  $12           ;add A with addr 12
+E9E3 : 97 10      staa  $10           ;store A in addr 10
+E9E5 : 96 0F      ldaa  $0F           ;load A with addr 0F
+E9E7 : 99 11      adca  $11           ;add C+A + addr 11
+E9E9 : 97 0F      staa  $0F           ;store A in addr 0F
+E9EB : 81 80      cmpa  #$80          ;compare A with 80h
+E9ED : 22 03      bhi  LE9F2          ;branch C+Z=0
+E9EF : 4F         clra                ;clear A
+E9F0 : 20 03      bra  LE9F5          ;branch always
+;LE9F2:
+E9F2 : 96 0C      ldaa  $0C           ;load A with addr 0C
+E9F4 : 01         nop                 ;
+;LE9F5:
+E9F5 : B7 20 02   staa  $2002         ;store A in DAC output SOUND
+E9F8 : 5A         decb                ;decr B
+E9F9 : 26 18      bne  LEA13          ;branch Z=0
+E9FB : 96 12      ldaa  $12           ;load A with addr 12
+E9FD : 9B 03      adda  $03           ;add A with addr 03
+E9FF : 97 12      staa  $12           ;store A in addr 12
+EA01 : 96 11      ldaa  $11           ;load A with addr 11
+EA03 : 99 02      adca  $02           ;add C+A + add 02
+EA05 : 97 11      staa  $11           ;store A in addr 11
+EA07 : D6 04      ldab  $04           ;load B with addr 04
+EA09 : DE 13      ldx  $13            ;load X with addr 13
+EA0B : 09         dex                 ;decr X
+EA0C : DF 13      stx  $13            ;store X in addr 13
+EA0E : 27 14      beq  LEA24          ;branch Z=1
+EA10 : 7E E9 DF   jmp  LE9DF          ;jump 
+;LEA13:
+EA13 : 08         inx                 ;incr X (4 cycles)
+EA14 : 09         dex                 ;decr X (4 cycles)
+EA15 : 08         inx                 ;incr X (4 cycles)
+EA16 : 09         dex                 ;decr X (4 cycles)
+EA17 : 08         inx                 ;incr X (4 cycles)
+EA18 : 09         dex                 ;decr X (4 cycles)
+EA19 : 08         inx                 ;incr X (4 cycles)
+EA1A : 09         dex                 ;decr X (4 cycles)
+EA1B : 08         inx                 ;incr X (4 cycles)
+EA1C : 09         dex                 ;decr X (4 cycles)
+EA1D : 08         inx                 ;incr X (4 cycles)
+EA1E : 09         dex                 ;decr X (4 cycles)
+EA1F : 01         nop                 ;(2 cycles)
+EA20 : 01         nop                 ;(2 cycles)
+EA21 : 01         nop                 ;(2 cycles)(42 cycles total)
+EA22 : 20 BB      bra  LE9DF          ;branch always 
+;LEA24:
+EA24 : 7A 00 15   dec  $0015          ;decr addr 0015
+EA27 : 27 09      beq  LEA32          ;branch Z=1
+EA29 : 96 0C      ldaa  $0C           ;load A with addr 0C
+EA2B : 90 16      suba  $16           ;sub A with addr 16
+EA2D : 97 0C      staa  $0C           ;store A in addr 0C
+EA2F : 7E E9 CC   jmp  LE9CC          ;jump 
+;LEA32:
+EA32 : 7A 00 17   dec  $0017          ;decr addr 0017
+EA35 : 27 09      beq  LEA40          ;branch Z=1
+EA37 : 96 0D      ldaa  $0D           ;load A with addr 0D
+EA39 : 9B 18      adda  $18           ;add A with addr 18
+EA3B : 97 0D      staa  $0D           ;store A in addr 0D
+EA3D : 7E E9 BF   jmp  LE9BF          ;jump 
+;LEA40:
+EA40 : 7E F0 06   jmp  LF006          ;jump ENDSND
+;*************************************;
+; data synth above (12 bytes)
+;*************************************;
+EA43 : 49 00 FF FE 08 00              ;
+EA49 : 67 08 20 01 00 00              ;
+;
+EA4F : 31 00 FF FE 10 00              ;
+EA55 : 67 08 20 01 00 00              ;
+;
+EA5B : 09 00 CA 19 01 00              ;
+EA61 : 28 5F F7 FC FF 20              ;
+;
+EA67 : 01 00 19 90 02 00              ;
+EA6D : 18 20 02 19 06 50              ;
+;
+EA73 : 3A 00 21 F9 02 09              ;
+EA79 : 62 1A 9F EB EF 07              ;
+;
+EA7F : 09 00 11 20 55 47              ;
+EA85 : 01 01 20 01 06 A0              ;
+;
+EA8B : 01 00 21 F9 04 01              ;
+EA91 : 62 04 90 01 10 02              ;
+;
+EA97 : 01 00 21 F9 04 01              ;
+EA9D : 62 04 90 02 10 50              ;
+;
+EAA3 : 00 00 F0 90 04 01              ;
+EAA9 : 30 20 02 01 06 00              ;
+;
+EAAF : 00 00 F0 90 01 01              ;
+EAB5 : 30 20 02 02 06 00              ;
+;
+EABB : 09 00 22 20 02 47              ;
+EAC1 : 01 01 20 01 06 09              ;
+;
+EAC7 : 09 00 11 20 99 47              ;
+EACD : 01 01 20 01 06 A0              ;
+;
+EAD3 : 09 00 11 20 33 47              ;
+EAD9 : 01 01 20 01 06 A0              ;
+;
+EADF : 09 00 11 20 22 47              ;
+EAE5 : 01 01 20 01 06 A0              ;
+;
+EAEB : 09 00 81 20 99 00              ;
+EAF1 : 30 01 20 01 06 09              ;
+;
+EAF7 : 29 00 81 20 99 00              ;
+EAFD : 30 01 20 01 06 09              ;
+;
+EB03 : 77 00 81 20 99 00              ;
+EB09 : 30 01 20 01 06 09              ;
+;
+EB0F : 77 00 81 20 99 00              ;
+EB15 : 30 01 20 01 06 02              ;
+;
+EB1B : 01 00 21 08 04 01              ;
+EB21 : 62 04 90 01 10 20              ;
+;
+EB27 : 01 00 21 07 04 01              ;
+EB2D : 62 04 90 01 10 00              ;
+;
+EB33 : 91 00 21 07 04 01              ;
+EB39 : 62 04 90 01 10 00              ;
+; 
+EB3F : 91 00 21 03 04 01              ;
+EB45 : 62 04 90 01 10 00              ;
+;
+EB4B : 91 00 02 07 04 01              ;
+EB51 : 62 04 90 01 10 00              ;
+;
+EB57 : 91 00 11 07 04 01              ;
+EB5D : 62 04 90 01 10 00              ;
+ ;
+EB63 : 99 00 0A 07 07 01              ;
+EB69 : 01 02 E0 01 90 01              ;
+;
+EB6F : 4B 00 FF FF 0A 00              ;
+EB75 : 67 08 20 01 00 00              ;
+;
+EB7B : 4D 00 FF FF 0A 00              ;
+EB81 : 67 08 20 01 00 00              ;
+;
+EB87 : 01 00 57 90 02 00              ;
+EB8D : 18 20 10 40 06 50              ;
+;*************************************;
+;Move #2 Parameters (extended from ROM 1 version)
+;*************************************;
+;MOVE2 LEB93:
+EB93 : CE 00 00   ldx  #$0000         ;load X with 0000h
+EB96 : DF 11      stx  $11            ;store X in addr 11
+EB98 : DF 13      stx  $13            ;store X in addr 13
+EB9A : 96 00      ldaa  $00           ;load A with addr 00
+EB9C : 97 0F      staa  $0F           ;store A in addr 0F
+EB9E : 96 01      ldaa  $01           ;load A with addr 01
+EBA0 : 97 10      staa  $10           ;store A in addr 10
+EBA2 : 96 02      ldaa  $02           ;load A with addr 02
+EBA4 : 97 15      staa  $15           ;store A in addr 15
+EBA6 : 96 03      ldaa  $03           ;load A with addr 03
+EBA8 : 97 16      staa  $16           ;store A in addr 16
+EBAA : 96 04      ldaa  $04           ;load A with addr 04
+EBAC : 97 17      staa  $17           ;store A in addr 17
+EBAE : DE 07      ldx  $07            ;load X with addr 07
+EBB0 : DF 0D      stx  $0D            ;store X in addr 0D
+EBB2 : 96 05      ldaa  $05           ;load A with addr 05
+EBB4 : 97 0B      staa  $0B           ;store A in addr 0B
+EBB6 : 96 06      ldaa  $06           ;load A with addr 06
+EBB8 : 97 0C      staa  $0C           ;store A in addr 0C
+EBBA : CE 55 AA   ldx  #$55AA         ;load X with 55AAh
+EBBD : DF 09      stx  $09            ;store X in addr 09
+EBBF : D6 0E      ldab  $0E           ;load B with addr 0E
+EBC1 : 39         rts                 ;return subroutine
+;*************************************;
+; SYNTH system 9 ninth 9
+;*************************************;
+;SYNTH99
+EBC2 : CE EC 27   ldx  #$EC27         ;load X with EC27h (data below)
+EBC5 : 16         tab                 ;transfer A to B
+EBC6 : 86 09      ldaa  #$09          ;load A with 09h
+EBC8 : BD EE 8B   jsr  LEE8B          ;jump sub TRNSLD
+EBCB : BD EB 93   jsr  LEB93          ;jump sub MOVE2
+;LEBCE:
+EBCE : 96 0A      ldaa  $0A           ;load A with addr 0A
+EBD0 : 44         lsra                ;logic shift right A
+EBD1 : 44         lsra                ;logic shift right A
+EBD2 : 44         lsra                ;logic shift right A
+EBD3 : 98 0A      eora  $0A           ;exclusive or A with addr 0A
+EBD5 : 44         lsra                ;logic shift right A
+EBD6 : 76 00 09   ror  $0009          ;rotate right addr 0009
+EBD9 : 76 00 0A   ror  $000A          ;rotate right addr 000A
+EBDC : 96 0B      ldaa  $0B           ;load A with addr 0B
+EBDE : 24 01      bcc  LEBE1          ;branch C=0
+EBE0 : 4F         clra                ;clear A
+;LEBE1:
+EBE1 : DE 13      ldx  $13            ;load X with addr 13
+EBE3 : AB 18      adda  $18,x         ;add A with X+18h
+EBE5 : 46         rora                ;rotate right A
+EBE6 : DE 11      ldx  $11            ;load X with addr 11
+EBE8 : A7 18      staa  $18,x         ;store A in addr X+18h
+EBEA : B7 20 02   staa  $2002         ;store A in DAC output SOUND
+EBED : 96 12      ldaa  $12           ;load A with addr 12
+EBEF : 4C         inca                ;incr A
+EBF0 : 84 1F      anda  #$1F          ;and A with 1Fh
+EBF2 : 97 12      staa  $12           ;store A in addr 12
+EBF4 : 9B 15      adda  $15           ;add A with addr 15
+EBF6 : 84 1F      anda  #$1F          ;and A with 1Fh
+EBF8 : 97 14      staa  $14           ;store A in addr 14
+EBFA : 96 0F      ldaa  $0F           ;load A with addr 0F
+;LEBFC:
+EBFC : 4A         deca                ;decr A
+EBFD : 26 FD      bne  LEBFC          ;branch Z=0
+EBFF : 5A         decb                ;decr B
+EC00 : 26 CC      bne  LEBCE          ;branch Z=0
+EC02 : 7A 00 0D   dec  $000D          ;decr addr 000D
+EC05 : 2A C7      bpl  LEBCE          ;branch N=0
+EC07 : 96 07      ldaa  $07           ;load A with addr 07
+EC09 : 97 0D      staa  $0D           ;store A in addr 0D
+EC0B : D6 0E      ldab  $0E           ;load B with addr 0E
+EC0D : 96 0F      ldaa  $0F           ;load A with addr 07
+EC0F : 9B 10      adda  $10           ;add A with addr 10
+EC11 : 97 0F      staa  $0F           ;store A in addr 0F
+EC13 : 96 15      ldaa  $15           ;load A with addr 07
+EC15 : 9B 16      adda  $16           ;add A with addr 16
+EC17 : 97 15      staa  $15           ;store A in addr 15
+EC19 : 96 0B      ldaa  $0B           ;load A with addr 07
+EC1B : 9B 0C      adda  $0C           ;add A with addr 0C
+EC1D : 97 0B      staa  $0B           ;store A in addr 0B
+EC1F : 7A 00 17   dec  $0017          ;decr addr 0017
+EC22 : 26 AA      bne  LEBCE          ;branch Z=0
+EC24 : 7E F0 06   jmp  LF006          ;jump ENDSND
+;*************************************;
+; data synth above (9 bytes)
+;*************************************;
+EC27 : 01 00 00 01 40 FF FC 00 FF     ;
+;
+EC30 : 01 00 00 01 40 FF FC 00 80     ;
+;
+EC39 : 01 00 00 01 40 FF FC 00 40     ;
+;
+EC42 : 01 01 00 01 40 FF 00 00 FF     ;
+;
+EC4B : 40 FF 40 FF 40 FF 00 00 FF     ;
+;
+EC54 : 20 FF 20 FF 20 FF 00 00 FF     ;
+;
+EC5D : 01 00 00 01 40 FF 00 00 FF     ;
+;
+EC66 : 10 00 00 01 40 FF FC 01 FF     ;
+;
+EC6F : 01 00 40 FE 40 FF 00 00 FF     ;
+;
+EC78 : 40 FF 00 01 40 FF FF 00 A0     ;
+;
+EC81 : 02 01 00 01 0F FF FA 00 FF     ;
+;
+EC8A : 01 01 3F FF 40 FF 00 00 80     ;
+;
+EC93 : 01 01 00 01 0B FF FC 01 FF     ;
+;
+EC9C : 01 01 3F FF 40 FF FC 01 FF     ;
+;
+ECA5 : 01 00 40 FF 40 FF 00 00 FF     ;
+;
+ECAE : 01 01 00 01 10 FF FA 00 FF     ;
+;
+ECB7 : 48 FF 40 FF 10 FF F0 00 FF     ;
+;
+ECC0 : 20 FF 20 FF 20 F0 F9 00 A0     ;
+;
+ECC9 : 18 FF 00 02 10 FF FC 00 F0     ;
+;*************************************;
+;Special Routine Jump Table #2 for LITEN and FNOISE
+;*************************************;
+;JMPTB2
+ECD2 : EC FE                          ;FNCL1
+ECD4 : ED 14                          ;FNLOAD
+ECD6 : ED 27                          ;FNCALL
+ECD8 : ED 2B                          ;FNCL3
+ECDA : ED 37                          ;FNCL4
+ECDC : ED C5                          ;LITE
+ECDE : ED CD                          ;APPEAR
+ECE0 : ED D7                          ;CRACK (find actual name)
+ECE2 : EE 0E                          ;TURBO
+ECE4 : ED 09                          ;FNCL2
+ECE6 : ED 2F                          ;FNCL5
+ECE8 : ED 33                          ;FNCL6
+;*************************************;
+; jmptbl for fnoise and liten
+;*************************************;
+;JMPFNL
+ECEA : 48         asla                ;arith shift left A
+ECEB : CE EC D2   ldx  #$ECD2         ;load X with ECD2h (JMPTB2)
+ECEE : BD EE 70   jsr  LEE70          ;jump sub ADDX
+ECF1 : EE 00      ldx  $00,x          ;load X with X+00h
+ECF3 : AD 00      jsr  $00,x          ;jump sub addr X+00h
+ECF5 : 7E F0 06   jmp  LF006          ;jump ENDSND
+;*************************************;
+;FNOISE loader routines
+;*************************************;
+; mem :06 07 A  B  Xh Xl
+ECF8 : 01 01 01 FF 03 E8              ;data
+;FNCL1
+ECFE : CE EC F8   ldx  #$ECF8         ;load X with ECF8h (data)
+ED01 : 20 14      bra  LED17          ;branch always FNLDR1
+;*
+ED03 : 01 01 10 4D 01 00              ;data
+;FNCL2
+ED09 : CE ED 03   ldx  #$ED03         ;load X with ED03h (data)
+ED0C : 20 09      bra  LED17          ;branch always FNLDR1
+;
+ED0E : 01 01 01 40 10 00              ;data
+;*************************************;
+; FNOISE loader
+;*************************************;
+;FNLOAD
+ED14 : CE ED 0E   ldx  #$ED0E         ;load X with ED0Eh (data)
+;FNLDR1 LED17:
+ED17 : A6 00      ldaa  $00,x         ;load A with X+00h
+ED19 : 97 06      staa  $06           ;store A in addr 06
+ED1B : A6 01      ldaa  $01,x         ;load A with X+01h
+ED1D : 97 07      staa  $07           ;store A in addr 07
+ED1F : A6 02      ldaa  $02,x         ;load A with X+02h
+ED21 : E6 03      ldab  $03,x         ;load A with X+03h
+ED23 : EE 04      ldx  $04,x          ;load X with X+04h
+ED25 : 20 17      bra  LED3E          ;branch always FNOISE
+;*************************************;
+; FNOISE Calling Routine
+;*************************************;
+;FNCALL
+ED27 : C6 02      ldab  #$02          ;load B with 02h
+ED29 : 20 0E      bra  LED39          ;branch always FNCLR
+;FNCL3
+ED2B : C6 03      ldab  #$03          ;load B with 03h
+ED2D : 20 0A      bra  LED39          ;branch always FNCLR
+;FNCL5
+ED2F : C6 05      ldab  #$05          ;load B with 05h
+ED31 : 20 06      bra  LED39          ;branch always FNCLR
+;FNCL6
+ED33 : C6 06      ldab  #$06          ;load B with 06h
+ED35 : 20 02      bra  LED39          ;branch always FNCLR
+;FNCL4
+ED37 : C6 04      ldab  #$04          ;load B with 04h
+;FNCLR
+ED39 : 4F         clra                ;clear A
+ED3A : 97 07      staa  $07           ;store A in addr 07
+ED3C : 97 06      staa  $06           ;store A in addr 06
+;*************************************;
+;Filtered Noise Routine 
+;*************************************;
+;*X=SAMPLE COUNT, ACCB=INITIAL MAX FREQ
+;*ACCA=FREQ DECAY FLAG ,DSFLG=DISTORTION FLAG
+;FNOISE
+ED3E : 97 05      staa  X0005
+ED40 : D7 00      stab  X0000
+ED42 : DF 03      stx  X0003
+ED44 : 7F 00 02   clr  X0002
+;
+ED47 : 86 6C      ldaa  #$6C
+ED49 : 97 01      staa  X0001
+ED4B : 97 61      staa  X0061
+ED4D : 86 E6      ldaa  #$E6
+ED4F : 97 02      staa  X0002
+ED51 : 97 62      staa  X0062
+ED53 : B7 20 02   staa  X2002
+;FNOIS0:
+ED56 : DE 03      ldx  X0003
+ED58 : B6 20 02   ldaa  X2002
+;LED5B:
+ED5B : 16         tab
+ED5C : 54         lsrb
+ED5D : 54         lsrb
+ED5E : 54         lsrb
+ED5F : D8 02      eorb  X0002
+ED61 : 54         lsrb
+ED62 : 76 00 01   ror  X0001
+ED65 : 76 00 02   ror  X0002
+ED68 : D6 00      ldab  X0000
+ED6A : 7D 00 06   tst  X0006
+ED6D : 27 04      beq  LED73
+ED6F : D4 01      andb  X0001
+ED71 : DB 07      addb  X0007
+;FNOIS2:
+ED73 : D7 61      stab  X0061
+ED75 : D6 62      ldab  X0062
+ED77 : 91 02      cmpa  X0002
+ED79 : 22 12      bhi  LED8D
+;FNOIS3:
+ED7B : 09         dex
+ED7C : 27 26      beq  LEDA4
+ED7E : B7 20 02   staa  X2002
+ED81 : DB 62      addb  X0062
+ED83 : 99 61      adca  X0061
+ED85 : 25 16      bcs  LED9D
+ED87 : 91 02      cmpa  X0002
+ED89 : 23 F0      bls  LED7B
+ED8B : 20 10      bra  LED9D
+;FNOIS4:
+ED8D : 09         dex
+ED8E : 27 14      beq  LEDA4
+ED90 : B7 20 02   staa  X2002
+ED93 : D0 62      subb  X0062
+ED95 : 92 61      sbca  X0061
+ED97 : 25 04      bcs  LED9D
+ED99 : 91 02      cmpa  X0002
+ED9B : 22 F0      bhi  LED8D
+;FNOIS5:
+ED9D : 96 02      ldaa  X0002
+ED9F : B7 20 02   staa  X2002
+EDA2 : 20 B7      bra  LED5B
+;FNOIS6:
+EDA4 : D6 05      ldab  X0005
+EDA6 : 27 B3      beq  LED5B
+EDA8 : 96 00      ldaa  X0000
+EDAA : D6 62      ldab  X0062
+EDAC : 44         lsra
+EDAD : 56         rorb
+EDAE : 44         lsra
+EDAF : 56         rorb
+EDB0 : 44         lsra
+EDB1 : 56         rorb
+EDB2 : 43         coma
+EDB3 : 50         negb
+EDB4 : 82 FF      sbca  #$FF
+EDB6 : DB 62      addb  X0062
+EDB8 : 99 00      adca  X0000
+EDBA : D7 62      stab  X0062
+EDBC : 97 00      staa  X0000
+EDBE : 26 96      bne  LED56
+EDC0 : C1 07      cmpb  #$07
+EDC2 : 26 92      bne  LED56
+EDC4 : 39         rts
+;*************************************;
+;Lightning 
+;*************************************;
+;LITE
 EDC5 : 86 01    "  "    ldaa  #$01
 EDC7 : 97 0B    "  "    staa  X000B
 EDC9 : C6 03    "  "    ldab  #$03
 EDCB : 20 12    "  "    bra  LEDDF
-        ;
+;*************************************;
+;Appear
+;*************************************;
+;APPEAR
 EDCD : 86 FF    "  "    ldaa  #$FF
 EDCF : 97 0B    "  "    staa  X000B
 EDD1 : 86 60    " `"    ldaa  #$60
 EDD3 : C6 FF    "  "    ldab  #$FF
 EDD5 : 20 08    "  "    bra  LEDDF
-        ;
+;*************************************;
+; Crack (short lightning ? )
+;*************************************;
+;CRACK
 EDD7 : 86 01    "  "    ldaa  #$01
 EDD9 : 97 0B    "  "    staa  X000B
 EDDB : 86 01    "  "    ldaa  #$01
 EDDD : C6 00    "  "    ldab  #$00
-EDDF        LEDDF:
+;*************************************;
+;Lightning+Appear Noise Routine 
+;*************************************;
+;LITEN:
 EDDF : 97 09    "  "    staa  X0009
 EDE1 : 86 FF    "  "    ldaa  #$FF
 EDE3 : B7 20 02    "   "    staa  X2002
 EDE6 : D7 0A    "  "    stab  X000A
-EDE8        LEDE8:
+;LITE0:
 EDE8 : D6 0A    "  "    ldab  X000A
-EDEA        LEDEA:
+;LITE1:
 EDEA : 96 62    " b"    ldaa  X0062
 EDEC : 44    "D"    lsra
 EDED : 44    "D"    lsra
@@ -8616,9 +8154,9 @@ EDF2 : 76 00 61    "v a"    ror  X0061
 EDF5 : 76 00 62    "v b"    ror  X0062
 EDF8 : 24 03    "$ "    bcc  LEDFD
 EDFA : 73 20 02    "s  "    com  X2002
-EDFD        LEDFD:
+;LITE2:
 EDFD : 96 09    "  "    ldaa  X0009
-EDFF        LEDFF:
+;LITE3:
 EDFF : 4A    "J"    deca
 EE00 : 26 FD    "& "    bne  LEDFF
 EE02 : 5A    "Z"    decb
@@ -8628,7 +8166,10 @@ EE07 : 9B 0B    "  "    adda  X000B
 EE09 : 97 09    "  "    staa  X0009
 EE0B : 26 DB    "& "    bne  LEDE8
 EE0D : 39    "9"    rts
-        ;
+;*************************************;
+;Turbo 
+;*************************************;
+;TURBO
 EE0E : 86 20    "  "    ldaa  #$20
 EE10 : 97 0A    "  "    staa  X000A
 EE12 : 97 0E    "  "    staa  X000E
@@ -8636,15 +8177,19 @@ EE14 : 86 01    "  "    ldaa  #$01
 EE16 : CE 00 01    "   "    ldx  #$0001
 EE19 : C6 FF    "  "    ldab  #$FF
 EE1B : 20 00    "  "    bra  LEE1D
-        ;
-EE1D        LEE1D:
+;*************************************;
+;White Noise Routine 
+;*************************************;
+;X=INIT PERIOD, ACCB=INIT AMP, ACCA DECAY RATE
+;CYCNT=CYCLE COUNT, NFFLG= FREQ DECAY FLAG
+;NOISE:
 EE1D : 97 0C    "  "    staa  X000C
-EE1F        LEE1F:
+;NOISE0:
 EE1F : DF 0F    "  "    stx  X000F
-EE21        LEE21:
+;NOIS00:
 EE21 : D7 0D    "  "    stab  X000D
 EE23 : D6 0A    "  "    ldab  X000A
-EE25        LEE25:
+;NOISE1:
 EE25 : 96 62    " b"    ldaa  X0062
 EE27 : 44    "D"    lsra
 EE28 : 44    "D"    lsra
@@ -8656,10 +8201,10 @@ EE30 : 76 00 62    "v b"    ror  X0062
 EE33 : 86 00    "  "    ldaa  #$00
 EE35 : 24 02    "$ "    bcc  LEE39
 EE37 : 96 0D    "  "    ldaa  X000D
-EE39        LEE39:
+;NOISE2:
 EE39 : B7 20 02    "   "    staa  X2002
 EE3C : DE 0F    "  "    ldx  X000F
-EE3E        LEE3E:
+;NOISE3:
 EE3E : 09    " "    dex
 EE3F : 26 FD    "& "    bne  LEE3E
 EE41 : 5A    "Z"    decb
@@ -8672,563 +8217,582 @@ EE4C : 08    " "    inx
 EE4D : 96 0E    "  "    ldaa  X000E
 EE4F : 27 D0    "' "    beq  LEE21
 EE51 : 20 CC    "  "    bra  LEE1F
-EE53        LEE53:
-EE53 : 39    "9"    rts
-        ;
-EE54        LEE54:
-EE54 : 96 61    " a"    ldaa  X0061
-EE56 : D6 62    " b"    ldab  X0062
-EE58 : 53    "S"    comb
-EE59 : C5 09    "  "    bitb  #$09
-EE5B : 26 05    "& "    bne  LEE62
-EE5D : 53    "S"    comb
-EE5E        LEE5E:
-EE5E : 46    "F"    rora
-EE5F : 56    "V"    rorb
-EE60 : 20 09    "  "    bra  LEE6B
-        ;
-EE62        LEE62:
-EE62 : 53    "S"    comb
-EE63 : C5 09    "  "    bitb  #$09
-EE65 : 26 02    "& "    bne  LEE69
-EE67 : 27 F5    "' "    beq  LEE5E
-EE69        LEE69:
-EE69 : 44    "D"    lsra
-EE6A : 56    "V"    rorb
-EE6B        LEE6B:
-EE6B : 97 61    " a"    staa  X0061
-EE6D : D7 62    " b"    stab  X0062
-EE6F : 39    "9"    rts
-        ;
-EE70        LEE70:
-EE70 : DF 6A    " j"    stx  X006A
-EE72 : 9B 6B    " k"    adda  X006B
-EE74 : 97 6B    " k"    staa  X006B
-EE76 : 24 03    "$ "    bcc  LEE7B
-EE78 : 7C 00 6A    "| j"    inc  X006A
-EE7B        LEE7B:
-EE7B : DE 6A    " j"    ldx  X006A
-EE7D : 39    "9"    rts
-        ;
-EE7E        LEE7E:
-EE7E : DF 6A    " j"    stx  X006A
-EE80 : DB 6B    " k"    addb  X006B
-EE82 : D7 6B    " k"    stab  X006B
-EE84 : 99 6A    " j"    adca  X006A
-EE86 : 97 6A    " j"    staa  X006A
-EE88 : DE 6A    " j"    ldx  X006A
-EE8A : 39    "9"    rts
-        ;
-EE8B        LEE8B:
-EE8B : 36    "6"    psha
-EE8C        LEE8C:
-EE8C : 5A    "Z"    decb
-EE8D : 2B 07    "+ "    bmi  LEE96
-EE8F : 32    "2"    pula
-EE90 : 36    "6"    psha
-EE91 : BD EE 70    "  p"    jsr  LEE70
-EE94 : 20 F6    "  "    bra  LEE8C
-        ;
-EE96        LEE96:
-EE96 : DF 6A    " j"    stx  X006A
-EE98 : DF 72    " r"    stx  X0072
-EE9A : CE 00 00    "   "    ldx  #$0000
-EE9D : DF 70    " p"    stx  X0070
-EE9F : DE 6A    " j"    ldx  X006A
-EEA1 : 33    "3"    pulb
-EEA2 : BD EE A6    "   "    jsr  LEEA6
-EEA5 : 39    "9"    rts
-        ;
-EEA6        LEEA6:
-EEA6 : 97 6F    " o"    staa  X006F
-EEA8        LEEA8:
-EEA8 : A6 00    "  "    ldaa  $00,x
-EEAA : DF 6A    " j"    stx  X006A
-EEAC : DE 70    " p"    ldx  X0070
-EEAE : A7 00    "  "    staa  $00,x
-EEB0 : 08    " "    inx
-EEB1 : DF 70    " p"    stx  X0070
-EEB3 : DE 6A    " j"    ldx  X006A
-EEB5 : 08    " "    inx
-EEB6 : 5A    "Z"    decb
-EEB7 : 26 EF    "& "    bne  LEEA8
-EEB9 : 96 6F    " o"    ldaa  X006F
-EEBB : 39    "9"    rts
-        ;
-EEBC : 8D 03    "  "    bsr  LEEC1
-EEBE : 7E F0 06    "~  "    jmp  LF006
-        ;
-EEC1        LEEC1:
-EEC1 : 86 FF    "  "    ldaa  #$FF
-EEC3 : 97 00    "  "    staa  X0000
-EEC5 : CE FE C0    "   "    ldx  #$FEC0
-EEC8 : DF 02    "  "    stx  X0002
-EECA : 86 20    "  "    ldaa  #$20
-EECC : CE FF E0    "   "    ldx  #$FFE0
-EECF : 8D 05    "  "    bsr  LEED6
-EED1 : 86 01    "  "    ldaa  #$01
-EED3 : CE 00 44    "  D"    ldx  #$0044
-EED6        LEED6:
-EED6 : 97 04    "  "    staa  X0004
-EED8 : DF 05    "  "    stx  X0005
-EEDA        LEEDA:
-EEDA : CE 00 10    "   "    ldx  #$0010
-EEDD        LEEDD:
-EEDD : 8D 21    " !"    bsr  LEF00
-EEDF : 96 01    "  "    ldaa  X0001
-EEE1 : 9B 03    "  "    adda  X0003
-EEE3 : 97 01    "  "    staa  X0001
-EEE5 : 96 00    "  "    ldaa  X0000
-EEE7 : 99 02    "  "    adca  X0002
-EEE9 : 97 00    "  "    staa  X0000
-EEEB : 09    " "    dex
-EEEC : 26 EF    "& "    bne  LEEDD
-EEEE : 96 03    "  "    ldaa  X0003
-EEF0 : 9B 04    "  "    adda  X0004
-EEF2 : 97 03    "  "    staa  X0003
-EEF4 : 24 03    "$ "    bcc  LEEF9
-EEF6 : 7C 00 02    "|  "    inc  X0002
-EEF9        LEEF9:
-EEF9 : DE 02    "  "    ldx  X0002
-EEFB : 9C 05    "  "    cpx  X0005
-EEFD : 26 DB    "& "    bne  LEEDA
-EEFF : 39    "9"    rts
-        ;
-EF00        LEF00:
-EF00 : 4F    "O"    clra
-EF01        LEF01:
-EF01 : B7 20 02    "   "    staa  X2002
-EF04 : 8B 20    "  "    adda  #$20
-EF06 : 24 F9    "$ "    bcc  LEF01
-EF08 : 8D 09    "  "    bsr  LEF13
-EF0A : 86 E0    "  "    ldaa  #$E0
-EF0C        LEF0C:
-EF0C : B7 20 02    "   "    staa  X2002
-EF0F : 80 20    "  "    suba  #$20
-EF11 : 24 F9    "$ "    bcc  LEF0C
-EF13        LEF13:
-EF13 : D6 00    "  "    ldab  X0000
-EF15        LEF15:
-EF15 : 86 02    "  "    ldaa  #$02
-EF17        LEF17:
-EF17 : 4A    "J"    deca
-EF18 : 26 FD    "& "    bne  LEF17
-EF1A : 5A    "Z"    decb
-EF1B : 26 F8    "& "    bne  LEF15
-EF1D : 39    "9"    rts
+;NSEND:
+EE53 : 39         rts
+;*************************************;
+; params - ror, adjust addr 61,62
+;*************************************;
+;PARAM1 LEE54:
+EE54 : 96 61      ldaa  $61           ;load A with addr 61
+EE56 : D6 62      ldab  $62           ;load B with addr 62
+EE58 : 53         comb                ;complement 1s B
+EE59 : C5 09      bitb  #$09          ;bit test B with 09h
+EE5B : 26 05      bne  LEE62          ;branch Z=0
+EE5D : 53         comb                ;complement 1s B
+;LEE5E:
+EE5E : 46         rora                ;rotate right A
+EE5F : 56         rorb                ;rotate right B
+EE60 : 20 09      bra  LEE6B          ;branch always 
+;LEE62:
+EE62 : 53         comb                ;complement 1s B
+EE63 : C5 09      bitb  #$09          ;bit test B with 09h
+EE65 : 26 02      bne  LEE69          ;branch Z=0
+EE67 : 27 F5      beq  LEE5E          ;branch Z=1
+;LEE69:
+EE69 : 44         lsra                ;logic shift right A
+EE6A : 56         rorb                ;rotate right B
+;LEE6B:
+EE6B : 97 61      staa  $61           ;store A in addr 61
+EE6D : D7 62      stab  $62           ;store B in addr 62
+EE6F : 39         rts                 ;return subroutine
+;*************************************;
+;Add A to X register
+;*************************************;
+;ADDX LEE70:
+EE70 : DF 6A     stx  $6A             ;store X in addr 6A
+EE72 : 9B 6B     adda  $6B            ;add A with addr 6B
+EE74 : 97 6B     staa  $6B            ;store A in addr 6B
+EE76 : 24 03     bcc  LEE7B           ;branch C=0 ADDX1
+EE78 : 7C 00 6A  inc  $006A           ;incr addr 006A
+;ADDX1
+EE7B : DE 6A     ldx  $6A             ;load X with addr 6A
+EE7D : 39        rts                  ;return subroutine
+;*************************************;
+;Add B to X register
+;*************************************;
+;ADDBX LEE7E:
+EE7E : DF 6A      stx  $6A            ;store X in addr 6A (XPLAY)
+EE80 : DB 6B      addb  $6B           ;add B with addr 6B
+EE82 : D7 6B      stab  $6B           ;store B in addr 6B
+EE84 : 99 6A      adca  $6A           ;add C+A + addr 6A
+EE86 : 97 6A      staa  $6A           ;store A in addr 6A
+EE88 : DE 6A      ldx  $6A            ;load X with addr 6A
+EE8A : 39         rts                 ;return subroutine
+;*************************************;
+; parameter transfer loader
+;*************************************;
+;TRNSLD LEE8B:
+EE8B : 36         psha                ;push A into stack then SP-1
+;LEE8C:
+EE8C : 5A         decb                ;decr B
+EE8D : 2B 07      bmi  LEE96          ;branch N=1 
+EE8F : 32         pula                ;SP+1 pull stack into A
+EE90 : 36         psha                ;push A into stack then SP-1
+EE91 : BD EE 70   jsr  LEE70          ;jump sub ADDX
+EE94 : 20 F6      bra  LEE8C          ;branch always 
+;LEE96:
+EE96 : DF 6A      stx  $6A            ;store X in addr 6A (XPLAY)
+EE98 : DF 72      stx  $72            ;store X in addr 72
+EE9A : CE 00 00   ldx  #$0000         ;load X with 0000h
+EE9D : DF 70      stx  $70            ;store X in addr 70 (XPTR)
+EE9F : DE 6A      ldx  $6A            ;load X with addr 6A
+EEA1 : 33         pulb                ;SP+1 pull stack into B
+EEA2 : BD EE A6   jsr  LEEA6          ;jump sub TRANS
+EEA5 : 39         rts                 ;return subroutine
+;*************************************;
+;Parameter Transfer 
+;*************************************;
+;TRANS LEEA6:
+EEA6 : 97 6F      staa  $6F           ;store A in addr 6F
+;TRANS1 LEEA8:
+EEA8 : A6 00      ldaa  $00,x         ;load A with X+00h
+EEAA : DF 6A      stx  $6A            ;store X in addr 6A (XPLAY)
+EEAC : DE 70      ldx  $70            ;load X with addr 70 (XPTR)
+EEAE : A7 00      staa  $00,x         ;store A in addr X+00h
+EEB0 : 08         inx                 ;incr X
+EEB1 : DF 70      stx  $70            ;store X in addr 70
+EEB3 : DE 6A      ldx  $6A            ;load X with addr 6A
+EEB5 : 08         inx                 ;incr X
+EEB6 : 5A         decb                ;decr B
+EEB7 : 26 EF      bne  LEEA8          ;branch Z=0 TRANS1
+EEB9 : 96 6F      ldaa  $6F           ;load A with 6F
+EEBB : 39         rts                 ;return subroutine
+;*************************************;
+; SYNTH system 9 "aye" A jmptbl
+;*************************************;
+;SYNTH9A
+EEBC : 8D 03      bsr  LEEC1          ;branch sub 
+EEBE : 7E F0 06   jmp  LF006          ;jump ENDSND
+;LEEC1:
+EEC1 : 86 FF      ldaa  #$FF          ;load A with FFh
+EEC3 : 97 00      staa  $00           ;store A in addr 00
+EEC5 : CE FE C0   ldx  #$FEC0         ;load X with FEC0h (data table)
+EEC8 : DF 02      stx  $02            ;store X in addr 02
+EECA : 86 20      ldaa  #$20          ;load A with 20h
+EECC : CE FF E0   ldx  #$FFE0         ;load X with FFE0h (data table)
+EECF : 8D 05      bsr  LEED6          ;branch sub 
+EED1 : 86 01      ldaa  #$01          ;load A with 01h
+EED3 : CE 00 44   ldx  #$0044         ;load X with 0044h
+;LEED6:
+EED6 : 97 04      staa  $04           ;store A in addr 04
+EED8 : DF 05      stx  $05            ;store X in addr 05
+;LEEDA:
+EEDA : CE 00 10   ldx  #$0010         ;load X with 0010h
+;LEEDD:
+EEDD : 8D 21      bsr  LEF00          ;branch sub 
+EEDF : 96 01      ldaa  $01           ;load A with addr 01
+EEE1 : 9B 03      adda  $03           ;add A with addr 03
+EEE3 : 97 01      staa  $01           ;store A in addr 01
+EEE5 : 96 00      ldaa  $00           ;load A with addr 00
+EEE7 : 99 02      adca  $02           ;add C+A + addr 02
+EEE9 : 97 00      staa  $00           ;store A in addr 00
+EEEB : 09         dex                 ;decr X
+EEEC : 26 EF      bne  LEEDD          ;branch Z=0
+EEEE : 96 03      ldaa  $03           ;load A with addr 03
+EEF0 : 9B 04      adda  $04           ;add A with addr 04
+EEF2 : 97 03      staa  $03           ;store A in addr 03
+EEF4 : 24 03      bcc  LEEF9          ;branch C=0
+EEF6 : 7C 00 02   inc  $0002          ;incr addr 0002
+;LEEF9:
+EEF9 : DE 02      ldx  $02            ;load X with addr 02
+EEFB : 9C 05      cpx  $05            ;compare X with addr 05
+EEFD : 26 DB      bne  LEEDA          ;branch Z=0 
+EEFF : 39         rts                 ;return subroutine
+;LEF00:
+EF00 : 4F         clra                ;clear A
+;LEF01:
+EF01 : B7 20 02   staa  $2002         ;store A in DAC output SOUND
+EF04 : 8B 20      adda  #$20          ;add A with 20h
+EF06 : 24 F9      bcc  LEF01          ;branch C=0 
+EF08 : 8D 09      bsr  LEF13          ;branch sub 
+EF0A : 86 E0      ldaa  #$E0          ;load a with E0h
+;LEF0C:
+EF0C : B7 20 02   staa  $2002         ;store A in DAC output SOUND
+EF0F : 80 20      suba  #$20          ;sub A with 20h
+EF11 : 24 F9      bcc  LEF0C          ;branch C=0 
+;LEF13:
+EF13 : D6 00      ldab  $00           ;load B with addr 00
+;LEF15:
+EF15 : 86 02      ldaa  #$02          ;load A with 02h
+;LEF17:
+EF17 : 4A         deca                ;decr A
+EF18 : 26 FD      bne  LEF17          ;branch Z=0 
+EF1A : 5A         decb                ;decr B
+EF1B : 26 F8      bne  LEF15          ;branch Z=0
+EF1D : 39         rts                 ;return subroutine
 ;*************************************;
 ;Interrupt Processing
 ;*************************************;
 ;IRQ
-EF1E : B6 20 00    "   "    ldaa  X2000
-EF21 : 97 6E    " n"    staa  X006E
-EF23 : 81 FF    "  "    cmpa  #$FF
-EF25 : 23 01    "# "    bls  LEF28
-EF27 : 3B    ";"    rti
-        ;
-EF28        LEF28:
-EF28 : 8E 00 7F    "   "    lds  #$007F
-EF2B : D6 60    " `"    ldab  X0060
-EF2D : 2A 04    "* "    bpl  LEF33
-EF2F : C4 70    " p"    andb  #$70
-EF31 : 20 3E    " >"    bra  LEF71
-        ;
-EF33        LEF33:
-EF33 : C5 08    "  "    bitb  #$08
-EF35 : 27 3A    "':"    beq  LEF71
-EF37 : C4 07    "  "    andb  #$07
-EF39 : 27 36    "'6"    beq  LEF71
-EF3B : C1 01    "  "    cmpb  #$01
-EF3D : 26 10    "& "    bne  LEF4F
-EF3F : 96 52    " R"    ldaa  X0052
-EF41 : 97 57    " W"    staa  X0057
-EF43 : DE 12    "  "    ldx  X0012
-EF45 : DF 58    " X"    stx  X0058
-EF47 : DF 50    " P"    stx  X0050
-EF49 : 96 66    " f"    ldaa  X0066
-EF4B : 97 5A    " Z"    staa  X005A
-EF4D : 20 22    " ""    bra  LEF71
-        ;
-EF4F        LEF4F:
-EF4F : C1 02    "  "    cmpb  #$02
-EF51 : 26 02    "& "    bne  LEF55
-EF53 : 20 12    "  "    bra  LEF67
-        ;
-EF55        LEF55:
-EF55 : C1 06    "  "    cmpb  #$06
-EF57 : 26 0A    "& "    bne  LEF63
-EF59 : D6 12    "  "    ldab  X0012
-EF5B        XEF5B:
-EF5B : D7 64    " d"    stab  X0064
-EF5D : D6 11    "  "    ldab  X0011
-EF5F : D7 63    " c"    stab  X0063
-EF61 : 20 0E    "  "    bra  LEF71
-        ;
-EF63        LEF63:
-EF63 : C1 07    "  "    cmpb  #$07
-EF65 : 26 0A    "& "    bne  LEF71
-EF67        LEF67:
-EF67 : DE 12    "  "    ldx  X0012
-EF69 : DF 50    " P"    stx  X0050
-EF6B : 96 66    " f"    ldaa  X0066
-EF6D : 97 53    " S"    staa  X0053
-EF6F : 20 00    "  "    bra  LEF71
-        ;
-EF71        LEF71:
-EF71 : D6 60    " `"    ldab  X0060
-EF73 : C4 77    " w"    andb  #$77
-EF75 : D7 60    " `"    stab  X0060
-EF77 : 96 6E    " n"    ldaa  X006E
-EF79        LEF79:
-EF79 : 26 19    "& "    bne  LEF94
-EF7B : 96 60    " `"    ldaa  X0060
-EF7D        XEF7D:
-EF7D : 84 70    " p"    anda  #$70
-EF7F : 97 60    " `"    staa  X0060
-EF81 : CE 00 50    "  P"    ldx  #$0050
-EF84 : 86 10    "  "    ldaa  #$10
-EF86        LEF86:
-EF86 : 6F 00    "o "    clr  $00,x
-EF88 : 08    " "    inx
-EF89 : 4A    "J"    deca
-EF8A : 26 FA    "& "    bne  LEF86
-EF8C : CE EF 92    "   "    ldx  #$EF92
-EF8F : 7E EF B8    "~  "    jmp  LEFB8
-EF92        LEF92:
-EF92 : 20 FE    "  "    bra  LEF92
-        ;
-EF94        LEF94:
-EF94 : CE F1 CC    "   "    ldx  #$F1CC
-EF97 : 4A    "J"    deca
-EF98 : 16    " "    tab
-EF99 : 97 6E    " n"    staa  X006E
-EF9B : 4F    "O"    clra
-EF9C : 58    "X"    aslb
-EF9D : 89 00    "  "    adca  #$00
-EF9F : DB 6E    " n"    addb  X006E
-EFA1 : 89 00    "  "    adca  #$00
-EFA3 : BD EE 7E    "  ~"    jsr  LEE7E
-EFA6 : A6 00    "  "    ldaa  $00,x
-EFA8 : E6 02    "  "    ldab  $02,x
-EFAA : D7 66    " f"    stab  X0066
-EFAC : E6 01    "  "    ldab  $01,x
-EFAE        XEFAE:
-EFAE : 48    "H"    asla
-EFAF : CE F1 9C    "   "    ldx  #$F19C
-EFB2 : BD EE 70    "  p"    jsr  LEE70
-EFB5 : EE 00    "  "    ldx  $00,x
-EFB7 : 17    " "    tba
-EFB8        LEFB8:
-EFB8 : 0E    " "    cli
-EFB9 : 6E 00    "n "    jmp  $00,x            ;INFO: index jump
-        ;
-EFBB : D6 60    " `"    ldab  X0060
-EFBD : C4 70    " p"    andb  #$70
-EFBF : CA 05    "  "    orab  #$05
-EFC1 : CA 08    "  "    orab  #$08
-EFC3 : D7 60    " `"    stab  X0060
-EFC5 : 97 5B    " ["    staa  X005B
-EFC7        LEFC7:
-EFC7 : 96 5B    " ["    ldaa  X005B
-EFC9 : CE E1 C0    "   "    ldx  #$E1C0
-EFCC : BD EF B8    "   "    jsr  LEFB8
-EFCF : 20 F6    "  "    bra  LEFC7
-        ;
-EFD1 : 97 65    " e"    staa  X0065
-EFD3 : BD EF E6    "   "    jsr  LEFE6
-EFD6 : D6 60    " `"    ldab  X0060
-EFD8 : C4 70    " p"    andb  #$70
-EFDA : CA 06    "  "    orab  #$06
-EFDC        XEFDC:
-EFDC : CA 08    "  "    orab  #$08
-EFDE : D7 60    " `"    stab  X0060
-EFE0 : CE E9 AF    "   "    ldx  #$E9AF
-EFE3 : 7E EF B8    "~  "    jmp  LEFB8
-        ;
-EFE6        LEFE6:
-EFE6 : 48    "H"    asla
-EFE7 : CE EF FE    "   "    ldx  #$EFFE
-EFEA : BD EE 70    "  p"    jsr  LEE70
-EFED : EE 00    "  "    ldx  $00,x
-EFEF : DF 6A    " j"    stx  X006A
-EFF1 : CE 00 00    "   "    ldx  #$0000
-EFF4 : DF 70    " p"    stx  X0070
-EFF6 : DE 6A    " j"    ldx  X006A
-EFF8 : C6 0C    "  "    ldab  #$0C
-EFFA : BD EE A6    "   "    jsr  LEEA6
-EFFD : 39    "9"    rts
-        ;
+EF1E : B6 20 00   ldaa  $2000         ;load PIA sound select
+EF21 : 97 6E      staa  $6E           ;store A in addr 6E
+EF23 : 81 FF      cmpa  #$FF          ;compare A to FFh (1111 1111)
+EF25 : 23 01      bls  LEF28          ;branch C+Z=1 IRQP1
+EF27 : 3B         rti                 ;return from interrupt
+;IRQP1 (irq params 1)
+EF28 : 8E 00 7F   lds  #$007F         ;load SP with 007Fh (ENDRAM)
+EF2B : D6 60      ldab  $60           ;load B with addr 60
+EF2D : 2A 04      bpl  LEF33          ;branch N=0 IRQP2
+EF2F : C4 70      andb  #$70          ;and B with 70h
+EF31 : 20 3E      bra  LEF71          ;branch always IRQ1
+;IRQP2
+EF33 : C5 08      bitb  #$08          ;bit test B with 08h
+EF35 : 27 3A      beq  LEF71          ;branch Z=1 IRQ1
+EF37 : C4 07      andb  #$07          ;and B with 07h
+EF39 : 27 36      beq  LEF71          ;branch Z=1 IRQ1
+EF3B : C1 01      cmpb  #$01          ;compare B with 01h
+EF3D : 26 10      bne  LEF4F          ;branch Z=0 IRQP3
+EF3F : 96 52      ldaa  $52           ;load A with addr 52
+EF41 : 97 57      staa  $57           ;store A in addr 57
+EF43 : DE 12      ldx  $12            ;load X with addr 12
+EF45 : DF 58      stx  $58            ;store X in addr 58
+EF47 : DF 50      stx  $50            ;store X in addr 50
+EF49 : 96 66      ldaa  $66           ;load A with addr 66
+EF4B : 97 5A      staa  $5A           ;store A in addr 5A
+EF4D : 20 22      bra  LEF71          ;branch always IRQ1
+;IRQP3
+EF4F : C1 02      cmpb  #$02          ;compare B with 02h
+EF51 : 26 02      bne  LEF55          ;branch Z=0 IRQP4
+EF53 : 20 12      bra  LEF67          ;branch always IRQP6
+;IRQP4
+EF55 : C1 06      cmpb  #$06          ;compare B with 06h
+EF57 : 26 0A      bne  LEF63          ;branch Z=0 IRQP5
+EF59 : D6 12      ldab  $12           ;load B with addr 12
+EF5B : D7 64      stab  $64           ;store B in addr 64
+EF5D : D6 11      ldab  $11           ;load B with addr 11
+EF5F : D7 63      stab  $63           ;store B in addr 63
+EF61 : 20 0E      bra  LEF71          ;branch always IRQ1
+;IRQP5
+EF63 : C1 07      cmpb  #$07          ;compare B with 07h
+EF65 : 26 0A      bne  LEF71          ;branch Z=0 IRQ1
+;IRQP6
+EF67 : DE 12      ldx  $12            ;load X with addr 12
+EF69 : DF 50      stx  $50            ;store X in addr 50
+EF6B : 96 66      ldaa  $66           ;load A with addr 66
+EF6D : 97 53      staa  $53           ;store A in addr 53
+EF6F : 20 00      bra  LEF71          ;branch always IRQ1
+;IRQ1 (irq processing 1)
+EF71 : D6 60      ldab  $60           ;load B with addr 60
+EF73 : C4 77      andb  #$77          ;and B with 77h
+EF75 : D7 60      stab  $60           ;store B in addr 60
+EF77 : 96 6E      ldaa  $6E           ;load A with addr 6E (saved sound select value)
+;IRQ1A
+EF79 : 26 19      bne  LEF94          ;branch Z=0 IRQ3
+;IRQ1B
+EF7B : 96 60      ldaa  $60           ;load A with addr 60
+EF7D : 84 70      anda  #$70          ;and A with 70h
+EF7F : 97 60      staa  $60           ;store A in addr 60
+EF81 : CE 00 50   ldx  #$0050         ;load X with addr 0050
+EF84 : 86 10      ldaa  #$10          ;load A with 10h
+;IRQ2 (clear next 16 addrs from $50)
+EF86 : 6F 00      clr  $00,x          ;clear X+00h
+EF88 : 08         inx                 ;incr X
+EF89 : 4A         deca                ;decr A
+EF8A : 26 FA      bne  LEF86          ;branch Z=0 IRQ2
+;
+EF8C : CE EF 92   ldx  #$EF92         ;load X with EF92h (bra)
+EF8F : 7E EF B8   jmp  LEFB8          ;jump IRQX
+EF92 : 20 FE      bra  LEF92          ;branch always here(*-2)
+;IRQ3
+EF94 : CE F1 CC   ldx  #$F1CC         ;load X with F1CCh (IRQDAT)
+EF97 : 4A         deca                ;decr A
+EF98 : 16         tab                 ;transfer A to B
+EF99 : 97 6E      staa  $6E           ;store A in addr 6E
+EF9B : 4F         clra                ;clear A
+EF9C : 58         aslb                ;arith shoft left B
+EF9D : 89 00      adca  #$00          ;add C+A + 00h
+EF9F : DB 6E      addb  $6E           ;add B with addr 6E
+EFA1 : 89 00      adca  #$00          ;add C+A + 00h
+EFA3 : BD EE 7E   jsr  LEE7E          ;jump sub ADDBX
+EFA6 : A6 00      ldaa  $00,x         ;load A with X+00h
+EFA8 : E6 02      ldab  $02,x         ;load B with X+02h
+EFAA : D7 66      stab  $66           ;store B in addr 66
+EFAC : E6 01      ldab  $01,x         ;load B with X+01h
+EFAE : 48         asla                ;arith shoft left A
+EFAF : CE F1 9C   ldx  #$F19C         ;load X with F19Ch (JMPTBL)
+EFB2 : BD EE 70   jsr  LEE70          ;jump sub ADDX
+EFB5 : EE 00      ldx  $00,x          ;load X with X+00h
+EFB7 : 17         tba                 ;transfer B to A
+;IRQX
+EFB8 : 0E         cli                 ;clear interrupts
+EFB9 : 6E 00      jmp  $00,x          ;jump addr X+00h
+;*************************************;
+; PARAM - jmptbl
+;*************************************;
+;PARAM2
+EFBB : D6 60      ldab  $60           ;load B with addr 60
+EFBD : C4 70      andb  #$70          ;and B with 70h
+EFBF : CA 05      orab  #$05          ;or B with 05h
+EFC1 : CA 08      orab  #$08          ;or B with 08h
+EFC3 : D7 60      stab  $60           ;store B in addr 60
+EFC5 : 97 5B      staa  $5B           ;store A in addr 5B
+;LEFC7:
+EFC7 : 96 5B      ldaa  $5B           ;load A with addr 5B
+EFC9 : CE E1 C0   ldx  #$E1C0         ;load X with E1C0h (opcodes jmp)
+EFCC : BD EF B8   jsr  LEFB8          ;jump sub IRQX
+EFCF : 20 F6      bra  LEFC7          ;branch always 
+;*************************************;
+; PARAMS - jmptbl
+;*************************************;
+;PARAM3
+EFD1 : 97 65      staa  $65           ;store A in addr 60
+EFD3 : BD EF E6   jsr  LEFE6          ;jump sub 
+EFD6 : D6 60      ldab  $60           ;load B with addr 60
+EFD8 : C4 70      andb  #$70          ;and B with 70h
+EFDA : CA 06      orab  #$06          ;or B with 06h
+EFDC : CA 08      orab  #$08          ;or B with 08h
+EFDE : D7 60      stab  $60           ;store B in addr 60
+EFE0 : CE E9 AF   ldx  #$E9AF         ;load X with E9AFh
+EFE3 : 7E EF B8   jmp  LEFB8          ;jump IRQX
+;*************************************;
+; PARAMS 
+;*************************************;
+;PARAM4 LEFE6:
+EFE6 : 48         asla                ;arith shift left
+EFE7 : CE EF FE   ldx  #$EFFE         ;load X with EFFEh
+EFEA : BD EE 70   jsr  LEE70          ;jump sub ADDX
+EFED : EE 00      ldx  $00,x          ;load X with X+00h
+EFEF : DF 6A      stx  $6A            ;store X in addr 6A
+EFF1 : CE 00 00   ldx  #$0000         ;load X with 0000h
+EFF4 : DF 70      stx  $70            ;store X in addr 70
+EFF6 : DE 6A      ldx  $6A            ;load X with addr 6A
+EFF8 : C6 0C      ldab  #$0C          ;load B with 0Ch
+EFFA : BD EE A6   jsr  LEEA6          ;jump sub TRANS
+EFFD : 39         rts                 ;return subroutine
+;*************************************;
+; data/jmp tables?
+;*************************************;
 EFFE : EA DF    "  "    orab  $DF,x
 F000 : EA D3    "  "    orab  $D3,x
-F002        XF002:
 F002 : EA 7F    "  "    orab  $7F,x
 F004 : EA C7    "  "    orab  $C7,x
-F006        LF006:
-F006 : 8E 00 7F    "   "    lds  #$007F
-F009 : D6 60    " `"    ldab  X0060
-F00B : 2A 02    "* "    bpl  LF00F
-F00D : C4 70    " p"    andb  #$70
-F00F        LF00F:
-F00F : D6 60    " `"    ldab  X0060
-F011 : C4 77    " w"    andb  #$77
-F013 : D7 60    " `"    stab  X0060
-F015        LF015:
-F015        XF015:
-F015 : 96 66    " f"    ldaa  X0066
-F017 : 27 05    "' "    beq  LF01E
-F019        XF019:
-F019 : 7E EF 79    "~ y"    jmp  LEF79
-F01C        LF01C:
-F01C : 20 FE    "  "    bra  LF01C
-        ;
-F01E        LF01E:
-F01E : D6 60    " `"    ldab  X0060
-F020 : C4 07    "  "    andb  #$07
-F022 : 27 F8    "' "    beq  LF01C
-F024 : C1 01    "  "    cmpb  #$01
-F026 : 26 06    "& "    bne  LF02E
-F028 : 96 5A    " Z"    ldaa  X005A
-F02A : 97 53    " S"    staa  X0053
-F02C : 20 64    " d"    bra  LF092
-        ;
-F02E        LF02E:
-F02E : C1 02    "  "    cmpb  #$02
-F030 : 26 02    "& "    bne  LF034
-F032 : 20 5E    " ^"    bra  LF092
-        ;
-F034        LF034:
-F034 : C1 03    "  "    cmpb  #$03
-F036 : 26 1D    "& "    bne  LF055
-F038 : D6 60    " `"    ldab  X0060
-F03A : CA 08    "  "    orab  #$08
-F03C : D7 60    " `"    stab  X0060
-F03E : C6 04    "  "    ldab  #$04
-F040 : CE EC 27    "  '"    ldx  #$EC27
-F043 : 86 09    "  "    ldaa  #$09
-F045 : BD EE 8B    "   "    jsr  LEE8B
-F048 : BD EB 93    "   "    jsr  LEB93
-F04B : 96 56    " V"    ldaa  X0056
-F04D : 97 15    "  "    staa  X0015
-F04F : CE EB CE    "   "    ldx  #$EBCE
-F052 : 7E EF B8    "~  "    jmp  LEFB8
-        ;
-F055        LF055:
-F055 : C1 05    "  "    cmpb  #$05
-F057 : 26 10    "& "    bne  LF069
-F059 : D6 60    " `"    ldab  X0060
-F05B : CA 08    "  "    orab  #$08
-F05D : D7 60    " `"    stab  X0060
-F05F        LF05F:
-F05F : 96 5B    " ["    ldaa  X005B
-F061 : CE E1 C0    "   "    ldx  #$E1C0
-F064 : BD EF B8    "   "    jsr  LEFB8
-F067 : 20 F6    "  "    bra  LF05F
-        ;
-F069        LF069:
-F069 : C1 06    "  "    cmpb  #$06
-F06B : 26 21    "&!"    bne  LF08E
-F06D : D6 60    " `"    ldab  X0060
-F06F : CA 08    "  "    orab  #$08
-F071 : D7 60    " `"    stab  X0060
-F073 : 96 65    " e"    ldaa  X0065
-F075 : BD EF E6    "   "    jsr  LEFE6
-F078 : D6 63    " c"    ldab  X0063
-F07A : D7 0D    "  "    stab  X000D
-F07C : D6 64    " d"    ldab  X0064
-F07E : D7 0E    "  "    stab  X000E
-F080 : D6 09    "  "    ldab  X0009
-F082 : D7 17    "  "    stab  X0017
-F084 : D6 0A    "  "    ldab  X000A
-F086 : D7 18    "  "    stab  X0018
-F088 : CE E9 BF    "   "    ldx  #$E9BF
-F08B : 7E EF B8    "~  "    jmp  LEFB8
-        ;
-F08E        LF08E:
-F08E : C1 07    "  "    cmpb  #$07
-F090 : 26 8A    "& "    bne  LF01C
-F092        LF092:
-F092 : 96 52    " R"    ldaa  X0052
-F094 : 16    " "    tab
-F095 : 4F    "O"    clra
-F096 : 58    "X"    aslb
-F097 : 89 00    "  "    adca  #$00
-F099 : D7 6F    " o"    stab  X006F
-F09B : 58    "X"    aslb
-F09C : 89 00    "  "    adca  #$00
-F09E : DB 6F    " o"    addb  X006F
-F0A0 : 89 00    "  "    adca  #$00
-F0A2        XF0A2:
-F0A2 : CE F7 24    "  $"    ldx  #$F724
-F0A5 : BD EE 7E    "  ~"    jsr  LEE7E
-F0A8 : A6 02    "  "    ldaa  $02,x
-F0AA : 97 12    "  "    staa  X0012
-F0AC : A6 03    "  "    ldaa  $03,x
-F0AE : 97 13    "  "    staa  X0013
-F0B0 : A6 04    "  "    ldaa  $04,x
-F0B2 : 97 14    "  "    staa  X0014
-F0B4 : A6 05    "  "    ldaa  $05,x
-F0B6 : 97 1D    "  "    staa  X001D
-F0B8 : 97 15    "  "    staa  X0015
-F0BA : EE 00    "  "    ldx  $00,x
-F0BC : DF 6A    " j"    stx  X006A
-F0BE : CE 00 00    "   "    ldx  #$0000
-F0C1 : DF 70    " p"    stx  X0070
-F0C3 : C6 12    "  "    ldab  #$12
-F0C5 : DE 6A    " j"    ldx  X006A
-F0C7 : DF 67    " g"    stx  X0067
-F0C9 : BD EE A6    "   "    jsr  LEEA6
-F0CC : D6 60    " `"    ldab  X0060
-F0CE : C5 08    "  "    bitb  #$08
-F0D0 : 26 19    "& "    bne  LF0EB
-F0D2 : DE 50    " P"    ldx  X0050
-F0D4 : 86 01    "  "    ldaa  #$01
-F0D6        LF0D6:
-F0D6 : E6 00    "  "    ldab  $00,x
-F0D8 : 26 04    "& "    bne  LF0DE
-F0DA : EE 01    "  "    ldx  $01,x
-F0DC : 20 04    "  "    bra  LF0E2
-        ;
-F0DE        LF0DE:
-F0DE : 08    " "    inx
-F0DF : 08    " "    inx
-F0E0 : 08    " "    inx
-F0E1 : 08    " "    inx
-F0E2        LF0E2:
-F0E2 : 4A    "J"    deca
-F0E3 : 26 F1    "& "    bne  LF0D6
-F0E5 : DF 12    "  "    stx  X0012
-F0E7 : D6 53    " S"    ldab  X0053
-F0E9 : D7 66    " f"    stab  X0066
-F0EB        LF0EB:
-F0EB : D6 60    " `"    ldab  X0060
-F0ED : C4 7F    "  "    andb  #$7F
-F0EF : CA 08    "  "    orab  #$08
-F0F1 : D7 60    " `"    stab  X0060
-F0F3 : CE E5 3E    "  >"    ldx  #$E53E
-F0F6 : 7E EF B8    "~  "    jmp  LEFB8
-        ;
-F0F9 : D6 60    " `"    ldab  X0060
-F0FB : C4 70    " p"    andb  #$70
-F0FD : CA 03    "  "    orab  #$03
-F0FF : CA 08    "  "    orab  #$08
-F101 : D7 60    " `"    stab  X0060
-F103 : 97 54    " T"    staa  X0054
-F105 : 81 02    "  "    cmpa  #$02
-F107 : 23 05    "# "    bls  LF10E
-F109 : 86 4A    " J"    ldaa  #$4A
-F10B : 7E EF 79    "~ y"    jmp  LEF79
-        ;
-F10E        LF10E:
-F10E : CE F1 1C    "   "    ldx  #$F11C
-F111 : BD EE 70    "  p"    jsr  LEE70
-F114 : A6 00    "  "    ldaa  $00,x
-F116 : CE EC EA    "   "    ldx  #$ECEA
-F119 : 7E EF B8    "~  "    jmp  LEFB8
-        ;
-F11C : 04    " "    db  $04
-        ;
-F11D : 0A    " "    clv
-F11E : 0B    " "    sev
-F11F : D6 60    " `"    ldab  X0060
-F121 : C4 07    "  "    andb  #$07
-F123 : C1 07    "  "    cmpb  #$07
-F125 : 26 0A    "& "    bne  LF131
-F127 : 91 52    " R"    cmpa  X0052
-F129 : 26 06    "& "    bne  LF131
-F12B : D6 60    " `"    ldab  X0060
-F12D : C4 77    " w"    andb  #$77
-F12F : 20 0C    "  "    bra  LF13D
-        ;
-F131        LF131:
-F131 : D6 60    " `"    ldab  X0060
-F133 : C4 70    " p"    andb  #$70
-F135 : CA 08    "  "    orab  #$08
-F137 : CA 07    "  "    orab  #$07
-F139 : D7 60    " `"    stab  X0060
-F13B : 97 52    " R"    staa  X0052
-F13D        LF13D:
-F13D : 7E F0 1E    "~  "    jmp  LF01E
-        ;
-F140 : CE F1 6C    "  l"    ldx  #$F16C
-F143 : 96 54    " T"    ldaa  X0054
-F145 : 4C    "L"    inca
-F146 : 81 04    "  "    cmpa  #$04
-F148 : 22 07    "" "    bhi  LF151
-F14A : 97 54    " T"    staa  X0054
-F14C : BD EE 70    "  p"    jsr  LEE70
-F14F : 20 03    "  "    bra  LF154
-        ;
-F151        LF151:
-F151 : 4F    "O"    clra
-F152 : 97 54    " T"    staa  X0054
-F154        LF154:
-F154 : A6 00    "  "    ldaa  $00,x
-F156 : 97 52    " R"    staa  X0052
-F158 : 96 60    " `"    ldaa  X0060
-F15A : 16    " "    tab
-F15B : C4 70    " p"    andb  #$70
-F15D : CA 02    "  "    orab  #$02
-F15F : 84 07    "  "    anda  #$07
-F161 : 81 02    "  "    cmpa  #$02
-F163 : 27 02    "' "    beq  LF167
-F165 : CA 08    "  "    orab  #$08
-F167        LF167:
-F167 : D7 60    " `"    stab  X0060
-F169 : 7E F0 1E    "~  "    jmp  LF01E
-        ;
-F16C : 30    "0"    tsx
-F16D : 2C 2B    ",+"    bge  LF19A
-F16F : 2A 21    "*!"    bpl  LF192
-F171 : D6 60    " `"    ldab  X0060
-F173 : C4 70    " p"    andb  #$70
-F175 : CA 01    "  "    orab  #$01
-F177 : D7 60    " `"    stab  X0060
-F179 : D6 57    " W"    ldab  X0057
-F17B : 27 09    "' "    beq  LF186
-F17D : D7 52    " R"    stab  X0052
-F17F : DE 58    " X"    ldx  X0058
-F181 : DF 50    " P"    stx  X0050
-F183 : 7E F0 1E    "~  "    jmp  LF01E
-        ;
-F186        LF186:
-F186 : 97 52    " R"    staa  X0052
-F188 : 97 57    " W"    staa  X0057
-F18A : D6 60    " `"    ldab  X0060
-F18C : CA 08    "  "    orab  #$08
-F18E : D7 60    " `"    stab  X0060
-F190 : 7E F0 1E    "~  "    jmp  LF01E
-        ;
-F193 : CE E1 C0    "   "    ldx  #$E1C0
-F196 : BD EF B8    "   "    jsr  LEFB8
-F199 : 7E F0 06    "~  "    jmp  LF006
-        ;
-F19C : E3    " "    db  $E3
-        ;
-F19D : EF E4    "  "    stx  $E4,x
-F19F : 67 E4    "g "    asr  $E4,x
-F1A1 : F8 F0 15    "   "    eorb  XF015
-F1A4 : E6 2D    " -"    ldab  $2D,x
-F1A6 : E7 20    "  "    stab  $20,x
-F1A8 : E7 CD    "  "    stab  $CD,x
-F1AA : E7 ED    "  "    stab  $ED,x
-F1AC : E9 A6    "  "    adcb  $A6,x
-F1AE : E8 52    " R"    eorb  $52,x
-F1B0 : E8 E5    "  "    eorb  $E5,x
-F1B2 : EB C2    "  "    addb  $C2,x
-F1B4 : E7 16    "  "    stab  $16,x
-F1B6 : F1 1F F1    "   "    cmpb  X1FF1
-F1B9 : 40    "@"    nega
-F1BA : F1 93 EF    "   "    cmpb  X93EF
-F1BD : D1 EF    "  "    cmpb  X00EF
-F1BF : BB EC EA    "   "    adda  XECEA
-F1C2 : EF 7B    " {"    stx  $7B,x
-F1C4        XF1C4:
-F1C4 : F0 F9 F1    "   "    subb  XF9F1
-        ;
-F1C7 : 71    "q"    db  $71
-        ;
-F1C8 : F1 86 EE    "   "    cmpb  X86EE
-F1CB : BC 0F 0A    "   "    cpx  X0F0A
+;*************************************;
+; end of sounds, reset SP, some params then IRQ or STDBY, etc
+;*************************************;
+;ENDSND LF006:
+F006 : 8E 00 7F   lds  #$007F         ;load SP with 007Fh (ENDRAM)
+F009 : D6 60      ldab  $60           ;load B with addr 60
+F00B : 2A 02      bpl  LF00F          ;branch N=0 ENDSD1
+F00D : C4 70      andb  #$70          ;and B with 70h
+;ENDSD1 LF00F:
+F00F : D6 60      ldab  $60           ;load B with addr 60
+F011 : C4 77      andb  #$77          ;and B with 77h
+F013 : D7 60      stab  $60           ;store B in addr 60
+;****;
+; params - jmptbl
+;PARAM5 
+F015 : 96 66      ldaa  $66           ;load A with addr 66
+F017 : 27 05      beq  LF01E          ;branch Z=1 
+F019 : 7E EF 79   jmp  LEF79          ;jump IRQ1A
+;STDBY2
+F01C : 20 FE      bra  LF01C          ;branch always here STDBY2 (*-2)
+;LF01E:
+F01E : D6 60      ldab  $60           ;load B with addr 60
+F020 : C4 07      andb  #$07          ;and B with 07h
+F022 : 27 F8      beq  LF01C          ;branch Z=1 STDBY2
+F024 : C1 01      cmpb  #$01          ;compare B with 01h
+F026 : 26 06      bne  LF02E          ;branch Z=0 
+F028 : 96 5A      ldaa  $5A           ;load A with addr 5A
+F02A : 97 53      staa  $53           ;store A in addr 53
+F02C : 20 64      bra  LF092          ;branch always 
+;LF02E:
+F02E : C1 02      cmpb  #$02          ;compare B with 02h
+F030 : 26 02      bne  LF034          ;branch Z=0 
+F032 : 20 5E      bra  LF092          ;branch always 
+;LF034:
+F034 : C1 03      cmpb  #$03          ;compare B with 03h
+F036 : 26 1D      bne  LF055          ;branch Z=0 
+F038 : D6 60      ldab  $60           ;load B with addr 60
+F03A : CA 08      orab  #$08          ;or B with 08h
+F03C : D7 60      stab  $60           ;store B in addr 60
+F03E : C6 04      ldab  #$04          ;load B with 04h
+F040 : CE EC 27   ldx  #$EC27         ;load X with EC27h (data)
+F043 : 86 09      ldaa  #$09          ;load A with 09h
+F045 : BD EE 8B   jsr  LEE8B          ;jump sub TRNSLD
+F048 : BD EB 93   jsr  LEB93          ;jump sub MOVE2
+F04B : 96 56      ldaa  $56           ;load A with addr 56
+F04D : 97 15      staa  $15           ;store A in addr 15
+F04F : CE EB CE   ldx  #$EBCE         ;load X with EBCEh (jump addr)
+F052 : 7E EF B8   jmp  LEFB8          ;jump IRQX
+;LF055:
+F055 : C1 05      cmpb  #$05          ;compare B with 05h
+F057 : 26 10      bne  LF069          ;branch Z=0 
+F059 : D6 60      ldab  $60           ;load B with addr 60
+F05B : CA 08      orab  #$08          ;or B with 08h
+F05D : D7 60      stab  $60           ;store B in addr 60
+;LF05F:
+F05F : 96 5B      ldaa  $5B           ;load A with addr 5B
+F061 : CE E1 C0   ldx  #$E1C0         ;load X with E1C0h (jump SPCALL)
+F064 : BD EF B8   jsr  LEFB8          ;jump sub IRQX
+F067 : 20 F6      bra  LF05F          ;branch always 
+;LF069:
+F069 : C1 06      cmpb  #$06          ;compare B with 06h
+F06B : 26 21      bne  LF08E          ;branch Z=0 
+F06D : D6 60      ldab  $60           ;load B with addr 60
+F06F : CA 08      orab  #$08          ;or B with 08h
+F071 : D7 60      stab  $60           ;store B in addr 60
+F073 : 96 65      ldaa  $65           ;load A with addr 65
+F075 : BD EF E6   jsr  LEFE6          ;jump sub 
+F078 : D6 63      ldab  $63           ;load B with addr 63
+F07A : D7 0D      stab  $0D           ;store B in addr 0D
+F07C : D6 64      ldab  $64           ;load B with addr 64
+F07E : D7 0E      stab  $0E           ;store B in addr 0D
+F080 : D6 09      ldab  $09           ;load B with addr 09
+F082 : D7 17      stab  $17           ;store B in addr 17
+F084 : D6 0A      ldab  $0A           ;load B with addr 0A
+F086 : D7 18      stab  $18           ;store B in addr 18
+F088 : CE E9 BF   ldx  #$E9BF         ;load X with E9BFh (val)
+F08B : 7E EF B8   jmp  LEFB8          ;jump IRQX
+;LF08E:
+F08E : C1 07      cmpb  #$07          ;compare B with 07h
+F090 : 26 8A      bne  LF01C          ;branch Z=0 STDBY2
+;LF092:
+F092 : 96 52      ldaa  $52           ;load A with addr 52
+F094 : 16         tab                 ;transfer A to B
+F095 : 4F         clra                ;clear A 
+F096 : 58         aslb                ;arith shift left B
+F097 : 89 00      adca  #$00          ;add C+A + 00h
+F099 : D7 6F      stab  $6F           ;store B in addr 6F
+F09B : 58         aslb                ;arith shift left B
+F09C : 89 00      adca  #$00          ;add C+A + 00h
+F09E : DB 6F      addb  $6F           ;add B + addr 6F
+F0A0 : 89 00      adca  #$00          ;add C+A + 00h
+F0A2 : CE F7 24   ldx  #$F724         ;load X with F724h (data)
+F0A5 : BD EE 7E   jsr  LEE7E          ;jump sub ADDBX
+F0A8 : A6 02      ldaa  $02,x         ;load A with X+02h
+F0AA : 97 12      staa  $12           ;store A in addr 12
+F0AC : A6 03      ldaa  $03,x         ;load A with X+03h
+F0AE : 97 13      staa  $13           ;store A in addr 13
+F0B0 : A6 04      ldaa  $04,x         ;load A with X+04h
+F0B2 : 97 14      staa  $14           ;store A in addr 14
+F0B4 : A6 05      ldaa  $05,x         ;load A with X+05h
+F0B6 : 97 1D      staa  $1D           ;store A in addr 1D
+F0B8 : 97 15      staa  $15           ;store A in addr 15
+F0BA : EE 00      ldx  $00,x          ;load X with X+00h
+F0BC : DF 6A      stx  $6A            ;store X in addr 6A
+F0BE : CE 00 00   ldx  #$0000         ;load X with 0000h
+F0C1 : DF 70      stx  $70            ;store X in addr 70
+F0C3 : C6 12      ldab  #$12          ;load B with 12h
+F0C5 : DE 6A      ldx  $6A            ;load X with addr 6A
+F0C7 : DF 67      stx  $67            ;store X in addr 67
+F0C9 : BD EE A6   jsr  LEEA6          ;jump sub TRANS
+F0CC : D6 60      ldab  $60           ;load B with addr 60
+F0CE : C5 08      bitb  #$08          ;bit test B with 08h
+F0D0 : 26 19      bne  LF0EB          ;branch Z=0 
+F0D2 : DE 50      ldx  $50            ;load X with addr 50
+F0D4 : 86 01      ldaa  #$01          ;load A with 01h
+;LF0D6:
+F0D6 : E6 00      ldab  $00,x         ;load B with X+00h
+F0D8 : 26 04      bne  LF0DE          ;branch Z=0 
+F0DA : EE 01      ldx  $01,x          ;load X with X+01h
+F0DC : 20 04      bra  LF0E2          ;branch always 
+;LF0DE:
+F0DE : 08         inx                 ;incr X
+F0DF : 08         inx                 ;incr X
+F0E0 : 08         inx                 ;incr X
+F0E1 : 08         inx                 ;incr X
+;LF0E2:
+F0E2 : 4A         deca                ;decr A
+F0E3 : 26 F1      bne  LF0D6          ;branch Z=0 
+F0E5 : DF 12      stx  $12            ;store X in addr 12
+F0E7 : D6 53      ldab  $53           ;load B with addr 53
+F0E9 : D7 66      stab  $66           ;store B in addr 66
+;LF0EB:
+F0EB : D6 60      ldab  $60           ;load B with addr 60
+F0ED : C4 7F      andb  #$7F          ;and B with 7Fh
+F0EF : CA 08      orab  #$08          ;or B with 08h
+F0F1 : D7 60      stab  $60           ;store B in addr 60
+F0F3 : CE E5 3E   ldx  #$E53E         ;load X with E53Eh (val)
+F0F6 : 7E EF B8   jmp  LEFB8          ;jump IRQX
+;*************************************;
+; param - jmptbl
+;*************************************;
+;PARAM6
+F0F9 : D6 60      ldab  $60           ;load B with addr 60
+F0FB : C4 70      andb  #$70          ;and B with 70h
+F0FD : CA 03      orab  #$03          ;or B with 03h
+F0FF : CA 08      orab  #$08          ;or B with 08h
+F101 : D7 60      stab  $60           ;store B in addr 60
+F103 : 97 54      staa  $54           ;store A in addr 54
+F105 : 81 02      cmpa  #$02          ;compare A with 02h
+F107 : 23 05      bls  LF10E          ;branch C+Z=1 
+F109 : 86 4A      ldaa  #$4A          ;load A with 4Ah
+F10B : 7E EF 79   jmp  LEF79          ;jump IRQ1A
+;LF10E:
+F10E : CE F1 1C   ldx  #$F11C         ;load X with F11Ch (data)
+F111 : BD EE 70   jsr  LEE70          ;jump sub ADDX
+F114 : A6 00      ldaa  $00,x         ;load A with X+00h
+F116 : CE EC EA   ldx  #$ECEA         ;load X with ECEAh (JMPFNL)
+F119 : 7E EF B8   jmp  LEFB8          ;jump IRQX
+;
+F11C : 04 0A 0B                       ;data
+;*************************************;
+; param - jmptbl
+;*************************************;
+;PARAM7
+F11F : D6 60      ldab  $60           ;load B with addr 60
+F121 : C4 07      andb  #$07          ;and B with 07h
+F123 : C1 07      cmpb  #$07          ;compare B with 07h
+F125 : 26 0A      bne  LF131          ;branch Z=0 
+F127 : 91 52      cmpa  $52           ;compare A with addr 52
+F129 : 26 06      bne  LF131          ;branch Z=0 
+F12B : D6 60      ldab  $60           ;load B with addr 60
+F12D : C4 77      andb  #$77          ;and B with 77h
+F12F : 20 0C      bra  LF13D          ;branch always 
+;LF131:
+F131 : D6 60      ldab  $60           ;load B with addr 60
+F133 : C4 70      andb  #$70          ;and B with 70h
+F135 : CA 08      orab  #$08          ;or B with 08h
+F137 : CA 07      orab  #$07          ;or B with 07h
+F139 : D7 60      stab  $60           ;store B in addr 60
+F13B : 97 52      staa  $52           ;store A in addr 52
+;LF13D:
+F13D : 7E F0 1E   jmp  LF01E          ;jump 
+;*************************************;
+; param - jmptbl
+;*************************************;
+;PARAM8
+F140 : CE F1 6C   ldx  #$F16C         ;load X with F16Ch (data)
+F143 : 96 54      ldaa  $54           ;load A with addr 54
+F145 : 4C         inca                ;incr A
+F146 : 81 04      cmpa  #$04          ;compare A with 04h
+F148 : 22 07      bhi  LF151          ;branch C+Z=0
+F14A : 97 54      staa  $54           ;store A in addr 54
+F14C : BD EE 70   jsr  LEE70          ;jump sub ADDX
+F14F : 20 03      bra  LF154          ;branch always 
+;LF151:
+F151 : 4F         clra                ;clear A
+F152 : 97 54      staa  $54           ;store A in addr 54
+;LF154:
+F154 : A6 00      ldaa  $00,x         ;load A with X+00h
+F156 : 97 52      staa  $52           ;store A in addr 52
+F158 : 96 60      ldaa  $60           ;load A with addr 60
+F15A : 16         tab                 ;transfer A to B
+F15B : C4 70      andb  #$70          ;and B with 70h
+F15D : CA 02      orab  #$02          ;or B with 02h
+F15F : 84 07      anda  #$07          ;and A with 07h
+F161 : 81 02      cmpa  #$02          ;compare A with 02h
+F163 : 27 02      beq  LF167          ;branch Z=1 
+F165 : CA 08      orab  #$08          ;or B with 08h
+;LF167:
+F167 : D7 60      stab  $60           ;store B in addr 60
+F169 : 7E F0 1E   jmp  LF01E          ;jump 
+;data
+F16C : 30 2C 2B 2A 21                 ;
+;*************************************;
+; params - jmptbl
+;*************************************;
+;PARAM9
+F171 : D6 60      ldab  $60           ;load B with addr 60
+F173 : C4 70      andb  #$70          ;and B with 70h
+F175 : CA 01      orab  #$01          ;or B with 01h
+F177 : D7 60      stab  $60           ;store B in addr 60
+F179 : D6 57      ldab  $57           ;load B with addr 57
+F17B : 27 09      beq  LF186          ;branch Z=1 PARAMA
+F17D : D7 52      stab  $52           ;store B in addr 52
+F17F : DE 58      ldx  $58            ;load X with addr 58
+F181 : DF 50      stx  $50            ;store X in addr 50
+F183 : 7E F0 1E   jmp  LF01E          ;jump 
+;*************************************;
+; params - jmptbl
+;*************************************;
+;PARAMA
+F186 : 97 52      staa  $52           ;store A in addr 52
+F188 : 97 57      staa  $57           ;store A in addr 57
+F18A : D6 60      ldab  $60           ;load B with addr 60
+F18C : CA 08      orab  #$08          ;or B with 08h
+F18E : D7 60      stab  $60           ;store B in addr 60
+F190 : 7E F0 1E   jmp  LF01E          ;jump 
+;*************************************;
+; jumps for speech call
+;*************************************;
+;JMPSPC
+F193 : CE E1 C0   ldx  #$E1C0         ;load X with E1C0h (jump SPCALL)
+F196 : BD EF B8   jsr  LEFB8          ;jump IRQX
+F199 : 7E F0 06   jmp  LF006          ;jump ENDSND
+;*************************************;
+;Special Routine Jump Table #1
+;*************************************;
+;JMPTBL
+F19C : E3 EF                          ;SYNTH91
+F19E : E4 67                          ;SYNTH92
+F1A0 : E4 F8                          ;SYNTH93
+F1A2 : F0 15                          ;PARAM
+F1A4 : E6 2D                          ;SYNTH94
+F1A6 : E7 20                          ;SYNTH95
+F1A8 : E7 CD                          ;TILT
+F1AA : E7 ED                          ;KNOCK
+F1AC : E9 A6                          ;SYNTH98
+F1AE : E8 52                          ;SYNTH96
+F1B0 : E8 E5                          ;SYNTH97
+F1B2 : EB C2                          ;SYNTH99
+F1B4 : E7 16                          ;SN95LD
+F1B6 : F1 1F                          ;PARAM7
+F1B7 : F1 40                          ;PARAM8
+F1BA : F1 93                          ;JMPSPC
+F1BC : EF D1                          ;PARAM3
+F1BE : EF BB                          ;PARAM2
+F1C0 : EC EA                          ;JMPFNL
+F1C2 : EF 7B                          ;IRQ1B
+F1C4 : F0 F9                          ;PARAM6
+F1C6 : F1 71                          ;PARAM9
+F1C8 : F1 86                          ;PARAMA
+F1CA : EE BC                          ;SYNTH
+;*************************************;
+; irq data 
+;*************************************;
+;IRQDAT
+F1CC : 0F 0A    "   "    cpx  X0F0A
         ;
 F1CE : 00 05    "  "    db  $00, $05
         ;
@@ -10229,28 +9793,29 @@ F4C6 : 13 00 00    "   "    db  $13, $00, $00
 ;* DIAGNOSTIC PROCESSING HERE
 ;*************************************;
 ;NMI:
-F4C9 : 0F    " "    sei
-F4CA : 8E 00 7F    "   "    lds  #$007F
-F4CD : 4F    "O"    clra
-F4CE : CE FF FF    "   "    ldx  #$FFFF
-F4D1 : 5F    "_"    clrb
-F4D2        LF4D2:
-F4D2 : E9 00    "  "    adcb  $00,x
-F4D4 : 09    " "    dex
-F4D5 : 8C E3 C0    "   "    cpx  #$E3C0
-F4D8 : 26 F8    "& "    bne  LF4D2
-F4DA : E1 00    "  "    cmpb  $00,x
-F4DC        LF4DC:
-F4DC : 26 FE    "& "    bne  LF4DC
-F4DE : CE EC D2    "   "    ldx  #$ECD2
-F4E1 : EE 00    "  "    ldx  $00,x
-F4E3 : AD 00    "  "    jsr  $00,x            ;INFO: index jump
-F4E5 : BD E1 C3    "   "    jsr  LE1C3
-F4E8 : 20 DF    "  "    bra  LF4C9
-        ;
-F4EA : 0E    " "    cli
-F4EB : 7E F0 15    "~  "    jmp  LF015
-        ;
+F4C9 : 0F         sei                 ;set interrupt mask
+F4CA : 8E 00 7F   lds  #$007F         ;load SP with 007Fh (#ENDRAM)
+F4CD : 4F         clra                ;clear A
+F4CE : CE FF FF   ldx  #$FFFF         ;load X with FFFFh
+F4D1 : 5F         clrb                ;clear B
+;NMI1
+F4D2 : E9 00      adcb  $00,x         ;add C+B + addr X+00h
+F4D4 : 09         dex                 ;decr X
+F4D5 : 8C E3 C0   cpx  #$E3C0         ;compare X with E3C0h (checksum prior to RESET?)
+F4D8 : 26 F8      bne  LF4D2          ;branch Z=0 NMI1
+F4DA : E1 00      cmpb  $00,x         ;compare B with X+00h
+;NMI2
+F4DC : 26 FE      bne  LF4DC          ;branch Z=0 NMI2 (*-2)
+F4DE : CE EC D2   ldx  #$ECD2         ;load X with ECD2h (JMPTB2)
+F4E1 : EE 00      ldx  $00,x          ;load X with X+00h
+F4E3 : AD 00      jsr  $00,x          ;jump sub X+00h
+F4E5 : BD E1 C3   jsr  LE1C3          ;jump sub (SPCHA1 calling routine)
+F4E8 : 20 DF      bra  LF4C9          ;branch always NMI
+;
+F4EA : 0E         cli                 ;clear interrupts I=0
+F4EB : 7E F0 15   jmp  LF015          ;jump PARAMS
+;*************************************;
+;data
 F4EE : 01    " "    nop
 F4EF : 01    " "    nop
         ;
@@ -10327,6 +9892,8 @@ F536 : 00    " "    db  $00
 F537 : FF FF 3F    "  ?"    stx  XFF3F
 F53A : FF 39 FF    " 9 "    stx  X39FF
 F53D : 59    "Y"    rolb
+;*************************************;
+;data
 F53E : 06    " "    tap
 F53F : 01    " "    nop
 F540 : F6 6E 06    " n "    ldab  X6E06
@@ -10692,6 +10259,8 @@ F71E : 20 00    "  "    bra  LF720
 F720        LF720:
 F720 : FF 2D FF    " - "    stx  X2DFF
 F723 : 33    "3"    pulb
+;*************************************;
+; data for organ type?
 F724 : F8 9E FB    "   "    eorb  X9EFB
 F727 : AD FF    "  "    jsr  $FF,x            ;INFO: index jump
         ;
@@ -11148,6 +10717,8 @@ F970 : FF 40 09    " @ "    stx  X4009
 F973 : 09    " "    dex
 F974 : 01    " "    nop
 F975 : 40    "@"    nega
+;*************************************;
+; jmptb 3 to data?
 F976 : F9 95 F9    "   "    adcb  X95F9
 F979 : C1 F9    "  "    cmpb  #$F9
 F97B : D9 FA    "  "    adcb  X00FA
@@ -12559,7 +12130,10 @@ FEBC : 04    " "    db  $04
 FEBD : 0A    " "    clv
 FEBE : 10    " "    sba
         ;
-FEBF : 04 04 1A    "   "    db  $04, $04, $1A
+FEBF : 04 
+;*************************************;
+; data for SYNTH9A
+FEC0 : 04 1A    "   "    db  $04, $04, $1A
         ;
 FEC2 : 0F    " "    sei
         ;
@@ -12856,7 +12430,10 @@ FFD6 : 02 00 00    "   "    db  $02, $00, $00
 FFD9 : FF C6 30    "  0"    stx  XC630
 FFDC : FA FF FF    "   "    orab  XFFFF
         ;
-FFDF : 02 00    "  "    db  $02, $00
+FFDF : 02 
+;*************************************;
+;data for SYNTH9A
+FFE0 : 00    "  "    db  $02, $00
         ;
 FFE1 : 01    " "    nop
         ;
