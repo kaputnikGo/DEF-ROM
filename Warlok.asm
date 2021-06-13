@@ -570,17 +570,17 @@ FB08 : 20 B8      bra  LFAC2
 FB0A : 33         pulb
 FB0B : 39         rts
 ;*************************************;
-;Pulse synth uses NOTTBL,SNDTBL,WAVFRM tables
+;CHIME synth uses NOTTBL,SNDTBL,WAVFRM tables
 ;*************************************;
-;PULSE
+;CHIME
 FB0C : 84 1F      anda  #$1F
-;PULSE1
+;CHIME1
 FB0E : 27 FE      beq  LFB0E
 FB10 : 81 11      cmpa  #$11
-;PULSE2
+;CHIME2
 FB12 : 27 FE      beq  LFB12
 FB14 : 81 12      cmpa  #$12
-;PULSE3
+;CHIME3
 FB16 : 27 FE      beq  LFB16
 FB18 : 84 0F      anda  #$0F
 FB1A : CE FB F7   ldx  #$FBF7
@@ -592,14 +592,14 @@ FB27 : C6 10      ldab  #$10
 FB29 : BD FA 19   jsr  LFA19
 FB2C : CE FC 07   ldx  #$FC07
 FB2F : E6 00      ldab  $00,x
-;PULSE4
+;CHIME4
 FB31 : D7 1A      stab  X001A
 FB33 : DF 22      stx  X0022
-;PULSE5
+;CHIME5
 FB35 : CE 00 00   ldx  #$0000
 FB38 : C6 08      ldab  #$08
 FB3A : D7 19      stab  X0019
-;PULSE6
+;CHIME6
 FB3C : A6 00      ldaa  $00,x
 FB3E : D6 18      ldab  X0018
 FB40 : 7D 00 1A   tst  X001A
@@ -607,10 +607,10 @@ FB43 : 26 06      bne  LFB4B
 FB45 : A0 08      suba  $08,x
 FB47 : A7 00      staa  $00,x
 FB49 : C0 03      subb  #$03
-;PULSE7
+;CHIME7
 FB4B : 08         inx
 FB4C : B7 04 00   staa  X0400
-;PULSE8
+;CHIME8
 FB4F : 5A         decb
 FB50 : 26 FD      bne  LFB4F
 FB52 : 7A 00 19   dec  X0019
@@ -643,7 +643,7 @@ FB80 : 43         coma                ;complement 1s A
 FB81 : 81 46      cmpa  #$46          ;compare A with 46h
 FB83 : 27 04      beq  LFB89          ;branch Z=1 IRQ1
 FB85 : 85 40      bita  #$40          ;bit test A with 40h
-FB87 : 26 83      bne  LFB0C          ;branch Z=0 PULSE
+FB87 : 26 83      bne  LFB0C          ;branch Z=0 CHIME
 ;IRQ1
 FB89 : 84 1F      anda  #$1F          ;and A with 1Fh
 FB8B : 27 14      beq  LFBA1          ;branch Z=1 IRQ2
@@ -705,7 +705,7 @@ FBE0 : DF 22      stx  $22            ;store X in addr 22
 FBE2 : BD F9 D6   jsr  LF9D6          ;jump sub SND1
 FBE5 : 20 F1      bra  LFBD8          ;branch always NMI2
 ;*************************************;
-;data tables for PULSE
+;data tables for CHIME
 ;*************************************;
 ;SNDTBL
 FBE7 : DA FF DA 80 26 01 26 80        ;
