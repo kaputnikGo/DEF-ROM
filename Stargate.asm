@@ -14,6 +14,7 @@
         ;
         ;  CPU:    Motorola 6800 (6800/6802/6808 family)
         ;
+        ;Video Sound ROM 2, Stargate, 1981
         ;basically identical to Sound ROM 15 except no Tilt, and Organ tune is different
         ;
         ;updated 23 May 2021
@@ -26,118 +27,116 @@ F800 : DF
 ;RESET power on
 ;*************************************;
 ;SETUP
-F801 : 0F         sei                 ;set interrupt mask   
-F802 : 8E 00 7F    "   "    lds  #$007F
-F805 : CE 04 00    "   "    ldx  #$0400
-F808 : 6F 01    "o "    clr  $01,x
-F80A : 6F 03    "o "    clr  $03,x
-F80C : 86 FF    "  "    ldaa  #$FF
-F80E : A7 00    "  "    staa  $00,x
-F810 : 6F 02    "o "    clr  $02,x
-F812 : 86 37    " 7"    ldaa  #$37
-F814 : A7 03    "  "    staa  $03,x
-F816 : 86 3C    " <"    ldaa  #$3C
-F818 : A7 01    "  "    staa  $01,x
-F81A : 97 09    "  "    staa  X0009
-F81C : 4F    "O"    clra
-F81D        XF81D:
-F81D : 97 07    "  "    staa  X0007
-F81F : 97 04    "  "    staa  X0004
-F821 : 97 05    "  "    staa  X0005
-F823 : 97 06    "  "    staa  X0006
-F825 : 97 08    "  "    staa  X0008
-F827 : 0E    " "    cli
-F828        LF828:
-F828 : 20 FE    "  "    bra  LF828
+F801 : 0F         sei                 ;set interrupt mask 
+F802 : 8E 00 7F   lds  #$007F
+F805 : CE 04 00   ldx  #$0400
+F808 : 6F 01      clr  $01,x
+F80A : 6F 03      clr  $03,x
+F80C : 86 FF      ldaa  #$FF
+F80E : A7 00      staa  $00,x
+F810 : 6F 02      clr  $02,x
+F812 : 86 37      ldaa  #$37
+F814 : A7 03      staa  $03,x
+F816 : 86 3C      ldaa  #$3C
+F818 : A7 01      staa  $01,x
+F81A : 97 09      staa  $09
+F81C : 4F         clra
+F81D : 97 07      staa  $07
+F81F : 97 04      staa  $04
+F821 : 97 05      staa  $05
+F823 : 97 06      staa  $06
+F825 : 97 08      staa  $08
+F827 : 0E         cli
+;STDBY
+F828 : 20 FE      bra  LF828
 ;*************************************;
 ;Vari Loader 
 ;*************************************;
 ;VARILD
-F82A : 16    " "    tab
-F82B : 48    "H"    asla
-F82C : 48    "H"    asla
-F82D : 48    "H"    asla
-F82E : 1B    " "    aba
-F82F : CE 00 13    "   "    ldx  #$0013         ;load X with value 0013h (#LOCRAM)
-F832 : DF 0F    "  "    stx  X000F
-F834 : CE FD 3C    "  <"    ldx  #$FD3C         ;load X with value FD3Ch (VVECT SAW)
-F837 : BD FC E7    "   "    jsr  LFCE7          ;jump sub ADDX
-F83A : C6 09    "  "    ldab  #$09
-F83C : 7E FA E0    "~  "    jmp  LFAE0          ;jump TRANS 
+F82A : 16         tab
+F82B : 48         asla
+F82C : 48         asla
+F82D : 48         asla
+F82E : 1B         aba
+F82F : CE 00 13   ldx  #$0013         ;load X with value 0013h (#LOCRAM)
+F832 : DF 0F      stx  $0F
+F834 : CE FD 3C   ldx  #$FD3C         ;load X with value FD3Ch (VVECT SAW)
+F837 : BD FC E7   jsr  LFCE7          ;jump sub ADDX
+F83A : C6 09      ldab  #$09
+F83C : 7E FA E0   jmp  LFAE0          ;jump TRANS 
 ;*************************************;
 ;Variable Duty Cycle Square Wave Routine 
 ;*************************************;
 ;VARI
-F83F : 96 1B    "  "    ldaa  X001B
-F841 : B7 04 00    "   "    staa  X0400
-F844        LF844:
-F844 : 96 13    "  "    ldaa  X0013
-F846 : 97 1C    "  "    staa  X001C
-F848 : 96 14    "  "    ldaa  X0014
-F84A : 97 1D    "  "    staa  X001D
-F84C        LF84C:
-F84C : DE 18    "  "    ldx  X0018
-F84E        LF84E:
-F84E : 96 1C    "  "    ldaa  X001C
-F850 : 73 04 00    "s  "    com  X0400
-F853        LF853:
-F853 : 09    " "    dex
-F854 : 27 10    "' "    beq  LF866
-F856 : 4A    "J"    deca
-F857 : 26 FA    "& "    bne  LF853
-F859 : 73 04 00    "s  "    com  X0400
-F85C : 96 1D    "  "    ldaa  X001D
-F85E        LF85E:
-F85E : 09    " "    dex
-F85F : 27 05    "' "    beq  LF866
-F861 : 4A    "J"    deca
-F862 : 26 FA    "& "    bne  LF85E
-F864 : 20 E8    "  "    bra  LF84E
-        ;
-F866        LF866:
-F866 : B6 04 00    "   "    ldaa  X0400
-F869 : 2B 01    "+ "    bmi  LF86C
-F86B : 43    "C"    coma
-F86C        LF86C:
-F86C : 8B 00    "  "    adda  #$00
-F86E : B7 04 00    "   "    staa  X0400
-F871 : 96 1C    "  "    ldaa  X001C
-F873 : 9B 15    "  "    adda  X0015
-F875 : 97 1C    "  "    staa  X001C
-F877 : 96 1D    "  "    ldaa  X001D
-F879 : 9B 16    "  "    adda  X0016
-F87B : 97 1D    "  "    staa  X001D
-F87D : 91 17    "  "    cmpa  X0017
-F87F : 26 CB    "& "    bne  LF84C
-F881 : 96 1A    "  "    ldaa  X001A
-F883 : 27 06    "' "    beq  LF88B
-F885 : 9B 13    "  "    adda  X0013
-F887 : 97 13    "  "    staa  X0013
-F889 : 26 B9    "& "    bne  LF844
+F83F : 96 1B      ldaa  X001B
+F841 : B7 04 00   staa  X0400
+;LF844:
+F844 : 96 13      ldaa  X0013
+F846 : 97 1C      staa  X001C
+F848 : 96 14      ldaa  X0014
+F84A : 97 1D      staa  X001D
+;LF84C:
+F84C : DE 18      ldx  X0018
+;LF84E:
+F84E : 96 1C      ldaa  X001C
+F850 : 73 04 00   com  X0400
+;LF853:
+F853 : 09         dex
+F854 : 27 10      beq  LF866
+F856 : 4A         deca
+F857 : 26 FA      bne  LF853
+F859 : 73 04 00   com  X0400
+F85C : 96 1D      ldaa  X001D
+;LF85E:
+F85E : 09         dex
+F85F : 27 05      beq  LF866
+F861 : 4A         deca
+F862 : 26 FA      bne  LF85E
+F864 : 20 E8      bra  LF84E
+;LF866:
+F866 : B6 04 00   ldaa  X0400
+F869 : 2B 01      bmi  LF86C
+F86B : 43         coma
+;LF86C:
+F86C : 8B 00      adda  #$00
+F86E : B7 04 00   staa  X0400
+F871 : 96 1C      ldaa  X001C
+F873 : 9B 15      adda  X0015
+F875 : 97 1C      staa  X001C
+F877 : 96 1D      ldaa  X001D
+F879 : 9B 16      adda  X0016
+F87B : 97 1D      staa  X001D
+F87D : 91 17      cmpa  X0017
+F87F : 26 CB      bne  LF84C
+F881 : 96 1A      ldaa  X001A
+F883 : 27 06      beq  LF88B
+F885 : 9B 13      adda  X0013
+F887 : 97 13      staa  X0013
+F889 : 26 B9      bne  LF844
 ;VARX
-F88B : 39    "9"    rts
+F88B : 39         rts
 ;*************************************;
 ;Lightning 
 ;*************************************;
 ;LITE
-F88C : 86 01    "  "    ldaa  #$01
-F88E : 97 1A    "  "    staa  X001A
-F890 : C6 03    "  "    ldab  #$03
-F892 : 20 0A    "  "    bra  LF89E
+F88C : 86 01      ldaa  #$01
+F88E : 97 1A      staa  X001A
+F890 : C6 03      ldab  #$03
+F892 : 20 0A      bra  LF89E
 ;*************************************;
 ;Appear 
 ;*************************************;
 ;APPEAR
-F894 : 86 FE    "  "    ldaa  #$FE
-F896 : 97 1A    "  "    staa  X001A
-F898 : 86 C0    "  "    ldaa  #$C0
-F89A : C6 10    "  "    ldab  #$10
-F89C : 20 00    "  "    bra  LF89E
+F894 : 86 FE      ldaa  #$FE
+F896 : 97 1A      staa  X001A
+F898 : 86 C0      ldaa  #$C0
+F89A : C6 10      ldab  #$10
+F89C : 20 00      bra  LF89E
 ;*************************************;
 ;Lightning+Appear Noise Routine 
 ;*************************************;
 ;LITEN:
-F89E : 97 19    "  "    staa  X0019
+F89E : 97 19       staa  X0019
 F8A0 : 86 FF    "  "    ldaa  #$FF
 F8A2 : B7 04 00    "   "    staa  X0400
 F8A5 : D7 15    "  "    stab  X0015
